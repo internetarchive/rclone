@@ -1,3 +1,5 @@
+// TODO(martin): pagination
+//
 package api
 
 import (
@@ -11,15 +13,10 @@ import (
 	"strings"
 
 	"github.com/rclone/rclone/backend/vault/cache"
-	"github.com/rclone/rclone/backend/vault/iotemp"
+	"github.com/rclone/rclone/backend/vault/extra"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/lib/rest"
 )
-
-// defaultLimit is the limit used for queries againts rest API. We currently do
-// not implement pagination, so we try to get all results at once.
-// TODO(martin): pagination
-const defaultLimit = "50000"
 
 // Organization represents a single document.
 type Organization struct {
@@ -54,8 +51,8 @@ type Collection struct {
 		URL  string `json:"url"`
 	} `json:"target_geolocations"`
 	TargetReplication int64  `json:"target_replication"`
-	TreeNode          string `json:"tree_node"` // http://localhost:8000/api/treenodes/15/
-	URL               string `json:"url"`       // http://127.0.0.1:8000/api/collections/1/
+	TreeNode          string `json:"tree_node"`
+	URL               string `json:"url"` // http://127.0.0.1:8000/api/collections/1/
 }
 
 // TreeNode is node in the filesystem tree.
@@ -63,7 +60,7 @@ type TreeNode struct {
 	Comment              interface{} `json:"comment"`
 	ContentURL           interface{} `json:"content_url"`
 	FileType             interface{} `json:"file_type"`
-	ID                   int64       `json:"id"`
+	Id                   int64       `json:"id"`
 	Md5Sum               interface{} `json:"md5_sum"`
 	ModifiedAt           string      `json:"modified_at"`
 	Name                 string      `json:"name"`
@@ -104,26 +101,15 @@ type File struct {
 
 // RegisterDepositRequest payload.
 type RegisterDepositRequest struct {
-	CollectionID int64   `json:"collection_id,omitempty"`
+	CollectionId int64   `json:"collection_id,omitempty"`
 	Files        []*File `json:"files"`
-	ParentNodeID int64   `json:"parent_node_id,omitempty"`
+	ParentNodeId int64   `json:"parent_node_id,omitempty"`
 	TotalSize    int64   `json:"total_size"`
 }
 
 // RegisterDepositResponse is the response to a successful RegisterDepositRequest.
 type RegisterDepositResponse struct {
 	ID int64 `json:"deposit_id"`
-}
-
-// WarningDepositResponse is returned by warning_deposit check.
-type WarningDepositResponse struct {
-	Objects []struct {
-		ID         int64  `json:"id"`
-		Name       string `json:"name"`
-		Parent     int64  `json:"parent"`
-		ParentName string `json:"parent_name"`
-	} `json:"objects"`
-	RelativePath []interface{} `json:"relative_path"`
 }
 
 // PathInfo can be obtained from an absolute path.
@@ -151,7 +137,7 @@ type FlowChunk struct {
 type CollectionStats struct {
 	Collections []struct {
 		FileCount int64  `json:"fileCount"`
-		ID        int64  `json:"id"`
+		Id        int64  `json:"id"`
 		Time      string `json:"time"`
 		TotalSize int64  `json:"totalSize"`
 	} `json:"collections"`
@@ -166,7 +152,7 @@ type Plan struct {
 	DefaultReplication     int64    `json:"default_replication"`
 	Name                   string   `json:"name"`
 	PricePerTerabyte       string   `json:"price_per_terabyte"`
-	URL                    string   `json:"url"`
+	Url                    string   `json:"url"`
 }
 
 // Helper methods
@@ -202,7 +188,7 @@ func (t *TreeNode) Content(options ...fs.OpenOption) (io.ReadCloser, error) {
 		}
 		return resp.Body, nil
 	case nil:
-		r := &iotemp.DummyReader{N: t.Size(), C: 0x7c}
+		r := &extra.DummyReader{N: t.Size(), C: 0x7c}
 		return io.NopCloser(r), nil
 	default:
 		return nil, fmt.Errorf("invalid content url type: %T", v)
@@ -328,31 +314,9 @@ func (c *Collection) Identifier() int64 {
 	}
 }
 
-// TreeNodeIdentifier returns the treenode id of this collection.
-func (c *Collection) TreeNodeIdentifier() int64 {
-	switch {
-	case c.TreeNode == "":
-		return 0
-	case !strings.HasPrefix(c.TreeNode, "http"):
-		return 0
-	default:
-		re := regexp.MustCompile(fmt.Sprintf(`^http.*/api/treenodes/([0-9]{1,})/?$`))
-		matches := re.FindStringSubmatch(c.TreeNode)
-		if len(matches) != 2 {
-			return 0
-		}
-		v, err := strconv.Atoi(matches[1])
-		if err != nil {
-			return 0
-		}
-		return int64(v)
-	}
-}
-
 // List objects
 // ------------
 
-// List is a generic envelop around list like responses.
 type List struct {
 	Count    int64       `json:"count"`
 	Next     interface{} `json:"next"`
@@ -387,7 +351,7 @@ type TreeNodeList struct {
 // -----------
 
 // GetCollectionStats returns a summary.
-func (api *API) GetCollectionStats() (*CollectionStats, error) {
+func (api *Api) GetCollectionStats() (*CollectionStats, error) {
 	var (
 		opts = rest.Opts{
 			Method: "GET",
@@ -399,12 +363,12 @@ func (api *API) GetCollectionStats() (*CollectionStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	return &doc, nil
 }
 
 // GetUser returns the user for a given id.
-func (api *API) GetUser(id string) (*User, error) {
+func (api *Api) GetUser(id string) (*User, error) {
 	if v := api.cache.GetGroup(id, "user"); v != nil {
 		return v.(*User), nil
 	}
@@ -419,7 +383,7 @@ func (api *API) GetUser(id string) (*User, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: users got %v", resp.StatusCode)
 	}
@@ -428,10 +392,7 @@ func (api *API) GetUser(id string) (*User, error) {
 }
 
 // GetOrganization returns the organization for a given id.
-func (api *API) GetOrganization(id string) (*Organization, error) {
-	if id == "" {
-		return nil, fmt.Errorf("missing organization identifier - is the user associated with an organization?")
-	}
+func (api *Api) GetOrganization(id string) (*Organization, error) {
 	if v := api.cache.GetGroup(id, "organization"); v != nil {
 		return v.(*Organization), nil
 	}
@@ -446,7 +407,7 @@ func (api *API) GetOrganization(id string) (*Organization, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: organizations got %v", resp.StatusCode)
 	}
@@ -455,7 +416,7 @@ func (api *API) GetOrganization(id string) (*Organization, error) {
 }
 
 // GetCollection returns the collection for a given id.
-func (api *API) GetCollection(id string) (*Collection, error) {
+func (api *Api) GetCollection(id string) (*Collection, error) {
 	if v := api.cache.GetGroup(id, "collection"); v != nil {
 		return v.(*Collection), nil
 	}
@@ -470,7 +431,7 @@ func (api *API) GetCollection(id string) (*Collection, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: collections got %v", resp.StatusCode)
 	}
@@ -479,7 +440,7 @@ func (api *API) GetCollection(id string) (*Collection, error) {
 }
 
 // GetTreeNode returns the treenode for a given id.
-func (api *API) GetTreeNode(id string) (*TreeNode, error) {
+func (api *Api) GetTreeNode(id string) (*TreeNode, error) {
 	if v := api.cache.GetGroup(id, "treenode"); v != nil {
 		return v.(*TreeNode), nil
 	}
@@ -494,7 +455,7 @@ func (api *API) GetTreeNode(id string) (*TreeNode, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: treenodes got %v", resp.StatusCode)
 	}
@@ -503,7 +464,7 @@ func (api *API) GetTreeNode(id string) (*TreeNode, error) {
 }
 
 // GetPlan returns the plan for a given id.
-func (api *API) GetPlan(id string) (*Plan, error) {
+func (api *Api) GetPlan(id string) (*Plan, error) {
 	if v := api.cache.GetGroup(id, "plan"); v != nil {
 		return v.(*Plan), nil
 	}
@@ -518,7 +479,7 @@ func (api *API) GetPlan(id string) (*Plan, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: plan got %v", resp.StatusCode)
 	}
@@ -529,12 +490,7 @@ func (api *API) GetPlan(id string) (*Plan, error) {
 // Find methods
 // ------------
 
-// FindUsers finds users matching a given query.
-func (api *API) FindUsers(vs url.Values) (result []*User, err error) {
-	if !vs.Has("limit") && !vs.Has("offset") {
-		vs.Set("offset", "0")
-		vs.Set("limit", defaultLimit) // TODO: implement pagination
-	}
+func (api *Api) FindUsers(vs url.Values) (result []*User, err error) {
 	if v := api.cache.GetGroup(cache.Atos(vs), "users"); v != nil {
 		return v.([]*User), nil
 	}
@@ -550,7 +506,7 @@ func (api *API) FindUsers(vs url.Values) (result []*User, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: users got %v", resp.StatusCode)
 	}
@@ -561,12 +517,7 @@ func (api *API) FindUsers(vs url.Values) (result []*User, err error) {
 	return result, nil
 }
 
-// FindOrganizations returns a list of organizations matching a query.
-func (api *API) FindOrganizations(vs url.Values) (result []*Organization, err error) {
-	if !vs.Has("limit") && !vs.Has("offset") {
-		vs.Set("offset", "0")
-		vs.Set("limit", defaultLimit) // TODO: implement pagination
-	}
+func (api *Api) FindOrganizations(vs url.Values) (result []*Organization, err error) {
 	var (
 		opts = rest.Opts{
 			Method:     "GET",
@@ -579,7 +530,7 @@ func (api *API) FindOrganizations(vs url.Values) (result []*Organization, err er
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: organizations got %v", resp.StatusCode)
 	}
@@ -589,11 +540,10 @@ func (api *API) FindOrganizations(vs url.Values) (result []*Organization, err er
 	return result, nil
 }
 
-// FindCollections finds collections matching a given query.
-func (api *API) FindCollections(vs url.Values) (result []*Collection, err error) {
+func (api *Api) FindCollections(vs url.Values) (result []*Collection, err error) {
 	if !vs.Has("limit") && !vs.Has("offset") {
 		vs.Set("offset", "0")
-		vs.Set("limit", defaultLimit) // TODO: implement pagination
+		vs.Set("limit", "5000") // TODO: implement pagination
 	}
 	var (
 		opts = rest.Opts{
@@ -607,7 +557,7 @@ func (api *API) FindCollections(vs url.Values) (result []*Collection, err error)
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: collections got %v", resp.StatusCode)
 	}
@@ -617,8 +567,7 @@ func (api *API) FindCollections(vs url.Values) (result []*Collection, err error)
 	return result, nil
 }
 
-// FindTreeNodes returns a set of matching treenodes for a query.
-func (api *API) FindTreeNodes(vs url.Values) (result []*TreeNode, err error) {
+func (api *Api) FindTreeNodes(vs url.Values) (result []*TreeNode, err error) {
 	// ?id=1&id__gt=&id__gte=&id__lt=&id__lte=&node_type__contains=&node_type__
 	// endswith=&node_type=&node_type__icontains=&node_type__iexact=&node_type__startsw
 	// ith=&path__contains=&path__endswith=&path=&path__icontains=&path__iexact=&path__
@@ -640,7 +589,7 @@ func (api *API) FindTreeNodes(vs url.Values) (result []*TreeNode, err error) {
 	}
 	if !vs.Has("limit") && !vs.Has("offset") {
 		vs.Set("offset", "0")
-		vs.Set("limit", defaultLimit) // TODO: implement pagination
+		vs.Set("limit", "5000") // TODO: implement pagination
 	}
 	var (
 		opts = rest.Opts{
@@ -654,7 +603,7 @@ func (api *API) FindTreeNodes(vs url.Values) (result []*TreeNode, err error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close() // nolint: errcheck
+	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("api: treenodes got %v", resp.StatusCode)
 	}

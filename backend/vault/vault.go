@@ -5,37 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/url"
 	"path"
-	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
-	"github.com/rclone/rclone/backend/vault/iotemp"
+	"github.com/rclone/rclone/backend/vault/extra"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
 )
 
-const (
-	// Note: the biggest increase in upload throughput so far came from
-	// increasing the chunk size to 16M.
-	//
-	//  1M/1/1:  5M/s
-	// 16M/1/1: 15M/s
-	// 16M/2/2: 20M/s
-	//
-	// Target two-core QA machine was occassionally maxed out, not sure if
-	// that's imposing a limit.
-	defaultUploadChunkSize    = 1 << 24 // 16M
-	defaultMaxParallelChunks  = 2
-	defaultMaxParallelUploads = 2
-)
-
 var (
-	ErrInvalidPath     = errors.New("invalid path")
+	ErrNotImplemented  = errors.New("not implemented")
 	ErrVersionMismatch = errors.New("api version mismatch")
 )
 
@@ -60,75 +44,18 @@ func init() {
 				Help:    "Vault API endpoint URL",
 				Default: "http://127.0.0.1:8000/api",
 			},
-			{
-				Name:    "suppress_progress_bar",
-				Help:    "Suppress deposit progress bar",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:    "skip_content_type_detection",
-				Help:    "Skip content-type detection on the client side",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:    "resume_deposit_id",
-				Help:    "Resume a deposit",
-				Default: 0,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:     "chunk_size",
-				Help:     "Upload chunk size in bytes (limited)",
-				Default:  defaultUploadChunkSize,
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_chunks",
-				Help:     "Maximum number of parallel chunk uploads",
-				Default:  defaultMaxParallelChunks, // TODO: find a good default
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_uploads",
-				Help:     "Maximum number of parallel file uploads",
-				Default:  defaultMaxParallelUploads, // TODO: find a good default
-				Advanced: true,
-			},
-		},
-		CommandHelp: []fs.CommandHelp{
-			fs.CommandHelp{
-				Name:  "status",
-				Short: "show deposit status",
-				Long: `Display status of deposit, pass deposit id (e.g. 742) as argument, e.g.:
-
-    $ rclone backend ds vault: 742
-
-Will return a JSON like this:
-
-    {
-      "assembled_files": 6,
-      "errored_files": 0,
-      "file_queue": 0,
-      "in_storage_files": 0,
-      "total_files": 6,
-      "uploaded_files": 0
-    }
-`,
-			},
 		},
 	})
 }
 
-// NewFS sets up a new filesystem for vault.
+// NewFS sets up a new filesystem.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
 	var opt Options
 	err := configstruct.Set(m, &opt)
 	if err != nil {
 		return nil, err
 	}
-	api := api.New(opt.EndpointNormalized(), opt.Username, opt.Password)
+	api := api.New(opt.Endpoint, opt.Username, opt.Password)
 	if err := api.Login(); err != nil {
 		return nil, err
 	}
@@ -141,89 +68,58 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		opt:  opt,
 		api:  api,
 	}
-	f.batcher = &batcher{
-		fs:                  f,
-		chunkSize:           opt.ChunkSize,
-		maxParallelChunks:   opt.MaxParallelChunks,
-		maxParallelUploads:  opt.MaxParallelUploads,
-		showDepositProgress: !opt.SuppressProgressBar,
-		resumeDepositId:     opt.ResumeDepositId,
-	}
 	f.features = (&fs.Features{
+		CaseInsensitive:         true,
 		CanHaveEmptyDirectories: true,
 		ReadMimeType:            true,
-		SlowModTime:             true,
-		About:                   f.About,
-		Command:                 f.Command,
-		DirMove:                 f.DirMove,
-		Disconnect:              f.Disconnect,
 		PublicLink:              f.PublicLink,
-		Purge:                   f.Purge,
+		About:                   f.About,
 		PutStream:               f.PutStream,
-		Shutdown:                f.Shutdown,
 		UserInfo:                f.UserInfo,
+		Disconnect:              f.Disconnect,
+		DirMove:                 f.DirMove,
+		Purge:                   f.Purge,
+		Shutdown:                f.Shutdown,
 	}).Fill(ctx, f)
 	return f, nil
 }
 
-// Options for Vault.
+// Options for vault.
 type Options struct {
-	Username                 string `config:"username"`
-	Password                 string `config:"password"`
-	Endpoint                 string `config:"endpoint"`
-	SuppressProgressBar      bool   `config:"suppress_progress_bar"`
-	ResumeDepositId          int64  `config:"resume_deposit_id"`
-	ChunkSize                int64  `config:"chunk_size"`
-	MaxParallelChunks        int    `config:"max_parallel_chunks"`
-	MaxParallelUploads       int    `config:"max_parallel_uploads"`
-	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
+	Username string `config:"username"`
+	Password string `config:"password"`
+	Endpoint string `config:"endpoint"`
 }
 
-// EndpointNormalized handles trailing slashes.
-func (opt Options) EndpointNormalized() string {
-	return strings.TrimRight(opt.Endpoint, "/")
-}
-
-// Fs is the main Vault filesystem. Most operations are accessed through the
-// api. A batch helper is required to model the deposit-style upload of a set
-// of files.
+// Fs is the main vault filesystem. Most operations are accessed through the
+// api. A batch helper is required to model the deposit-style upload of a
+// potentially large set of files.
 type Fs struct {
 	name     string
 	root     string
 	opt      Options
-	api      *api.API     // Vault API wrapper
-	features *fs.Features // optional features
-	batcher  *batcher     // batching for deposits
+	api      *api.Api
+	features *fs.Features
+	mu       sync.Mutex // protect batcher
+	batcher  *batcher   // batching for deposits, for put
 }
 
 // Fs Info
 // -------
 
-// Name returns the name of the filesystem.
-func (f *Fs) Name() string { return f.name }
-
-// Root returns the filesystem root.
-func (f *Fs) Root() string { return f.root }
-
-// String returns the name of the filesystem.
-func (f *Fs) String() string { return f.name }
-
-// Precision returns the support precision.
+func (f *Fs) Name() string             { return f.name }
+func (f *Fs) Root() string             { return f.root }
+func (f *Fs) String() string           { return f.name }
 func (f *Fs) Precision() time.Duration { return 1 * time.Second }
-
-// Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
-// SHA256 - but for large deposits, this would slow down uploads considerably.
-// So for now, we do not want to support any hash.
-func (f *Fs) Hashes() hash.Set { return hash.Set(hash.None) }
-
-// Features returns optional features.
-func (f *Fs) Features() *fs.Features { return f.features }
+func (f *Fs) Hashes() hash.Set         { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
+func (f *Fs) Features() *fs.Features   { return f.features }
 
 // Fs Ops
 // ------
 
-// List the objects and directories in dir into entries. The entries can be
-// returned in any order but should be for a complete directory.
+// List the objects and directories in dir into entries.  The
+// entries can be returned in any order but should be for a
+// complete directory.
 //
 // dir should be "" to list the root, and should not have
 // trailing slashes.
@@ -231,13 +127,14 @@ func (f *Fs) Features() *fs.Features { return f.features }
 // This should return ErrDirNotFound if the directory isn't
 // found.
 func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
+	fs.Debugf(f, "list dir %v", dir)
 	var (
 		entries fs.DirEntries
 		absPath = f.absPath(dir)
 	)
 	t, err := f.api.ResolvePath(absPath)
 	if err != nil {
-		if err == fs.ErrorObjectNotFound {
+		if dir == "" && err == fs.ErrorObjectNotFound {
 			return nil, fs.ErrorDirNotFound
 		}
 		return nil, err
@@ -289,9 +186,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
-	if !IsValidPath(remote) {
-		return nil, ErrInvalidPath
-	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
 	if err != nil {
 		return nil, err
@@ -315,50 +209,37 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
-// Put uploads a new object. This does not upload content immediately, but
-// copies the source to a temporary file and registers the file with the
-// batcher, which will upload all files at rclone shutdown time.
+// Put uploads a new object.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
-	if !IsValidPath(src.Remote()) {
-		return nil, ErrInvalidPath
-	}
 	var (
-		filename                string
-		err                     error
-		deleteFileAfterTransfer bool = false
+		filename string
+		err      error
 	)
-	// While we are not supporting hashes currently, we still need to copy
-	// remote file to local temporary files in order to get a complete picture
-	// of the deposit. TODO(martin): we may get by to register a deposit w/o
-	// downloading all files before the start. We would need to get a listing,
-	// register the deposit and then start streaming data to vault.
-	switch {
-	case src != nil && src.Fs() != nil && src.Fs().Name() == "local":
-		filename = path.Join(src.Fs().Root(), src.String())
-		fs.Debugf(f, "adding local file to batch: %v", filename)
-	default:
-		fs.Debugf(f, "fetching remote file temporarily")
-		if filename, err = iotemp.TempFileFromReader(in); err != nil {
+	if filename, err = extra.TempFileFromReader(in); err != nil {
+		return nil, err
+	}
+	f.mu.Lock()
+	if f.batcher == nil {
+		f.batcher, err = newBatcher(ctx, f)
+		if err != nil {
 			return nil, err
 		}
-		deleteFileAfterTransfer = true
-		fs.Debugf(f, "fetched %v to temporary location: %v", src.Remote(), filename)
+		f.batcher.showDepositProgress = true
 	}
+	f.mu.Unlock()
+	// TODO: with retries, we may add the same object twice or more; check that
+	// each batch contains unique elements
 	f.batcher.Add(&batchItem{
-		root:                     f.root,
-		filename:                 filename,
-		src:                      src,
-		options:                  options,
-		deleteFileAfterTransfer:  deleteFileAfterTransfer,
-		skipContentTypeDetection: f.opt.SkipContentTypeDetection,
+		root:     f.root,
+		filename: filename,
+		src:      src,
+		options:  options,
 	})
-	fs.Debugf(f, "added file to batch (filename=%s, skipContentTypeDetection=%v)", filename, f.opt.SkipContentTypeDetection)
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
 		treeNode: &api.TreeNode{
-			NodeType:   "FILE",
 			ObjectSize: src.Size(),
 		},
 	}, nil
@@ -370,21 +251,22 @@ func (f *Fs) Mkdir(ctx context.Context, dir string) error {
 }
 
 // mkdir creates a directory, ignores the filesystem root and expects dir to be
-// the absolute path. Will create parent directories if necessary.
+// the absolute path. Will create directories recursively.
 func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	fs.Debugf(f, "mkdir: %v", dir)
 	var t, _ = f.api.ResolvePath(dir)
 	switch {
-	case t != nil && (t.NodeType == "FOLDER" || t.NodeType == "COLLECTION"):
+	case t != nil && t.NodeType == "FOLDER":
 		return nil
 	case t != nil:
-		return fmt.Errorf("path already exists: %v [%s]", dir, t.NodeType)
+		fs.Debugf(f, "path exists: %v [%v]", dir, t.NodeType)
+		return nil
 	case f.root == "/" || strings.Count(dir, "/") == 1:
 		return f.api.CreateCollection(ctx, path.Base(dir))
 	default:
 		segments := pathSegments(dir, "/")
 		if len(segments) == 0 {
-			return fmt.Errorf("broken path: %s", dir)
+			return fmt.Errorf("broken path")
 		}
 		var (
 			parent  *api.TreeNode
@@ -417,17 +299,16 @@ func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	return nil
 }
 
-// Rmdir deletes a folder. Collections cannot be removed.
+// Rmdir deletes a folder.
 func (f *Fs) Rmdir(ctx context.Context, dir string) error {
-	fs.Debugf(f, "rmdir %v", f.absPath(dir))
 	t, err := f.api.ResolvePath(f.absPath(dir))
 	if err != nil {
 		return err
 	}
-	if t.NodeType == "FOLDER" {
-		return f.api.Remove(ctx, t)
+	if t.NodeType != "FOLDER" {
+		return fmt.Errorf("can only drop folders, not %v", t.NodeType)
 	}
-	return fmt.Errorf("cannot delete node type %v", strings.ToLower(t.NodeType))
+	return f.api.Remove(ctx, t)
 }
 
 // Fs extra
@@ -442,13 +323,9 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 	switch v := t.ContentURL.(type) {
 	case string:
 		// TODO: may want to url encode
-		u, err := url.Parse(v)
-		if err != nil {
-			return "", err
-		}
-		return u.String(), nil
+		return v, nil
 	default:
-		return "", fmt.Errorf("link not available for treenode %v", t.ID)
+		return "", fmt.Errorf("link not available for treenode %v", t.Id)
 	}
 }
 
@@ -456,11 +333,11 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 func (f *Fs) About(ctx context.Context) (*fs.Usage, error) {
 	organization, err := f.api.Organization()
 	if err != nil {
-		return nil, fmt.Errorf("api organization failed: %w", err)
+		return nil, err
 	}
 	stats, err := f.api.GetCollectionStats()
 	if err != nil {
-		return nil, fmt.Errorf("api collection failed: %w", err)
+		return nil, err
 	}
 	var (
 		numFiles = stats.NumFiles()
@@ -525,7 +402,7 @@ func (f *Fs) DirMove(ctx context.Context, src fs.Fs, srcRemote, dstRemote string
 	if err != nil {
 		return err
 	}
-	if srcDirParentNode.ID == dstDirParentNode.ID {
+	if srcDirParentNode.Id == dstDirParentNode.Id {
 		fs.Debugf(f, "move is a rename")
 		t, err := f.api.ResolvePath(src.Root())
 		if err != nil {
@@ -571,7 +448,6 @@ func (f *Fs) DirMove(ctx context.Context, src fs.Fs, srcRemote, dstRemote string
 	return nil
 }
 
-// Purge remove a folder.
 func (f *Fs) Purge(ctx context.Context, dir string) error {
 	t, err := f.api.ResolvePath(f.absPath(dir))
 	if err != nil {
@@ -583,35 +459,9 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 	return f.api.Remove(ctx, t)
 }
 
-// Shutdown triggers the deposit upload.
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
-	if f.batcher != nil {
-		return f.batcher.Shutdown(ctx)
-	}
 	return nil
-}
-
-// Command allows for custom commands. TODO(martin): We could have a cli dashboard or a deposit status command.
-func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
-	// TODO: fixity reports, distribution, ...
-	switch name {
-	case "status", "st", "deposit-status", "ds", "dst":
-		if len(args) == 0 {
-			return nil, fmt.Errorf("deposit id required")
-		}
-		id, err := strconv.Atoi(args[0])
-		if err != nil {
-			return nil, fmt.Errorf("deposit id must be numeric")
-		}
-		ds, err := f.api.DepositStatus(int64(id))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get deposit status")
-		}
-		return ds, nil
-		// Add more custom commands here.
-	}
-	return nil, fmt.Errorf("command not found")
 }
 
 // Fs helpers
@@ -677,52 +527,38 @@ func (o *Object) Hash(ctx context.Context, ty hash.Type) (string, error) {
 	case hash.MD5:
 		if v, ok := o.treeNode.Md5Sum.(string); ok {
 			return v, nil
-		} else {
-			return "", nil
 		}
 	case hash.SHA1:
 		if v, ok := o.treeNode.Sha1Sum.(string); ok {
 			return v, nil
-		} else {
-			return "", nil
 		}
 	case hash.SHA256:
 		if v, ok := o.treeNode.Sha256Sum.(string); ok {
 			return v, nil
-		} else {
-			return "", nil
 		}
-	case hash.None:
-		// Testing systems sometimes miss a hash, so we just skip it.
-		return "", nil
 	}
 	// TODO: we may want hash.ErrUnsupported, but we get an err, via:
 	// https://github.com/rclone/rclone/blob/c85fbebce6f7166350c79e11fae763c8264ef865/fs/operations/operations.go#L105
-	return "", hash.ErrUnsupported
+	return "", nil
 }
-
-// Storable returns true, since all we should be able to save all them.
 func (o *Object) Storable() bool { return true }
 
 // Object Ops
 // ----------
 
-// SetModTime set the modified at time to the current time.
-func (o *Object) SetModTime(ctx context.Context, _ time.Time) error {
-	fs.Debugf(o, "set mod time (now) for %v", o.ID())
-	return o.fs.api.SetModTime(ctx, o.treeNode)
+func (o *Object) SetModTime(ctx context.Context, t time.Time) error {
+	fs.Debugf(o, "noop: set mod time")
+	return nil
 }
 func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadCloser, error) {
-	fs.Debugf(o, "reading object contents from %v", o.ID())
+	fs.Debugf(o, "reading object contents")
 	return o.treeNode.Content(options...)
 }
 func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) error {
-	fs.Debugf(o, "updating object contents at %v", o.ID())
-	_, err := o.fs.Put(ctx, in, src, options...)
-	return err
+	fs.Debugf(o, "noop: update")
+	return nil
 }
 func (o *Object) Remove(ctx context.Context) error {
-	fs.Debugf(o, "removing object: %v", o.ID())
 	return o.fs.api.Remove(ctx, o.treeNode)
 }
 
@@ -733,7 +569,7 @@ func (o *Object) MimeType(ctx context.Context) string {
 	return o.treeNode.MimeType()
 }
 
-// ID returns treenode path, which should be unique for any object in Vault.
+// ID returns treenode path, which should be unique for any object in vault.
 func (o *Object) ID() string {
 	if o.treeNode == nil {
 		return ""
@@ -795,14 +631,13 @@ func (dir *Dir) ID() string { return dir.treeNode.Path }
 
 var (
 	_ fs.Abouter      = (*Fs)(nil)
-	_ fs.Commander    = (*Fs)(nil)
 	_ fs.DirMover     = (*Fs)(nil)
-	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.Fs           = (*Fs)(nil)
 	_ fs.PublicLinker = (*Fs)(nil)
 	_ fs.PutStreamer  = (*Fs)(nil)
 	_ fs.Shutdowner   = (*Fs)(nil)
 	_ fs.UserInfoer   = (*Fs)(nil)
+	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.MimeTyper    = (*Object)(nil)
 	_ fs.Object       = (*Object)(nil)
 	_ fs.IDer         = (*Object)(nil)
