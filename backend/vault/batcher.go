@@ -2,391 +2,251 @@ package vault
 
 import (
 	"context"
-	"errors"
-	"time"
-
-	"crypto/md5"
 	"fmt"
 	"io"
+	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
+	"os/signal"
 	"path"
 	"strconv"
 	"sync"
+	"time"
 
-	"github.com/neilotoole/errgroup"
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/operations"
+	"github.com/rclone/rclone/lib/atexit"
 	"github.com/rclone/rclone/lib/rest"
 	"github.com/schollz/progressbar/v3"
 )
 
-const flowIdentifierPrefix = "rclone-vault-flow"
-
-var (
-	ErrCannotCopyToRoot         = errors.New("copying files to root is not supported in vault")
-	ErrMissingDepositIdentifier = errors.New("missing deposit identifier")
-)
-
-// batcher is used to group upload files (deposit).
+// batcher is used to group files for a deposit.
 type batcher struct {
-	fs                  *Fs                 // fs.root will be the parent collection or folder
-	parent              *api.TreeNode       // resolved and possibly new parent treenode
-	showDepositProgress bool                // show progress bar
-	chunkSize           int64               // upload unit size in bytes
-	maxParallelChunks   int                 // maximum number of parallel chunks to upload
-	maxParallelUploads  int                 // maximum number of parallel file uploads
-	resumeDepositId     int64               // if non-zero, try to resume deposit
-	shutOnce            sync.Once           // only shutdown once
-	mu                  sync.Mutex          // protect items
-	items               []*batchItem        // file metadata and content for deposit items
-	seen                map[string]struct{} // avoid duplicates in batch items
+	fs                  *Fs             // fs.root will be the parent collection or folder
+	atexit              atexit.FnHandle // callback
+	parent              *api.TreeNode   // resolved and possibly new parent treenode
+	shutOnce            sync.Once       // only batch wrap up once
+	mu                  sync.Mutex      // protect items
+	items               []*batchItem    // file metadata and content for deposit items
+	showDepositProgress bool            // show progress bar
+}
 
-	// The following fields are set up during processing, e.g. after the
-	// deposit has been registered. The list of files is duplicating some
-	// information in items; TODO: only use items or files, but not both.
-	depositIdentifier int64                    // deposit ID, set while uploading
-	files             []*api.File              // items, but represented as API items
-	totalSize         int64                    // total upload size in bytes
-	progressBar       *progressbar.ProgressBar // setup before upload starts
+// newBatcher creates a new batcher, which will execute most code at rclone
+// exit time. Note: this will create the fs.Root if it does not exist, hence
+// newBatcher should only be called, if we are actually performing a batch
+// operation (e.g. in Put). We run "mkdir" here and not in the atexit handler,
+// since here we can still return errors (which we currently cannot in the
+// atexit handler).
+func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
+	t, err := f.api.ResolvePath(f.root)
+	if err != nil {
+		if err == fs.ErrorObjectNotFound {
+			if err = f.mkdir(ctx, f.root); err != nil {
+				return nil, err
+			}
+			if t, err = f.api.ResolvePath(f.root); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
+	}
+	b := &batcher{
+		fs:     f,
+		parent: t,
+	}
+	b.atexit = atexit.Register(b.Shutdown)
+	// When interrupted, we may have items in the batch, clean these up before
+	// the shutdown handler runs.
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, os.Interrupt)
+	go func() {
+		for _ = range c {
+			b.mu.Lock()
+			if len(b.items) > 0 {
+				fs.Logf(b, "ignoring %d batch entries", len(b.items))
+			}
+			b.items = b.items[:0]
+			b.mu.Unlock()
+		}
+	}()
+	fs.Debugf(b, "initialized batcher")
+	return b, nil
 }
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
 type batchItem struct {
-	root                     string          // the fs root
-	filename                 string          // some file with contents, may be temporary
-	src                      fs.ObjectInfo   // object info
-	options                  []fs.OpenOption // open options
-	deleteFileAfterTransfer  bool            // if true, delete the file given in filename; only set this to true, if you are using temporary files
-	skipContentTypeDetection bool            // whether we should skip content-type detection
+	root     string // the fs root
+	filename string // some temporary file with contents
+	src      fs.ObjectInfo
+	options  []fs.OpenOption
 }
 
-// ToFile turns a batchItem value into a api.File for a deposit request. This
-// method sets the flow identifier. Returns nil, when a batch item cannot be
-// converted.
+// ToFile turns a batch item into a File for a deposit request.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
-	if item == nil || item.src == nil {
-		return nil
-	}
-	flowIdentifier, err := item.deriveFlowIdentifier()
-	if err != nil {
-		return nil
-	}
-	fi := &api.File{
+	var (
+		randInt        = 1_000_000_000 + rand.Intn(8_999_999_999) // fixed length
+		randSuffix     = fmt.Sprintf("%s-%d", time.Now().Format("20060102030405"), randInt)
+		flowIdentifier = fmt.Sprintf("rclone-vault-flow-%s", randSuffix)
+	)
+	return &api.File{
 		Name:                 path.Base(item.src.Remote()),
 		FlowIdentifier:       flowIdentifier,
 		RelativePath:         item.src.Remote(),
 		Size:                 item.src.Size(),
 		PreDepositModifiedAt: item.src.ModTime(ctx).Format("2006-01-02T03:04:05.000Z"),
+		Type:                 item.contentType(),
 	}
-	if !item.skipContentTypeDetection {
-		fi.Type = item.contentType()
-	}
-	return fi
 }
 
-// contentType detects the content type. Returns the empty string, if no
-// specific content type could be found. TODO(martin): This reads 512b from the
-// file. May be a bottleneck when working with larger number of files.
-//
-// TODO: make this optional via flag
+// contentType tries to sniff the content type, or returns the empty string.
 func (item *batchItem) contentType() string {
-	if item == nil {
-		return ""
-	}
 	f, err := os.Open(item.filename)
 	if err != nil {
 		return ""
 	}
-	defer f.Close() // nolint:errcheck
+	defer f.Close()
 	buf := make([]byte, 512)
 	if _, err := f.Read(buf); err != nil {
 		return ""
 	}
-	v := http.DetectContentType(buf)
-	if v == "application/octet-stream" {
+	switch v := http.DetectContentType(buf); v {
+	case "application/octet-stream":
 		// DetectContentType always returns a valid MIME type: if it cannot
 		// determine a more specific one, it returns
 		// "application/octet-stream".
 		return ""
+	default:
+		return v
 	}
-	return v
-}
-
-// deriveFlowIdentifier derives a unique per file identifier from metadata (not
-// content, for performance).
-func (item *batchItem) deriveFlowIdentifier() (string, error) {
-	if item == nil || item.src == nil {
-		return "", nil
-	}
-	var h = md5.New()
-	// Previously, we read up to 16M of the file and included that into the
-	// hash, but for large number of files, this becomes a bottleneck. We want
-	// this identifier to be stable and derived from the file, but we can use
-	// the path as well (and be much faster).
-	if _, err := io.WriteString(h, item.root); err != nil {
-		return "", err
-	}
-	if _, err := io.WriteString(h, item.src.Remote()); err != nil {
-		return "", err
-	}
-	// Filename and root may be enough. For the moment we include a partial MD5
-	// sum of the file. We also want the filename length to be constant.
-	return fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil)), nil
 }
 
 // String will most likely show up in debug messages.
 func (b *batcher) String() string {
-	return fmt.Sprintf("vault batcher [%v]", len(b.items))
+	return "vault batcher"
 }
 
-// Add a single item to the batch. If the item has been added before (same
-// filename) it will be ignored. This is threadsafe, as rclone will be default
-// run uploads concurrently.
+// Add a single item to the batch.
 func (b *batcher) Add(item *batchItem) {
 	b.mu.Lock()
-	defer b.mu.Unlock()
-	if b.seen == nil {
-		b.seen = make(map[string]struct{})
-	}
-	if _, ok := b.seen[item.filename]; !ok {
-		b.items = append(b.items, item)
-		b.seen[item.filename] = struct{}{}
-	} else {
-		fs.Debugf(b, "ignoring already batched file: %v", item.filename)
-	}
-}
-
-// files returns batch items as a list of vault API file objects and the total
-// size of the objects. If an item cannot be converted, if will be ignored.
-func (b *batcher) itemsToFiles(ctx context.Context) (files []*api.File, totalSize int64) {
-	for _, item := range b.items {
-		if f := item.ToFile(ctx); f != nil {
-			totalSize += item.src.Size()
-			files = append(files, f)
-		}
-	}
-	return files, totalSize
-}
-
-// completeRegisterDepositRequest updates parent information of the
-// registration request. Modifies request in place.
-func (b *batcher) completeRegisterDepositRequest(rdr *api.RegisterDepositRequest) error {
-	switch {
-	case b.parent.NodeType == "COLLECTION":
-		c, err := b.fs.api.TreeNodeToCollection(b.parent)
-		if err != nil {
-			err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
-			return err
-		}
-		rdr.CollectionID = c.Identifier()
-	case b.parent.NodeType == "FOLDER":
-		rdr.ParentNodeID = b.parent.ID
-	default:
-		return ErrCannotCopyToRoot
-	}
-	return nil
-}
-
-// ensureParentExists tries to create parent folder, if it does not exist.
-func (b *batcher) ensureParentExists(ctx context.Context) error {
-	var (
-		t   *api.TreeNode
-		err error
-	)
-	if b.parent != nil {
-		return nil
-	}
-	t, err = b.fs.api.ResolvePath(b.fs.root)
-	if err != nil {
-		if err == fs.ErrorObjectNotFound {
-			if err = b.fs.mkdir(ctx, b.fs.root); err != nil {
-				return err
-			}
-			if t, err = b.fs.api.ResolvePath(b.fs.root); err != nil {
-				return err
-			}
-		} else {
-			return err
-		}
-	}
-	b.parent = t
-	return nil
+	b.items = append(b.items, item)
+	b.mu.Unlock()
 }
 
 // Shutdown creates a new deposit request for all batch items and uploads them.
-// This is the one of the last things rclone runs before exiting.
-func (b *batcher) Shutdown(ctx context.Context) (err error) {
+// This is the one of the last things rclone run before exiting. There is no
+// way to relay an error to return from here, so we deliberately exit the
+// process from here with an exit code of 1, if anything fails.
+func (b *batcher) Shutdown() {
 	fs.Debugf(b, "shutdown started")
 	b.shutOnce.Do(func() {
+		atexit.Unregister(b.atexit)
+		signal.Reset(os.Interrupt)
 		if len(b.items) == 0 {
+			fs.Debugf(b, "nothing to deposit")
 			return
 		}
-		start := time.Now()
-		// We do not want to be cancelled in Shutdown; or if we do, we want
-		// to set our own timeout for deposit uploads.
-		var ctx = context.Background()
-		// Make sure the parent exists.
-		if err = b.ensureParentExists(ctx); err != nil {
-			return
+		var (
+			// We do not want to be cancelled in Shutdown; or if we do, we want
+			// to set our own timeout for deposit uploads.
+			ctx             = context.Background()
+			totalSize int64 = 0
+			files     []*api.File
+			bar       *progressbar.ProgressBar
+		)
+		fs.Debugf(b, "preparing %d files for deposit", len(b.items))
+		for _, item := range b.items {
+			totalSize += item.src.Size()
+			files = append(files, item.ToFile(ctx))
 		}
-		// Prepare deposit request.
-		fs.Logf(b, "preparing %d file(s) for deposit (chunkSize=%d, maxParallelUploads=%d, maxParallelChunks=%d)",
-			len(b.items), b.chunkSize, b.maxParallelUploads, b.maxParallelChunks)
-		b.files, b.totalSize = b.itemsToFiles(ctx)
-		if len(b.files) != len(b.items) {
-			err = fmt.Errorf("not all items (%v) converted to files (%v)", len(b.items), len(b.files))
-			return
+		// TODO: we may want to reuse a deposit to continue an interrupted deposit
+		rdr := &api.RegisterDepositRequest{
+			TotalSize: totalSize,
+			Files:     files,
 		}
-		// TODO: We want to clean any file from the deposit request, that
-		// already exists on the remote until WT-1605 is resolved
 		switch {
-		case b.resumeDepositId > 0:
-			b.depositIdentifier = b.resumeDepositId
-			fs.Logf(b, "trying to resume deposit %d", b.depositIdentifier)
-		default:
-			rdr := &api.RegisterDepositRequest{
-				TotalSize: b.totalSize,
-				Files:     b.files,
-			}
-			// Complete parent information.
-			if err = b.completeRegisterDepositRequest(rdr); err != nil {
-				return
-			}
-			// Register deposit.
-			b.depositIdentifier, err = b.fs.api.RegisterDeposit(ctx, rdr)
+		case b.parent.NodeType == "COLLECTION":
+			c, err := b.fs.api.TreeNodeToCollection(b.parent)
 			if err != nil {
-				err = fmt.Errorf("deposit failed: %w", err)
-				return
+				log.Fatalf("failed to resolve treenode to collection")
 			}
-			fs.Debugf(b, "created deposit %v", b.depositIdentifier)
+			rdr.CollectionId = c.Identifier()
+		case b.parent.NodeType == "FOLDER":
+			rdr.ParentNodeId = b.parent.Id
 		}
+		depositId, err := b.fs.api.RegisterDeposit(ctx, rdr)
+		if err != nil {
+			log.Fatalf("deposit failed: %v", err)
+		}
+		fs.Debugf(b, "created deposit %v", depositId)
 		if b.showDepositProgress {
-			b.progressBar = progressbar.DefaultBytes(b.totalSize, "[>] uploading to vault")
+			bar = progressbar.DefaultBytes(totalSize, "<5>NOTICE: depositing")
 		}
-		// Actually upload items.
-		g, ctx := errgroup.WithContextN(ctx, b.maxParallelUploads, 0)
 		for i, item := range b.items {
-			g.Go(func() error {
-				return b.UploadItem(ctx, item, b.files[i])
-			})
-		}
-		if err = g.Wait(); err != nil {
-			return
-		}
-		fs.Logf(b, "upload done after %s for deposit %d, successfully deposited %s, %d files(s)",
-			time.Since(start), b.depositIdentifier, operations.SizeString(b.totalSize, true), len(b.items))
-		return
-	})
-	return
-}
-
-// Upload a single item to vault, possibly in parallel.
-func (b *batcher) UploadItem(ctx context.Context, item *batchItem, f *api.File) error {
-	if b.depositIdentifier == 0 {
-		return ErrMissingDepositIdentifier
-	}
-	if item == nil || f == nil {
-		return nil
-	}
-	var (
-		chunker *Chunker
-		j       int64
-		resp    *http.Response
-		err     error
-	)
-	// https://pkg.go.dev/github.com/neilotoole/errgroup#WithContextN limits
-	// the number of goroutines started within the errgroup.
-	g, ctx := errgroup.WithContextN(ctx, b.maxParallelChunks, 0)
-	if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
-		return err
-	}
-	for j = 1; j <= chunker.NumChunks(); j++ {
-		j := j
-		g.Go(func() error {
-			currentChunkSize := chunker.ChunkSize(j - 1)
-			fs.Debugf(b, "[%d/%d] %d %d %s",
-				j,
-				chunker.NumChunks(),
-				currentChunkSize,
-				chunker.FileSize(),
-				item.filename,
-			)
-			params := url.Values{
-				"depositId":            []string{strconv.Itoa(int(b.depositIdentifier))},
-				"flowChunkNumber":      []string{strconv.Itoa(int(j))},
-				"flowChunkSize":        []string{strconv.Itoa(int(b.chunkSize))},
-				"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
-				"flowFilename":         []string{f.Name},
-				"flowIdentifier":       []string{f.FlowIdentifier},
-				"flowRelativePath":     []string{f.RelativePath},
-				"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
-				"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
-				"upload_token":         []string{"my_token"}, // TODO(martin): just copy'n'pasting ...
+			// Upload file with a single chunk. First issue a GET, if that is a
+			// 204 then follow up with a POST.
+			fi, err := os.Stat(item.filename)
+			if err != nil {
+				log.Fatalf("stat: %v", err)
 			}
-			fs.Debugf(b, "params: %v", params)
+			size := fi.Size()
+			params := url.Values{
+				"depositId":            []string{strconv.Itoa(int(depositId))},
+				"flowChunkNumber":      []string{"1"},
+				"flowChunkSize":        []string{strconv.Itoa(int(size))},
+				"flowCurrentChunkSize": []string{strconv.Itoa(int(size))},
+				"flowFilename":         []string{files[i].Name},
+				"flowIdentifier":       []string{files[i].FlowIdentifier},
+				"flowRelativePath":     []string{files[i].RelativePath},
+				"flowTotalChunks":      []string{"1"},
+				"flowTotalSize":        []string{strconv.Itoa(int(size))},
+				"upload_token":         []string{"my_token"}, // just copy'n'pasting ...
+			}
 			opts := rest.Opts{
 				Method:     "GET",
 				Path:       "/flow_chunk",
 				Parameters: params,
 			}
-			resp, err = b.fs.api.Call(ctx, &opts)
+			resp, err := b.fs.api.Call(ctx, &opts)
 			if err != nil {
-				fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
-				return err
+				log.Fatalf("call failed: %v", err)
 			}
-			defer resp.Body.Close() // nolint:errcheck
-			if resp.StatusCode >= 300 {
-				fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
-				err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
-				return err
+			defer resp.Body.Close()
+			if resp.StatusCode != 204 {
+				log.Fatalf("expected HTTP 204, got %v", resp.StatusCode)
 			}
-			fs.Debugf(b, "GET returned: %v", resp.StatusCode)
-			var (
-				r    io.Reader
-				chr  = chunker.ChunkReader(j - 1)
-				size = currentChunkSize // size will get mutated during request
-			)
-			if b.showDepositProgress {
-				r = io.TeeReader(chr, b.progressBar)
-			} else {
-				r = chr
+			itemf, err := os.Open(item.filename)
+			if err != nil {
+				log.Fatalf("failed to open temporary file: %v", err)
 			}
+			r := io.TeeReader(itemf, bar)
 			opts = rest.Opts{
 				Method:               "POST",
 				Path:                 "/flow_chunk",
 				MultipartParams:      params,
 				ContentLength:        &size,
 				MultipartContentName: "file",
-				MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
+				MultipartFileName:    path.Base(item.src.Remote()),
 				Body:                 r,
 			}
-			if resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil); err != nil {
-				fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
-				return err
+			resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil)
+			if err != nil {
+				log.Fatalf("upload failed: %v", err)
 			}
-			if err = resp.Body.Close(); err != nil {
-				fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
-				return err
+			if err := resp.Body.Close(); err != nil {
+				log.Fatalf("body close: %v", err)
 			}
-			fs.Debugf(b, "chunk done: %d/%d", j, chunker.NumChunks())
-			return nil
-		})
-	}
-	if err = g.Wait(); err != nil {
-		return err
-	}
-	if err = chunker.Close(); err != nil {
-		fs.LogPrintf(fs.LogLevelError, b, "chunker close: %v", err)
-		return err
-	}
-	if item.deleteFileAfterTransfer {
-		if err = os.Remove(item.filename); err != nil {
-			fs.LogPrintf(fs.LogLevelError, b, "remove: %v", err)
-			return err
+			if err := itemf.Close(); err != nil {
+				log.Fatalf("file close: %v", err)
+			}
+			if err := os.Remove(item.filename); err != nil {
+				log.Fatalf("cleanup: %v", err)
+			}
 		}
-	}
-	return nil
+		fs.Logf(b, "upload done, deposited %s, %d item(s)",
+			operations.SizeString(totalSize, true), len(b.items))
+	})
 }
