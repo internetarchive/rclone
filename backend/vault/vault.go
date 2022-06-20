@@ -216,10 +216,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		filename string
 		err      error
 	)
+	fs.Debugf(f, "fetching remote file temporarily")
 	if filename, err = extra.TempFileFromReader(in); err != nil {
 		return nil, err
 	}
 	f.mu.Lock()
+	fs.Debugf(f, "fetched %v to %v", src.Remote(), filename)
 	if f.batcher == nil {
 		f.batcher, err = newBatcher(ctx, f)
 		if err != nil {
