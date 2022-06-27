@@ -94,7 +94,7 @@ func (api *Api) Login() (err error) {
 	if u, err = url.Parse(api.Endpoint); err != nil {
 		return err
 	}
-	u.Path = api.loginPath
+	u.Path = strings.Replace(u.Path, "/api", api.loginPath, 1)
 	loginURL := u.String()
 	resp, err := http.Get(loginURL)
 	if err != nil {
