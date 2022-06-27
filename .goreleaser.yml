@@ -26,14 +26,27 @@ archives:
 snapshot:
   name_template: "{{ incpatch .Version }}-vault"
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - '^docs:'
-      - '^test:'
+  skip: true
+  # sort: asc
+  # filters:
+  #   exclude:
+  #     - '^docs:'
+  #     - '^test:'
 release:
   github:
     owner: internetarchive
     name: rclone
   prerelease: true
   disable: false
+  header: |
+    ## rclone with vault support (experimental)
+
+    This is an release of rclone with support for the Vault
+    Digital Preservation System, developed by the [Internet
+    Archive](https://archive.org).
+
+    * Date: {{ .Date }}
+    * Version: {{ .Version }}
+    * Branch: {{ .Branch }}
+    * Tag: {{ .Tag }}
+    * Commit: {{ .FullCommit }}
