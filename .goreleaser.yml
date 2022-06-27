@@ -1,14 +1,8 @@
+# This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at https://goreleaser.com
-#
-# To tag the current vault branch for upload, we use the following convention:
-#
-# $ git tag $(git tag -l | grep -E '^v[0-9\.]+$' | tail -1)-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
-#
-# Example tag would be: v1.59.1-vault-20230131181542-1da70fdd1
-#
-# Where v1.59.1 is the latest tag of the master branch that this branch is rebased on.
 before:
   hooks:
+    # You may remove this if you don't use go modules.
     - go mod tidy
 builds:
   - env:
@@ -21,37 +15,25 @@ builds:
       - amd64
       - arm64
 archives:
-  -
-    format: binary
-    replacements:
+  - replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
+      # 386: i386
       amd64: x86_64
+# checksum:
+  # name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incpatch .Version }}-vault"
 changelog:
-  skip: true
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
 release:
   github:
     owner: internetarchive
     name: rclone
+  prerelease: true
   disable: false
-  header: |
-    ## Rclone with Vault support (experimental)
-
-    This is a release of Rclone with support for the Vault
-    Digital Preservation System, developed at the [Internet
-    Archive](https://archive.org).
-
-    More information about this backend can be found in
-    [backend/vault/README.md](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
-
-    Note MacOS users: We recommended to download the binary on the command line
-    with [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/).
-
-    * Date: {{ .Date }}
-    * Version: {{ .Version }}
-    * Branch: {{ .Branch }}
-    * Tag: {{ .Tag }}
-    * Commit: {{ .FullCommit }}
