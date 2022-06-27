@@ -1,5 +1,10 @@
-# This is an example .goreleaser.yml file with some sane defaults.
 # Make sure to check the documentation at https://goreleaser.com
+#
+# To tag the current vault branch for upload, use something like:
+#
+# $ git tag v1.57.0-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
+#
+# Where v1.57.0 is the latest tag of the master branch that this branch is rebased off.
 before:
   hooks:
     # You may remove this if you don't use go modules.
