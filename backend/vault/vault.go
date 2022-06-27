@@ -55,7 +55,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if err != nil {
 		return nil, err
 	}
-	api := api.New(opt.Endpoint, opt.Username, opt.Password)
+	api := api.New(opt.EndpointNoTrailingSlash(), opt.Username, opt.Password)
 	if err := api.Login(); err != nil {
 		return nil, err
 	}
@@ -89,6 +89,11 @@ type Options struct {
 	Username string `config:"username"`
 	Password string `config:"password"`
 	Endpoint string `config:"endpoint"`
+}
+
+// EndpointNoTrailingSlash returns a normalized endpoint.
+func (opt Options) EndpointNoTrailingSlash() string {
+	return strings.TrimRight(opt.Endpoint, "/")
 }
 
 // Fs is the main vault filesystem. Most operations are accessed through the
