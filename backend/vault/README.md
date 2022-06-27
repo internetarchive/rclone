@@ -2,8 +2,7 @@
 
 Experimental CLI support for Internet Archive Vault Digital Preservation System
 in [Rclone](https://rclone.org/). This is a private fork of rclone and
-work-in-progress. Glad about any feedback (slack,
-[WT-1168](https://webarchive.jira.com/browse/WT-1168),
+work-in-progress. Glad about any feedback (open or comment on issue, email to
 [martin@archive.org](mailto:martin@archive.org), ...), especially on:
 
 * bugs
@@ -20,20 +19,18 @@ work-in-progress. Glad about any feedback (slack,
 
 ## Download the custom rclone binary
 
-* [https://archive.org/details/rclone-v1.59.0-beta.6247.16c32ad70.ia-wt-1168](https://archive.org/details/rclone-v1.59.0-beta.6247.16c32ad70.ia-wt-1168)
+* [https://github.com/internetarchive/rclone/releases](https://github.com/internetarchive/rclone/releases)
 
-Direct links:
-
-* [rclone-darwin](https://archive.org/download/rclone-v1.59.0-beta.6247.16c32ad70.ia-wt-1168/rclone-darwin) (MacOS)
-* [rclone-linux](https://archive.org/download/rclone-v1.59.0-beta.6247.16c32ad70.ia-wt-1168/rclone-linux) (Linux)
-* [rclone.exe](https://archive.org/download/rclone-v1.59.0-beta.6247.16c32ad70.ia-wt-1168/rclone.exe) (Windows)
+Release will most likely follow a version scheme like:
+`v1.57.0-vault-20220627142057-e4798bf85` (rclone version, "vault", timestamp,
+commit).
 
 ## Building the custom rclone binary
 
 Building requires the Go toolchain installed.
 
 ```
-$ git clone https://git.archive.org/martin/rclone.git
+$ git clone git@github.com:internetarchive/rclone.git
 $ cd rclone
 $ git checkout ia-wt-1168
 $ make
