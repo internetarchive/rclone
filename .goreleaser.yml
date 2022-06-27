@@ -20,8 +20,9 @@ builds:
       - amd64
       - arm64
 archives:
-  - format: binary
-  - replacements:
+  -
+    format: binary
+    replacements:
       darwin: Darwin
       linux: Linux
       windows: Windows
