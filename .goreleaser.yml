@@ -52,6 +52,9 @@ release:
     Digital Preservation System, developed by the [Internet
     Archive](https://archive.org).
 
+    More information about this backend can be found in
+    [backend/vault/README.md](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
+
     * Date: {{ .Date }}
     * Version: {{ .Version }}
     * Branch: {{ .Branch }}
