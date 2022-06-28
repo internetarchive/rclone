@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
+	"math"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -18,20 +18,18 @@ import (
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/operations"
-	"github.com/rclone/rclone/lib/atexit"
 	"github.com/rclone/rclone/lib/rest"
 	"github.com/schollz/progressbar/v3"
 )
 
 // batcher is used to group files for a deposit.
 type batcher struct {
-	fs                  *Fs             // fs.root will be the parent collection or folder
-	atexit              atexit.FnHandle // callback
-	parent              *api.TreeNode   // resolved and possibly new parent treenode
-	shutOnce            sync.Once       // only batch wrap up once
-	mu                  sync.Mutex      // protect items
-	items               []*batchItem    // file metadata and content for deposit items
-	showDepositProgress bool            // show progress bar
+	fs                  *Fs           // fs.root will be the parent collection or folder
+	parent              *api.TreeNode // resolved and possibly new parent treenode
+	shutOnce            sync.Once     // only batch wrap up once
+	mu                  sync.Mutex    // protect items
+	items               []*batchItem  // file metadata and content for deposit items
+	showDepositProgress bool          // show progress bar
 }
 
 // newBatcher creates a new batcher, which will execute most code at rclone
@@ -58,7 +56,6 @@ func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
 		fs:     f,
 		parent: t,
 	}
-	b.atexit = atexit.Register(b.Shutdown)
 	// When interrupted, we may have items in the batch, clean these up before
 	// the shutdown handler runs.
 	c := make(chan os.Signal, 1)
@@ -136,14 +133,54 @@ func (b *batcher) Add(item *batchItem) {
 	b.mu.Unlock()
 }
 
+// Chunker allows to read file in chunks.
+type Chunker struct {
+	chunkSize int64
+	fileSize  int64
+	f         *os.File
+}
+
+// NewChunker sets up a new chunker. Needs to close this.
+func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
+	if chunkSize < 1 {
+		return nil, fmt.Errorf("chunk size must be positive")
+	}
+	f, err := os.Open(filename)
+	if err != nil {
+		return nil, err
+	}
+	fi, err := f.Stat()
+	if err != nil {
+		return nil, err
+	}
+	return &Chunker{
+		f:         f,
+		chunkSize: chunkSize,
+		fileSize:  fi.Size(),
+	}, nil
+}
+
+func (c *Chunker) NumChunks() int64 {
+	return int64(math.Ceil(float64(c.fileSize) / float64(c.chunkSize)))
+}
+func (c *Chunker) ChuckReader(i int64) io.Reader {
+	offset := i * c.chunkSize
+	return io.NewSectionReader(c.f, offset, c.chunkSize)
+}
+func (c *Chunker) FileSize() int64 {
+	return c.fileSize
+}
+func (c *Chunker) Close() error {
+	return c.f.Close()
+}
+
 // Shutdown creates a new deposit request for all batch items and uploads them.
 // This is the one of the last things rclone run before exiting. There is no
 // way to relay an error to return from here, so we deliberately exit the
 // process from here with an exit code of 1, if anything fails.
-func (b *batcher) Shutdown() {
+func (b *batcher) Shutdown() (err error) {
 	fs.Debugf(b, "shutdown started")
 	b.shutOnce.Do(func() {
-		atexit.Unregister(b.atexit)
 		signal.Reset(os.Interrupt)
 		if len(b.items) == 0 {
 			fs.Debugf(b, "nothing to deposit")
@@ -171,7 +208,8 @@ func (b *batcher) Shutdown() {
 		case b.parent.NodeType == "COLLECTION":
 			c, err := b.fs.api.TreeNodeToCollection(b.parent)
 			if err != nil {
-				log.Fatalf("failed to resolve treenode to collection")
+				err = fmt.Errorf("failed to resolve treenode to collection")
+				return
 			}
 			rdr.CollectionId = c.Identifier()
 		case b.parent.NodeType == "FOLDER":
@@ -179,7 +217,8 @@ func (b *batcher) Shutdown() {
 		}
 		depositId, err := b.fs.api.RegisterDeposit(ctx, rdr)
 		if err != nil {
-			log.Fatalf("deposit failed: %v", err)
+			err = fmt.Errorf("deposit failed: %v", err)
+			return
 		}
 		fs.Debugf(b, "created deposit %v", depositId)
 		if b.showDepositProgress {
@@ -188,65 +227,87 @@ func (b *batcher) Shutdown() {
 		for i, item := range b.items {
 			// Upload file with a single chunk. First issue a GET, if that is a
 			// 204 then follow up with a POST.
-			fi, err := os.Stat(item.filename)
+			//
+			// TODO: streamline the chunking part a bit
+			var (
+				chunker   *Chunker
+				chunkSize int64 = 1 << 20 // 1M
+				j         int64
+				resp      *http.Response
+			)
+			chunker, err = NewChunker(item.filename, chunkSize)
 			if err != nil {
-				log.Fatalf("stat: %v", err)
+				return
 			}
-			size := fi.Size()
-			params := url.Values{
-				"depositId":            []string{strconv.Itoa(int(depositId))},
-				"flowChunkNumber":      []string{"1"},
-				"flowChunkSize":        []string{strconv.Itoa(int(size))},
-				"flowCurrentChunkSize": []string{strconv.Itoa(int(size))},
-				"flowFilename":         []string{files[i].Name},
-				"flowIdentifier":       []string{files[i].FlowIdentifier},
-				"flowRelativePath":     []string{files[i].RelativePath},
-				"flowTotalChunks":      []string{"1"},
-				"flowTotalSize":        []string{strconv.Itoa(int(size))},
-				"upload_token":         []string{"my_token"}, // just copy'n'pasting ...
+			for j = 1; j <= chunker.NumChunks(); j++ {
+				currentChunkSize := chunkSize
+				if j == chunker.NumChunks() {
+					currentChunkSize = chunker.FileSize() - ((j - 1) * chunkSize)
+				}
+				fs.Debugf(b, "[%d/%d] %d %d %s",
+					j, chunker.NumChunks(), currentChunkSize, chunker.FileSize(), item.filename)
+				params := url.Values{
+					"depositId":            []string{strconv.Itoa(int(depositId))},
+					"flowChunkNumber":      []string{strconv.Itoa(int(j))},
+					"flowChunkSize":        []string{strconv.Itoa(int(chunkSize))},
+					"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
+					"flowFilename":         []string{files[i].Name},
+					"flowIdentifier":       []string{files[i].FlowIdentifier},
+					"flowRelativePath":     []string{files[i].RelativePath},
+					"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
+					"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
+					"upload_token":         []string{"my_token"}, // just copy'n'pasting ...
+				}
+				fs.Debugf(b, "params: %v", params)
+				opts := rest.Opts{
+					Method:     "GET",
+					Path:       "/flow_chunk",
+					Parameters: params,
+				}
+				resp, err = b.fs.api.Call(ctx, &opts)
+				if err != nil {
+					fs.LogPrintf(fs.LogLevelError, b, "call: %v", err)
+					return
+				}
+				defer resp.Body.Close()
+				if resp.StatusCode >= 300 {
+					fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
+					err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
+					return
+				}
+				r := io.TeeReader(chunker.ChuckReader(j-1), bar)
+				size := currentChunkSize
+				opts = rest.Opts{
+					Method:               "POST",
+					Path:                 "/flow_chunk",
+					MultipartParams:      params,
+					ContentLength:        &size,
+					MultipartContentName: "file",
+					MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
+					Body:                 r,
+				}
+				resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil)
+				if err != nil {
+					fs.LogPrintf(fs.LogLevelError, b, "call: %v", err)
+					return
+				}
+				if err = resp.Body.Close(); err != nil {
+					fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
+					return
+				}
 			}
-			opts := rest.Opts{
-				Method:     "GET",
-				Path:       "/flow_chunk",
-				Parameters: params,
+			if err = chunker.Close(); err != nil {
+				fs.LogPrintf(fs.LogLevelError, b, "close: %v", err)
+				return
 			}
-			resp, err := b.fs.api.Call(ctx, &opts)
-			if err != nil {
-				log.Fatalf("call failed: %v", err)
-			}
-			defer resp.Body.Close()
-			if resp.StatusCode != 204 {
-				log.Fatalf("expected HTTP 204, got %v", resp.StatusCode)
-			}
-			itemf, err := os.Open(item.filename)
-			if err != nil {
-				log.Fatalf("failed to open temporary file: %v", err)
-			}
-			r := io.TeeReader(itemf, bar)
-			opts = rest.Opts{
-				Method:               "POST",
-				Path:                 "/flow_chunk",
-				MultipartParams:      params,
-				ContentLength:        &size,
-				MultipartContentName: "file",
-				MultipartFileName:    path.Base(item.src.Remote()),
-				Body:                 r,
-			}
-			resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil)
-			if err != nil {
-				log.Fatalf("upload failed: %v", err)
-			}
-			if err := resp.Body.Close(); err != nil {
-				log.Fatalf("body close: %v", err)
-			}
-			if err := itemf.Close(); err != nil {
-				log.Fatalf("file close: %v", err)
-			}
-			if err := os.Remove(item.filename); err != nil {
-				log.Fatalf("cleanup: %v", err)
+			if err = os.Remove(item.filename); err != nil {
+				fs.LogPrintf(fs.LogLevelError, b, "remove: %v", err)
+				return
 			}
 		}
 		fs.Logf(b, "upload done, deposited %s, %d item(s)",
 			operations.SizeString(totalSize, true), len(b.items))
+		return
 	})
+	return
 }
