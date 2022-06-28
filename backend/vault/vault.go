@@ -468,6 +468,9 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
+	if f.batcher != nil {
+		return f.batcher.Shutdown()
+	}
 	return nil
 }
 
