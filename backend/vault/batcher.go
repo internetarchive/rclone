@@ -26,7 +26,7 @@ import (
 type batcher struct {
 	fs                  *Fs           // fs.root will be the parent collection or folder
 	parent              *api.TreeNode // resolved and possibly new parent treenode
-	shutOnce            sync.Once     // only batch wrap up once
+	once                sync.Once     // only batch wrap up once
 	mu                  sync.Mutex    // protect items
 	items               []*batchItem  // file metadata and content for deposit items
 	showDepositProgress bool          // show progress bar
@@ -38,6 +38,9 @@ type batcher struct {
 // operation (e.g. in Put). We run "mkdir" here and not in the atexit handler,
 // since here we can still return errors (which we currently cannot in the
 // atexit handler).
+//
+// TODO: Now that we have proper error handling, we can move mkdir closer to
+// the upload and be more liberal where the batcher it set up.
 func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
 	t, err := f.api.ResolvePath(f.root)
 	if err != nil {
@@ -58,6 +61,8 @@ func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
 	}
 	// When interrupted, we may have items in the batch, clean these up before
 	// the shutdown handler runs.
+	//
+	// TODO: revisit this, since we have better error handling now
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 	go func() {
@@ -77,7 +82,7 @@ func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
 type batchItem struct {
 	root     string // the fs root
-	filename string // some temporary file with contents
+	filename string // some (temporary) file with contents
 	src      fs.ObjectInfo
 	options  []fs.OpenOption
 }
@@ -85,7 +90,7 @@ type batchItem struct {
 // ToFile turns a batch item into a File for a deposit request.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	var (
-		randInt        = 1_000_000_000 + rand.Intn(8_999_999_999) // fixed length
+		randInt        = 100_000_000 + rand.Intn(899_999_999) // fixed length
 		randSuffix     = fmt.Sprintf("%s-%d", time.Now().Format("20060102030405"), randInt)
 		flowIdentifier = fmt.Sprintf("rclone-vault-flow-%s", randSuffix)
 	)
@@ -140,7 +145,8 @@ type Chunker struct {
 	f         *os.File
 }
 
-// NewChunker sets up a new chunker. Needs to close this.
+// NewChunker sets up a new chunker. Caller will need to close this to close
+// the associated file.
 func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 	if chunkSize < 1 {
 		return nil, fmt.Errorf("chunk size must be positive")
@@ -160,16 +166,23 @@ func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 	}, nil
 }
 
+// NumChunks returns the number of chunks this file is splitted to.
 func (c *Chunker) NumChunks() int64 {
 	return int64(math.Ceil(float64(c.fileSize) / float64(c.chunkSize)))
 }
-func (c *Chunker) ChuckReader(i int64) io.Reader {
+
+// ChunkReader returns the reader over a section of the file. Counting starts at zero.
+func (c *Chunker) ChunkReader(i int64) io.Reader {
 	offset := i * c.chunkSize
 	return io.NewSectionReader(c.f, offset, c.chunkSize)
 }
+
+// FileSize returns the filesize.
 func (c *Chunker) FileSize() int64 {
 	return c.fileSize
 }
+
+// Close closes the wrapped file.
 func (c *Chunker) Close() error {
 	return c.f.Close()
 }
@@ -180,7 +193,7 @@ func (c *Chunker) Close() error {
 // process from here with an exit code of 1, if anything fails.
 func (b *batcher) Shutdown() (err error) {
 	fs.Debugf(b, "shutdown started")
-	b.shutOnce.Do(func() {
+	b.once.Do(func() {
 		signal.Reset(os.Interrupt)
 		if len(b.items) == 0 {
 			fs.Debugf(b, "nothing to deposit")
@@ -189,17 +202,17 @@ func (b *batcher) Shutdown() (err error) {
 		var (
 			// We do not want to be cancelled in Shutdown; or if we do, we want
 			// to set our own timeout for deposit uploads.
-			ctx             = context.Background()
-			totalSize int64 = 0
-			files     []*api.File
-			bar       *progressbar.ProgressBar
+			ctx               = context.Background()
+			totalSize   int64 = 0
+			files       []*api.File
+			progressBar *progressbar.ProgressBar
 		)
 		fs.Debugf(b, "preparing %d files for deposit", len(b.items))
 		for _, item := range b.items {
 			totalSize += item.src.Size()
 			files = append(files, item.ToFile(ctx))
 		}
-		// TODO: we may want to reuse a deposit to continue an interrupted deposit
+		// TODO: we may want to reuse a deposit to continue an interrupted deposit, e.g. --vault-continue-deposit 123
 		rdr := &api.RegisterDepositRequest{
 			TotalSize: totalSize,
 			Files:     files,
@@ -208,7 +221,7 @@ func (b *batcher) Shutdown() (err error) {
 		case b.parent.NodeType == "COLLECTION":
 			c, err := b.fs.api.TreeNodeToCollection(b.parent)
 			if err != nil {
-				err = fmt.Errorf("failed to resolve treenode to collection")
+				err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
 				return
 			}
 			rdr.CollectionId = c.Identifier()
@@ -217,12 +230,12 @@ func (b *batcher) Shutdown() (err error) {
 		}
 		depositId, err := b.fs.api.RegisterDeposit(ctx, rdr)
 		if err != nil {
-			err = fmt.Errorf("deposit failed: %v", err)
+			err = fmt.Errorf("deposit failed: %w", err)
 			return
 		}
 		fs.Debugf(b, "created deposit %v", depositId)
 		if b.showDepositProgress {
-			bar = progressbar.DefaultBytes(totalSize, "<5>NOTICE: depositing")
+			progressBar = progressbar.DefaultBytes(totalSize, "<5>NOTICE: depositing")
 		}
 		for i, item := range b.items {
 			// Upload file with a single chunk. First issue a GET, if that is a
@@ -231,7 +244,7 @@ func (b *batcher) Shutdown() (err error) {
 			// TODO: streamline the chunking part a bit
 			var (
 				chunker   *Chunker
-				chunkSize int64 = 1 << 20 // 1M
+				chunkSize int64 = 1 << 20 // 1M, TODO: allow this to be set
 				j         int64
 				resp      *http.Response
 			)
@@ -275,7 +288,7 @@ func (b *batcher) Shutdown() (err error) {
 					err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
 					return
 				}
-				r := io.TeeReader(chunker.ChuckReader(j-1), bar)
+				r := io.TeeReader(chunker.ChunkReader(j-1), progressBar)
 				size := currentChunkSize
 				opts = rest.Opts{
 					Method:               "POST",
@@ -305,8 +318,8 @@ func (b *batcher) Shutdown() (err error) {
 				return
 			}
 		}
-		fs.Logf(b, "upload done, deposited %s, %d item(s)",
-			operations.SizeString(totalSize, true), len(b.items))
+		fs.Logf(b, "upload done (%d), deposited %s, %d item(s)",
+			depositId, operations.SizeString(totalSize, true), len(b.items))
 		return
 	})
 	return
