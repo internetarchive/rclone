@@ -2,6 +2,8 @@ package vault
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -22,6 +24,8 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
+const standardChunkSize = 1 << 20 // 1M
+
 // batcher is used to group files for a deposit.
 type batcher struct {
 	fs                  *Fs           // fs.root will be the parent collection or folder
@@ -29,7 +33,7 @@ type batcher struct {
 	showDepositProgress bool          // show progress bar
 	chunkSize           int64         // upload unit size
 	resumeDepositId     int64         // if non-zero, try to resume deposit
-	once                sync.Once     // only batch wrap up once
+	shutOnce            sync.Once     // only shutdown once
 	mu                  sync.Mutex    // protect items
 	items               []*batchItem  // file metadata and content for deposit items
 }
@@ -45,7 +49,8 @@ type batcher struct {
 // the upload and be more liberal where the batcher it set up.
 func newBatcher(f *Fs) *batcher {
 	b := &batcher{
-		fs: f,
+		fs:        f,
+		chunkSize: standardChunkSize,
 	}
 	// When interrupted, we may have items in the batch, clean these up before
 	// the shutdown handler runs.
@@ -75,13 +80,19 @@ type batchItem struct {
 	options  []fs.OpenOption
 }
 
-// ToFile turns a batch item into a File for a deposit request.
+// ToFile turns a batch item into a File for a deposit request.  This method
+// sets the flow identifier. TODO: For resumable uploads, we need to derive the
+// flow identifier from the file itself.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
-	var (
-		randInt        = 100_000_000 + rand.Intn(899_999_999) // fixed length
-		randSuffix     = fmt.Sprintf("%s-%d", time.Now().Format("20060102030405"), randInt)
+	flowIdentifier, err := item.deriveFlowIdentifier()
+	if err != nil {
+		fs.Debugf(item, "falling back to synthetic flow id (deposit will not be resumable [err: %v])", err)
+		var (
+			randInt    = 100_000_000 + rand.Intn(899_999_999) // fixed length
+			randSuffix = fmt.Sprintf("%s-%d", time.Now().Format("20060102030405"), randInt)
+		)
 		flowIdentifier = fmt.Sprintf("rclone-vault-flow-%s", randSuffix)
-	)
+	}
 	return &api.File{
 		Name:                 path.Base(item.src.Remote()),
 		FlowIdentifier:       flowIdentifier,
@@ -112,6 +123,26 @@ func (item *batchItem) contentType() string {
 	default:
 		return v
 	}
+}
+
+// deriveFlowIdentifier from a file, faster than a whole file fingerprint.
+func (item *batchItem) deriveFlowIdentifier() (string, error) {
+	f, err := os.Open(item.filename)
+	if err != nil {
+		return "", err
+	}
+	defer f.Close()
+	const maxBytes = 1 << 30 // 1GB
+	h := md5.New()
+	if _, err := io.Copy(h, io.LimitReader(f, maxBytes)); err != nil {
+		return "", err
+	}
+	// Filename and root would probably be enough. For the moment we include a
+	// partial MD5 sum of the file.
+	return fmt.Sprintf("rclone-vault-flow-%x-%s-%s",
+		h.Sum(nil),
+		hex.EncodeToString([]byte(item.root)),
+		hex.EncodeToString([]byte(item.src.Remote()))), nil
 }
 
 // String will most likely show up in debug messages.
@@ -181,7 +212,7 @@ func (c *Chunker) Close() error {
 // process from here with an exit code of 1, if anything fails.
 func (b *batcher) Shutdown(ctx context.Context) (err error) {
 	fs.Debugf(b, "shutdown started")
-	b.once.Do(func() {
+	b.shutOnce.Do(func() {
 		signal.Reset(os.Interrupt)
 		if len(b.items) == 0 {
 			fs.Debugf(b, "nothing to deposit")
