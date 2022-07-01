@@ -346,7 +346,7 @@ a6cfd6fc383e5856da20444a633ee5e4c23b603b27f807459186118035ed2441  d/first.md
 ...
 ```
 
-## Resuming a interrupted deposit
+## Resuming an interrupted deposit
 
 It is possible to resume an interrupted deposit.
 
