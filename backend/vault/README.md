@@ -346,6 +346,27 @@ a6cfd6fc383e5856da20444a633ee5e4c23b603b27f807459186118035ed2441  d/first.md
 ...
 ```
 
+## Resuming a interrupted deposit
+
+It is possible to resume an interrupted deposit.
+
+Assuming we want to copy local path "A" to vault "B", we can start a deposit by
+copying files. You'll the the deposit id in the logs (e.g. 742):
+
+```
+$ rclone copy A vault:/B
+<5>NOTICE: vault (v1): deposit registered: 742
+...
+```
+
+You can interrupt the deposit e.g. with CTRL-C. To resume:
+
+```
+$ rclone copy A vault:/B --vault-resume-deposit 742
+```
+
+Note that resuming only makes sense when the source and destination path are the same.
+
 ## TODO
 
 * [ ] issue with `max-depth`
