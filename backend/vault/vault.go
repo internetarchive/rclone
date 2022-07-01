@@ -53,6 +53,11 @@ func init() {
 				Help:    "Suppress deposit progress bar",
 				Default: false,
 			},
+			{
+				Name:    "resume_deposit_id",
+				Help:    "Resume a deposit",
+				Default: 0,
+			},
 		},
 	})
 }
@@ -80,6 +85,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	f.batcher = newBatcher(f)
 	f.batcher.showDepositProgress = !opt.SuppressProgressBar
 	f.batcher.chunkSize = int64(opt.ChunkSize)
+	f.batcher.resumeDepositId = opt.ResumeDepositId
 	f.features = (&fs.Features{
 		CaseInsensitive:         true,
 		CanHaveEmptyDirectories: true,
@@ -103,6 +109,7 @@ type Options struct {
 	Endpoint            string        `config:"endpoint"`
 	ChunkSize           fs.SizeSuffix `config:"chunk_size"` // TODO: k, M, G work, but suffix-less byte not
 	SuppressProgressBar bool          `config:"suppress_progress_bar"`
+	ResumeDepositId     int64         `config:"resume_deposit_id"`
 }
 
 // EndpointNormalized returns a normalized endpoint. We currently want no trailing slash.
@@ -572,8 +579,8 @@ func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadClo
 	return o.treeNode.Content(options...)
 }
 func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) error {
-	fs.Debugf(o, "noop: update")
-	return nil
+	_, err := o.fs.Put(ctx, in, src, options...)
+	return err
 }
 func (o *Object) Remove(ctx context.Context) error {
 	return o.fs.api.Remove(ctx, o.treeNode)
