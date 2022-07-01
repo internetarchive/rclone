@@ -26,10 +26,10 @@ import (
 type batcher struct {
 	fs                  *Fs           // fs.root will be the parent collection or folder
 	parent              *api.TreeNode // resolved and possibly new parent treenode
+	showDepositProgress bool          // show progress bar
 	once                sync.Once     // only batch wrap up once
 	mu                  sync.Mutex    // protect items
 	items               []*batchItem  // file metadata and content for deposit items
-	showDepositProgress bool          // show progress bar
 }
 
 // newBatcher creates a new batcher, which will execute most code at rclone
@@ -41,23 +41,9 @@ type batcher struct {
 //
 // TODO: Now that we have proper error handling, we can move mkdir closer to
 // the upload and be more liberal where the batcher it set up.
-func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
-	t, err := f.api.ResolvePath(f.root)
-	if err != nil {
-		if err == fs.ErrorObjectNotFound {
-			if err = f.mkdir(ctx, f.root); err != nil {
-				return nil, err
-			}
-			if t, err = f.api.ResolvePath(f.root); err != nil {
-				return nil, err
-			}
-		} else {
-			return nil, err
-		}
-	}
+func newBatcher(f *Fs) *batcher {
 	b := &batcher{
-		fs:     f,
-		parent: t,
+		fs: f,
 	}
 	// When interrupted, we may have items in the batch, clean these up before
 	// the shutdown handler runs.
@@ -76,7 +62,7 @@ func newBatcher(ctx context.Context, f *Fs) (*batcher, error) {
 		}
 	}()
 	fs.Debugf(b, "initialized batcher")
-	return b, nil
+	return b
 }
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
@@ -191,7 +177,7 @@ func (c *Chunker) Close() error {
 // This is the one of the last things rclone run before exiting. There is no
 // way to relay an error to return from here, so we deliberately exit the
 // process from here with an exit code of 1, if anything fails.
-func (b *batcher) Shutdown() (err error) {
+func (b *batcher) Shutdown(ctx context.Context) (err error) {
 	fs.Debugf(b, "shutdown started")
 	b.once.Do(func() {
 		signal.Reset(os.Interrupt)
@@ -206,13 +192,31 @@ func (b *batcher) Shutdown() (err error) {
 			totalSize   int64 = 0
 			files       []*api.File
 			progressBar *progressbar.ProgressBar
+			t           *api.TreeNode
 		)
+		// Make sure the parent exists.
+		t, err = b.fs.api.ResolvePath(b.fs.root)
+		if err != nil {
+			if err == fs.ErrorObjectNotFound {
+				if err = b.fs.mkdir(ctx, b.fs.root); err != nil {
+					return
+				}
+				if t, err = b.fs.api.ResolvePath(b.fs.root); err != nil {
+					return
+				}
+			} else {
+				return
+			}
+		}
+		b.parent = t
+		// Prepare deposit request.
 		fs.Debugf(b, "preparing %d files for deposit", len(b.items))
 		for _, item := range b.items {
 			totalSize += item.src.Size()
 			files = append(files, item.ToFile(ctx))
 		}
-		// TODO: we may want to reuse a deposit to continue an interrupted deposit, e.g. --vault-continue-deposit 123
+		// TODO: we may want to reuse a deposit to continue an interrupted
+		// deposit, e.g. --vault-continue-deposit 123
 		rdr := &api.RegisterDepositRequest{
 			TotalSize: totalSize,
 			Files:     files,
