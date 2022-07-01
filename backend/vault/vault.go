@@ -55,7 +55,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if err != nil {
 		return nil, err
 	}
-	api := api.New(opt.EndpointNoTrailingSlash(), opt.Username, opt.Password)
+	api := api.New(opt.EndpointNormalized(), opt.Username, opt.Password)
 	if err := api.Login(); err != nil {
 		return nil, err
 	}
@@ -91,8 +91,8 @@ type Options struct {
 	Endpoint string `config:"endpoint"`
 }
 
-// EndpointNoTrailingSlash returns a normalized endpoint.
-func (opt Options) EndpointNoTrailingSlash() string {
+// EndpointNormalized returns a normalized endpoint. We currently want no trailing slash.
+func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
 
@@ -103,10 +103,10 @@ type Fs struct {
 	name     string
 	root     string
 	opt      Options
-	api      *api.Api
-	features *fs.Features
-	mu       sync.Mutex // protect batcher
-	batcher  *batcher   // batching for deposits, for put
+	api      *api.Api     // vault api wrapper
+	features *fs.Features // optional features
+	mu       sync.Mutex   // protect batcher
+	batcher  *batcher     // batching for deposits
 }
 
 // Fs Info
@@ -214,7 +214,9 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
-// Put uploads a new object.
+// Put uploads a new object. This does not upload content immediately, but save
+// the source in a temporary file and add the file to the batcher, which will
+// upload at rclone exit time.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
 	var (
@@ -258,7 +260,7 @@ func (f *Fs) Mkdir(ctx context.Context, dir string) error {
 }
 
 // mkdir creates a directory, ignores the filesystem root and expects dir to be
-// the absolute path. Will create directories recursively.
+// the absolute path. Will create parent directories if necessary.
 func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	fs.Debugf(f, "mkdir: %v", dir)
 	var t, _ = f.api.ResolvePath(dir)
@@ -266,14 +268,13 @@ func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	case t != nil && t.NodeType == "FOLDER":
 		return nil
 	case t != nil:
-		fs.Debugf(f, "path exists: %v [%v]", dir, t.NodeType)
-		return nil
+		return fmt.Errorf("path already exists: %v [%s]", dir, t.NodeType)
 	case f.root == "/" || strings.Count(dir, "/") == 1:
 		return f.api.CreateCollection(ctx, path.Base(dir))
 	default:
 		segments := pathSegments(dir, "/")
 		if len(segments) == 0 {
-			return fmt.Errorf("broken path")
+			return fmt.Errorf("broken path: %s", dir)
 		}
 		var (
 			parent  *api.TreeNode
@@ -455,6 +456,7 @@ func (f *Fs) DirMove(ctx context.Context, src fs.Fs, srcRemote, dstRemote string
 	return nil
 }
 
+// Purge remove a folder.
 func (f *Fs) Purge(ctx context.Context, dir string) error {
 	t, err := f.api.ResolvePath(f.absPath(dir))
 	if err != nil {
@@ -466,6 +468,7 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 	return f.api.Remove(ctx, t)
 }
 
+// Shutdown triggers the deposit upload.
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
 	if f.batcher != nil {
