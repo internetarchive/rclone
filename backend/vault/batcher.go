@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"os/signal"
 	"path"
 	"strconv"
 	"sync"
@@ -52,22 +51,6 @@ func newBatcher(f *Fs) *batcher {
 		fs:        f,
 		chunkSize: standardChunkSize,
 	}
-	// When interrupted, we may have items in the batch, clean these up before
-	// the shutdown handler runs.
-	//
-	// TODO: revisit this, since we have better error handling now
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	go func() {
-		for _ = range c {
-			b.mu.Lock()
-			if len(b.items) > 0 {
-				fs.Logf(b, "ignoring %d batch entries", len(b.items))
-			}
-			b.items = b.items[:0]
-			b.mu.Unlock()
-		}
-	}()
 	fs.Debugf(b, "initialized batcher")
 	return b
 }
@@ -213,7 +196,6 @@ func (c *Chunker) Close() error {
 func (b *batcher) Shutdown(ctx context.Context) (err error) {
 	fs.Debugf(b, "shutdown started")
 	b.shutOnce.Do(func() {
-		signal.Reset(os.Interrupt)
 		if len(b.items) == 0 {
 			fs.Debugf(b, "nothing to deposit")
 			return
