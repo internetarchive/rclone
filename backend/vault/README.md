@@ -369,9 +369,9 @@ Note that resuming only makes sense when the source and destination path are the
 
 ## TODO
 
-* [ ] issue with `max-depth`
+* [x] issue with `max-depth`
 * [ ] ncdu performance
-* [ ] resumable deposits
+* [x] resumable deposits
 * [ ] cli access to various reports (fixity, ...)
 * [ ] test harness
 
