@@ -44,11 +44,6 @@ func init() {
 				Default: "http://127.0.0.1:8000/api",
 			},
 			{
-				Name:    "chunk_size",
-				Help:    "Deposit chunk size",
-				Default: 1 * fs.Mega,
-			},
-			{
 				Name:    "suppress_progress_bar",
 				Help:    "Suppress deposit progress bar",
 				Default: false,
@@ -84,7 +79,6 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	}
 	f.batcher = newBatcher(f)
 	f.batcher.showDepositProgress = !opt.SuppressProgressBar
-	f.batcher.chunkSize = int64(opt.ChunkSize)
 	f.batcher.resumeDepositId = opt.ResumeDepositId
 	f.features = (&fs.Features{
 		CaseInsensitive:         true,
@@ -104,12 +98,11 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 
 // Options for vault.
 type Options struct {
-	Username            string        `config:"username"`
-	Password            string        `config:"password"`
-	Endpoint            string        `config:"endpoint"`
-	ChunkSize           fs.SizeSuffix `config:"chunk_size"` // TODO: k, M, G work, but suffix-less byte not
-	SuppressProgressBar bool          `config:"suppress_progress_bar"`
-	ResumeDepositId     int64         `config:"resume_deposit_id"`
+	Username            string `config:"username"`
+	Password            string `config:"password"`
+	Endpoint            string `config:"endpoint"`
+	SuppressProgressBar bool   `config:"suppress_progress_bar"`
+	ResumeDepositId     int64  `config:"resume_deposit_id"`
 }
 
 // EndpointNormalized returns a normalized endpoint. We currently want no trailing slash.
