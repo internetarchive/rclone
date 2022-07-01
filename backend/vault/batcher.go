@@ -27,10 +27,11 @@ type batcher struct {
 	fs                  *Fs           // fs.root will be the parent collection or folder
 	parent              *api.TreeNode // resolved and possibly new parent treenode
 	showDepositProgress bool          // show progress bar
-	chunkSize           int64
-	once                sync.Once    // only batch wrap up once
-	mu                  sync.Mutex   // protect items
-	items               []*batchItem // file metadata and content for deposit items
+	chunkSize           int64         // upload unit size
+	resumeDepositId     int64         // if non-zero, try to resume deposit
+	once                sync.Once     // only batch wrap up once
+	mu                  sync.Mutex    // protect items
+	items               []*batchItem  // file metadata and content for deposit items
 }
 
 // newBatcher creates a new batcher, which will execute most code at rclone
@@ -194,6 +195,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			files       []*api.File
 			progressBar *progressbar.ProgressBar
 			t           *api.TreeNode
+			depositId   int64
 		)
 		// Make sure the parent exists.
 		t, err = b.fs.api.ResolvePath(b.fs.root)
@@ -216,29 +218,35 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			totalSize += item.src.Size()
 			files = append(files, item.ToFile(ctx))
 		}
-		// TODO: we may want to reuse a deposit to continue an interrupted
-		// deposit, e.g. --vault-continue-deposit 123
-		rdr := &api.RegisterDepositRequest{
-			TotalSize: totalSize,
-			Files:     files,
-		}
 		switch {
-		case b.parent.NodeType == "COLLECTION":
-			c, err := b.fs.api.TreeNodeToCollection(b.parent)
+		case b.resumeDepositId > 0:
+			depositId = b.resumeDepositId
+			fs.Debugf(b, "trying to resume deposit %d", depositId)
+		default:
+			// TODO: we may want to reuse a deposit to continue an interrupted
+			// deposit, e.g. --vault-continue-deposit 123
+			rdr := &api.RegisterDepositRequest{
+				TotalSize: totalSize,
+				Files:     files,
+			}
+			switch {
+			case b.parent.NodeType == "COLLECTION":
+				c, err := b.fs.api.TreeNodeToCollection(b.parent)
+				if err != nil {
+					err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
+					return
+				}
+				rdr.CollectionId = c.Identifier()
+			case b.parent.NodeType == "FOLDER":
+				rdr.ParentNodeId = b.parent.Id
+			}
+			depositId, err = b.fs.api.RegisterDeposit(ctx, rdr)
 			if err != nil {
-				err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
+				err = fmt.Errorf("deposit failed: %w", err)
 				return
 			}
-			rdr.CollectionId = c.Identifier()
-		case b.parent.NodeType == "FOLDER":
-			rdr.ParentNodeId = b.parent.Id
+			fs.Debugf(b, "created deposit %v", depositId)
 		}
-		depositId, err := b.fs.api.RegisterDeposit(ctx, rdr)
-		if err != nil {
-			err = fmt.Errorf("deposit failed: %w", err)
-			return
-		}
-		fs.Debugf(b, "created deposit %v", depositId)
 		if b.showDepositProgress {
 			progressBar = progressbar.DefaultBytes(totalSize, "<5>NOTICE: depositing")
 		}
@@ -283,7 +291,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				}
 				resp, err = b.fs.api.Call(ctx, &opts)
 				if err != nil {
-					fs.LogPrintf(fs.LogLevelError, b, "call: %v", err)
+					fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
 					return
 				}
 				defer resp.Body.Close()
@@ -291,6 +299,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 					fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
 					err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
 					return
+				} else {
+					fs.Debugf(b, "GET returned: %v", resp.StatusCode)
 				}
 				var r io.Reader
 				if b.showDepositProgress {
@@ -310,7 +320,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				}
 				resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil)
 				if err != nil {
-					fs.LogPrintf(fs.LogLevelError, b, "call: %v", err)
+					fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
 					return
 				}
 				if err = resp.Body.Close(); err != nil {
