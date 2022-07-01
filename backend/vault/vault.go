@@ -7,7 +7,6 @@ import (
 	"io"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
@@ -68,6 +67,8 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		opt:  opt,
 		api:  api,
 	}
+	f.batcher = newBatcher(f)
+	f.batcher.showDepositProgress = true // TODO: make this a flag
 	f.features = (&fs.Features{
 		CaseInsensitive:         true,
 		CanHaveEmptyDirectories: true,
@@ -105,7 +106,6 @@ type Fs struct {
 	opt      Options
 	api      *api.Api     // vault api wrapper
 	features *fs.Features // optional features
-	mu       sync.Mutex   // protect batcher
 	batcher  *batcher     // batching for deposits
 }
 
@@ -227,16 +227,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if filename, err = extra.TempFileFromReader(in); err != nil {
 		return nil, err
 	}
-	f.mu.Lock()
 	fs.Debugf(f, "fetched %v to %v", src.Remote(), filename)
-	if f.batcher == nil {
-		f.batcher, err = newBatcher(ctx, f)
-		if err != nil {
-			return nil, err
-		}
-		f.batcher.showDepositProgress = true
-	}
-	f.mu.Unlock()
 	// TODO: with retries, we may add the same object twice or more; check that
 	// each batch contains unique elements
 	f.batcher.Add(&batchItem{
@@ -472,7 +463,7 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
 	if f.batcher != nil {
-		return f.batcher.Shutdown()
+		return f.batcher.Shutdown(ctx)
 	}
 	return nil
 }
