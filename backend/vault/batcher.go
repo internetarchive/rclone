@@ -27,9 +27,10 @@ type batcher struct {
 	fs                  *Fs           // fs.root will be the parent collection or folder
 	parent              *api.TreeNode // resolved and possibly new parent treenode
 	showDepositProgress bool          // show progress bar
-	once                sync.Once     // only batch wrap up once
-	mu                  sync.Mutex    // protect items
-	items               []*batchItem  // file metadata and content for deposit items
+	chunkSize           int64
+	once                sync.Once    // only batch wrap up once
+	mu                  sync.Mutex   // protect items
+	items               []*batchItem // file metadata and content for deposit items
 }
 
 // newBatcher creates a new batcher, which will execute most code at rclone
@@ -247,26 +248,25 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			//
 			// TODO: streamline the chunking part a bit
 			var (
-				chunker   *Chunker
-				chunkSize int64 = 1 << 20 // 1M, TODO: allow this to be set
-				j         int64
-				resp      *http.Response
+				chunker *Chunker
+				j       int64
+				resp    *http.Response
 			)
-			chunker, err = NewChunker(item.filename, chunkSize)
+			chunker, err = NewChunker(item.filename, b.chunkSize)
 			if err != nil {
 				return
 			}
 			for j = 1; j <= chunker.NumChunks(); j++ {
-				currentChunkSize := chunkSize
+				currentChunkSize := b.chunkSize
 				if j == chunker.NumChunks() {
-					currentChunkSize = chunker.FileSize() - ((j - 1) * chunkSize)
+					currentChunkSize = chunker.FileSize() - ((j - 1) * b.chunkSize)
 				}
 				fs.Debugf(b, "[%d/%d] %d %d %s",
 					j, chunker.NumChunks(), currentChunkSize, chunker.FileSize(), item.filename)
 				params := url.Values{
 					"depositId":            []string{strconv.Itoa(int(depositId))},
 					"flowChunkNumber":      []string{strconv.Itoa(int(j))},
-					"flowChunkSize":        []string{strconv.Itoa(int(chunkSize))},
+					"flowChunkSize":        []string{strconv.Itoa(int(b.chunkSize))},
 					"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
 					"flowFilename":         []string{files[i].Name},
 					"flowIdentifier":       []string{files[i].FlowIdentifier},
@@ -292,7 +292,12 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 					err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
 					return
 				}
-				r := io.TeeReader(chunker.ChunkReader(j-1), progressBar)
+				var r io.Reader
+				if b.showDepositProgress {
+					r = io.TeeReader(chunker.ChunkReader(j-1), progressBar)
+				} else {
+					r = chunker.ChunkReader(j - 1)
+				}
 				size := currentChunkSize
 				opts = rest.Opts{
 					Method:               "POST",
