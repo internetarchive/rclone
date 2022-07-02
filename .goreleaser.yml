@@ -43,13 +43,12 @@ release:
   github:
     owner: internetarchive
     name: rclone
-  prerelease: true
   disable: false
   header: |
     ## rclone with vault support (experimental)
 
     This is an release of rclone with support for the Vault
-    Digital Preservation System, developed by the [Internet
+    Digital Preservation System, developed at the [Internet
     Archive](https://archive.org).
 
     More information about this backend can be found in
