@@ -1,48 +1,31 @@
-# Rclone for Vault
+# Rclone with Vault support
 
-Experimental CLI support for Internet Archive Vault Digital Preservation System
-in [Rclone](https://rclone.org/). This is a private fork of rclone and
-work-in-progress. Glad about any feedback (open or comment on issue, email to
-[martin@archive.org](mailto:martin@archive.org), ...), especially on:
+[Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
 
-* bugs
-* unintuitive behaviour
+We are developing an rclone backend for Vault Digital Preservation System
+([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
+developed at the [Internet Archive](https://archive.org/) and release versions here.
 
-## Known limitations
+With this version of rclone, you can **list your collections** in Vault and **upload files
+and folders** conveniently from **local disk** or other **cloud providers**.
 
-* once an upload starts, it cannot be interrupted (or resumed)
-* the *exit code* from a failed upload currently may be zero
-* read and write support **only on the command line**
-* partial read support (no write) for *mount* and *serve* commands
+## Download rclone with Vault support
 
-----
+Download the latest release from:
 
-## Download the custom rclone binary
+[https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
-* [https://github.com/internetarchive/rclone/releases](https://github.com/internetarchive/rclone/releases)
+Releases follow a versioning scheme that includes the rclone version, timestamp and commit, e.g. like:
+`v1.57.0-vault-20220627142057-e4798bf85`.
 
-Release will most likely follow a version scheme like:
-`v1.57.0-vault-20220627142057-e4798bf85` (rclone version, "vault", timestamp,
-commit).
+Drop the downloaded binary into your
+[PATH](https://en.wikipedia.org/wiki/PATH_(variable)). You may want to rename
+the binary to a more conventient name; you may also need to set executable
+permissions:
 
-## Building the custom rclone binary
-
-Building requires the Go toolchain installed.
-
-```
-$ git clone git@github.com:internetarchive/rclone.git
-$ cd rclone
-$ git checkout ia-wt-1168
-$ make
-$ ./rclone version
-rclone v1.59.0-beta.6244.66b9ef95f.sample
-- os/version: ubuntu 20.04 (64 bit)
-- os/kernel: 5.13.0-48-generic (x86_64)
-- os/type: linux
-- os/arch: amd64
-- go/version: go1.18.3
-- go/linking: dynamic
-- go/tags: none
+```shell
+$ mv rclone_1.57.0-vault-20220701222624-3e2968a05_Darwin_x86_64 rclone
+$ chmod +x rclone
 ```
 
 ## Configuration
@@ -53,15 +36,23 @@ There is a single configuration file for rclone, located by default under:
 ~/.config/rclone/rclone.conf
 ```
 
-In you rclone config, add the following section for vault (the section name is
-arbitrary; used to refer to the remote).
+You can also ask rclone, where your configuration file is located:
+
+```
+$ rclone config file
+Configuration file is stored at:
+/Users/fdr/.config/rclone/rclone.conf
+```
+
+In your rclone configuration file, add the following section for vault (the
+section name is arbitrary; it will be used to refer to the remote in commands).
 
 ```ini
 [vault]
 type = vault
-username = admin
-password = admin
-endpoint = http://localhost:8000/api
+username = Roosevelt
+password = 4tJ3RGIDZw4P
+endpoint = https://vault.archive-it.org/vault/api/
 ```
 
 ## Examples
@@ -177,10 +168,10 @@ $ rclone lsjson vault:/ | head -10
 
 ### Listing files and folders as tree
 
-Similar to the linux [tree](https://en.wikipedia.org/wiki/Tree_(command)),
-rclone can render a tree as well. Note that this only starts to render the
-output when all the relevant files have been inspected. Hence this command can
-take a while on large folders.
+Similar to the linux [tree](https://en.wikipedia.org/wiki/Tree_(command))
+command, rclone can render files and folder as a tree as well. Note that this
+only starts to render the output when all the relevant files have been
+inspected. Hence this command can take a while on large folders.
 
 Options: `-d`, `-s`, ...
 
@@ -221,7 +212,6 @@ $ rclone tree vault:/C100
 12 directories, 18 files
 ```
 
-
 ### Creating Collections and Folder
 
 Collections and folders are handled transparently (e.g. first path component
@@ -252,7 +242,8 @@ Copy operations to vault will create directories as needed:
 $ rclone copy ~/tmp/somedir vault:/ExampleCollection/somedir
 ```
 
-If you configure other remotes, like Dropbox, Google Drive, Amazon S3, etc. you can copy files directly from there to vault:
+If you configure other remotes, like Dropbox, Google Drive, Amazon S3, etc. you
+can copy files directly from there to vault:
 
 ```
 $ rclone copy dropbox:/iris-data.csv vault:/C104
@@ -288,7 +279,7 @@ $ rclone cat vault:/ExampleCollection/somedir/f.txt
 
 ### Deleting files and folders
 
-* [x] delete, deletefile
+* [x] delete
 
 ```
 $ rclone delete vault:/C123/a/f.txt
@@ -304,7 +295,8 @@ $ rclone delete vault:/C123
 
 * [x] ncdu
 
-Similar to [ncdu](https://en.wikipedia.org/wiki/Ncdu), rclone can show what dirs consume most disk space.
+Similar to [ncdu](https://en.wikipedia.org/wiki/Ncdu), rclone can show what
+dirs consume most disk space.
 
 ```
 $ rclone ncdu vault:/
@@ -366,6 +358,30 @@ $ rclone copy A vault:/B --vault-resume-deposit 742
 ```
 
 Note that resuming only makes sense when the source and destination path are the same.
+
+
+# Misc
+
+## Building the custom rclone binary
+
+Building requires the Go toolchain installed.
+
+```
+$ git clone git@github.com:internetarchive/rclone.git
+$ cd rclone
+$ git checkout ia-wt-1168
+$ make
+$ ./rclone version
+rclone v1.59.0-beta.6244.66b9ef95f.sample
+- os/version: ubuntu 20.04 (64 bit)
+- os/kernel: 5.13.0-48-generic (x86_64)
+- os/type: linux
+- os/arch: amd64
+- go/version: go1.18.3
+- go/linking: dynamic
+- go/tags: none
+```
+
 
 ## TODO
 
