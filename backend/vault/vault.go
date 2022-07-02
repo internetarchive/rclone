@@ -2,7 +2,6 @@ package vault
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"path"
@@ -10,16 +9,12 @@ import (
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
+	pkgapi "github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/extra"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
-)
-
-var (
-	ErrNotImplemented  = errors.New("not implemented")
-	ErrVersionMismatch = errors.New("api version mismatch")
 )
 
 func init() {
@@ -69,7 +64,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
-		return nil, ErrVersionMismatch
+		return nil, pkgapi.ErrVersionMismatch
 	}
 	f := &Fs{
 		name: name,
@@ -77,9 +72,12 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		opt:  opt,
 		api:  api,
 	}
-	f.batcher = newBatcher(f)
-	f.batcher.showDepositProgress = !opt.SuppressProgressBar
-	f.batcher.resumeDepositId = opt.ResumeDepositId
+	f.batcher = &batcher{
+		fs:                  f,
+		chunkSize:           defaultUploadChunkSize,
+		showDepositProgress: !opt.SuppressProgressBar,
+		resumeDepositId:     opt.ResumeDepositId,
+	}
 	f.features = (&fs.Features{
 		CaseInsensitive:         true,
 		CanHaveEmptyDirectories: true,
@@ -105,7 +103,7 @@ type Options struct {
 	ResumeDepositId     int64  `config:"resume_deposit_id"`
 }
 
-// EndpointNormalized returns a normalized endpoint. We currently want no trailing slash.
+// EndpointNormalized returns a normalized endpoint.
 func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
