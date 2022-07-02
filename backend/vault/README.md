@@ -26,6 +26,15 @@ permissions:
 ```shell
 $ mv rclone_1.57.0-vault-20220701222624-3e2968a05_Darwin_x86_64 rclone
 $ chmod +x rclone
+$ rclone version
+rclone v1.57.0-vault-20220702021915-4e51866c5
+- os/version: ubuntu 20.04 (64 bit)
+- os/kernel: 5.13.0-52-generic (x86_64)
+- os/type: linux
+- os/arch: amd64
+- go/version: go1.18.3
+- go/linking: dynamic
+- go/tags: none
 ```
 
 ## Configuration
