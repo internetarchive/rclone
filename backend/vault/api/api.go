@@ -30,8 +30,9 @@ const (
 )
 
 var (
-	ErrUserNotFound   = errors.New("user not found")
-	ErrAmbiguousQuery = errors.New("ambiguous query")
+	ErrUserNotFound    = errors.New("user not found")
+	ErrAmbiguousQuery  = errors.New("ambiguous query")
+	ErrVersionMismatch = errors.New("api version mismatch")
 )
 
 // Api wraps the Vault API. Django REST Framework has some support for swagger
