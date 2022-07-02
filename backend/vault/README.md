@@ -54,7 +54,8 @@ Configuration file is stored at:
 ```
 
 In your rclone configuration file, add the following section for vault (the
-section name is arbitrary; it will be used to refer to the remote in commands).
+section name is arbitrary; it will be used to refer to the remote in commands,
+e.g. `rclone ls vault:/x/y/z`).
 
 ```ini
 [vault]
@@ -64,7 +65,22 @@ password = 4tJ3RGIDZw4P
 endpoint = https://vault.archive-it.org/vault/api/
 ```
 
-## Examples
+To check if everything works, you can e.g. run `rclone config userinfo` to
+display information about the user:
+
+```shell
+$ rclone config userinfo vault:
+DefaultFixityFrequency: TWICE_YEARLY
+             FirstName:
+             LastLogin: 2022-07-02T00:29:20.364793Z
+              LastName:
+          Organization: SuperOrg
+                  Plan: Basic
+            QuotaBytes: 1099511627776
+              Username: admin
+ ```
+
+## Example commands
 
 Note: Most examples show abbreviated outputs. To show debug output, append `-v`
 or `-vv` to the command.
