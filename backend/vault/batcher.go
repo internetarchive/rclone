@@ -23,7 +23,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-const standardChunkSize = 1 << 20 // 1M
+const defaultUploadChunkSize = 1 << 20 // 1M
 
 // batcher is used to group files for a deposit.
 type batcher struct {
@@ -35,24 +35,6 @@ type batcher struct {
 	shutOnce            sync.Once     // only shutdown once
 	mu                  sync.Mutex    // protect items
 	items               []*batchItem  // file metadata and content for deposit items
-}
-
-// newBatcher creates a new batcher, which will execute most code at rclone
-// exit time. Note: this will create the fs.Root if it does not exist, hence
-// newBatcher should only be called, if we are actually performing a batch
-// operation (e.g. in Put). We run "mkdir" here and not in the atexit handler,
-// since here we can still return errors (which we currently cannot in the
-// atexit handler).
-//
-// TODO: Now that we have proper error handling, we can move mkdir closer to
-// the upload and be more liberal where the batcher it set up.
-func newBatcher(f *Fs) *batcher {
-	b := &batcher{
-		fs:        f,
-		chunkSize: standardChunkSize,
-	}
-	fs.Debugf(b, "initialized batcher")
-	return b
 }
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
