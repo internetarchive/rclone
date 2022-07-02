@@ -9,7 +9,7 @@ developed at the [Internet Archive](https://archive.org/) and release versions h
 With this version of rclone, you can **list your collections** in Vault and **upload files
 and folders** conveniently from **local disk** or other **cloud providers**.
 
-## Download rclone with Vault support
+## Download Rclone with Vault support
 
 Download the latest release from:
 
