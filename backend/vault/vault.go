@@ -7,6 +7,7 @@ import (
 	"io"
 	"log"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
@@ -82,17 +83,18 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		resumeDepositId:     opt.ResumeDepositId,
 	}
 	f.features = (&fs.Features{
-		CaseInsensitive:         true,
 		CanHaveEmptyDirectories: true,
 		ReadMimeType:            true,
-		PublicLink:              f.PublicLink,
+		SlowModTime:             true,
 		About:                   f.About,
-		PutStream:               f.PutStream,
-		UserInfo:                f.UserInfo,
-		Disconnect:              f.Disconnect,
+		Command:                 f.Command,
 		DirMove:                 f.DirMove,
+		Disconnect:              f.Disconnect,
+		PublicLink:              f.PublicLink,
 		Purge:                   f.Purge,
+		PutStream:               f.PutStream,
 		Shutdown:                f.Shutdown,
+		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
 	return f, nil
 }
@@ -483,6 +485,28 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
+	switch name {
+	case "info":
+		log.Printf("args: %v", args)
+		log.Printf("opts: %v", opt)
+	case "deposit-status", "ds":
+		if len(args) == 0 {
+			return nil, fmt.Errorf("deposit id required")
+		}
+		id, err := strconv.Atoi(args[0])
+		if err != nil {
+			return nil, fmt.Errorf("deposit id must be numeric")
+		}
+		ds, err := f.api.DepositStatus(int64(id))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get deposit status: %w", err)
+		}
+		return ds, nil
+	}
+	return nil, nil
+}
+
 // Fs helpers
 // ----------
 
@@ -651,13 +675,14 @@ func (dir *Dir) ID() string { return dir.treeNode.Path }
 
 var (
 	_ fs.Abouter      = (*Fs)(nil)
+	_ fs.Commander    = (*Fs)(nil)
 	_ fs.DirMover     = (*Fs)(nil)
+	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.Fs           = (*Fs)(nil)
 	_ fs.PublicLinker = (*Fs)(nil)
 	_ fs.PutStreamer  = (*Fs)(nil)
 	_ fs.Shutdowner   = (*Fs)(nil)
 	_ fs.UserInfoer   = (*Fs)(nil)
-	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.MimeTyper    = (*Object)(nil)
 	_ fs.Object       = (*Object)(nil)
 	_ fs.IDer         = (*Object)(nil)
