@@ -433,6 +433,14 @@ func (api *Api) RegisterDeposit(ctx context.Context, rdr *RegisterDepositRequest
 	var depositResp RegisterDepositResponse
 	resp, err := api.client.CallJSON(ctx, &opts, rdr, &depositResp)
 	if err != nil {
+		if resp.StatusCode == 500 {
+			// This may happen, if after a successful, but not yet assembled
+			// deposit the same (e.g. sync) command is executed again. This
+			// leads to various integrity errors. However, once the files are
+			// assembled and in place, the command will work fine again.
+			return 0, fmt.Errorf(
+				`encountered HTTP 500 Internal Server Error, a manual retry after a short delay may succeed`)
+		}
 		// TODO: we need warning deposit here to check whether files already
 		// exist; do some kind of "--force" by default
 		return 0, fmt.Errorf("api failed: %v", err)
