@@ -10,7 +10,7 @@ import (
 func TestIntegration(t *testing.T) {
 	// Setup fresh vault, e.g. with testcontainers.
 	fstests.Run(t, &fstests.Opt{
-		RemoteName: "vault:",
+		RemoteName: "VaultTest:",
 		NilObject:  (*Object)(nil),
 	})
 }
