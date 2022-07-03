@@ -27,14 +27,15 @@ const defaultUploadChunkSize = 1 << 20 // 1M
 
 // batcher is used to group files for a deposit.
 type batcher struct {
-	fs                  *Fs           // fs.root will be the parent collection or folder
-	parent              *api.TreeNode // resolved and possibly new parent treenode
-	showDepositProgress bool          // show progress bar
-	chunkSize           int64         // upload unit size
-	resumeDepositId     int64         // if non-zero, try to resume deposit
-	shutOnce            sync.Once     // only shutdown once
-	mu                  sync.Mutex    // protect items
-	items               []*batchItem  // file metadata and content for deposit items
+	fs                  *Fs                 // fs.root will be the parent collection or folder
+	parent              *api.TreeNode       // resolved and possibly new parent treenode
+	showDepositProgress bool                // show progress bar
+	chunkSize           int64               // upload unit size
+	resumeDepositId     int64               // if non-zero, try to resume deposit
+	shutOnce            sync.Once           // only shutdown once
+	mu                  sync.Mutex          // protect items
+	items               []*batchItem        // file metadata and content for deposit items
+	seen                map[string]struct{} // avoid duplicates in batch
 }
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
@@ -118,7 +119,13 @@ func (b *batcher) String() string {
 // Add a single item to the batch.
 func (b *batcher) Add(item *batchItem) {
 	b.mu.Lock()
-	b.items = append(b.items, item)
+	if b.seen == nil {
+		b.seen = make(map[string]struct{})
+	}
+	if _, ok := b.seen[item.filename]; !ok {
+		b.items = append(b.items, item)
+		b.seen[item.filename] = struct{}{}
+	}
 	b.mu.Unlock()
 }
 
