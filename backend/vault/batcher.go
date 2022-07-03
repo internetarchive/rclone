@@ -126,6 +126,7 @@ func (b *batcher) Add(item *batchItem) {
 type Chunker struct {
 	chunkSize int64
 	fileSize  int64
+	numChunks int64
 	f         *os.File
 }
 
@@ -147,23 +148,24 @@ func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 		f:         f,
 		chunkSize: chunkSize,
 		fileSize:  fi.Size(),
+		numChunks: int64(math.Ceil(float64(fi.Size()) / float64(chunkSize))),
 	}, nil
+}
+
+// FileSize returns the filesize.
+func (c *Chunker) FileSize() int64 {
+	return c.fileSize
 }
 
 // NumChunks returns the number of chunks this file is splitted to.
 func (c *Chunker) NumChunks() int64 {
-	return int64(math.Ceil(float64(c.fileSize) / float64(c.chunkSize)))
+	return c.numChunks
 }
 
 // ChunkReader returns the reader over a section of the file. Counting starts at zero.
 func (c *Chunker) ChunkReader(i int64) io.Reader {
 	offset := i * c.chunkSize
 	return io.NewSectionReader(c.f, offset, c.chunkSize)
-}
-
-// FileSize returns the filesize.
-func (c *Chunker) FileSize() int64 {
-	return c.fileSize
 }
 
 // Close closes the wrapped file.
@@ -219,7 +221,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			fs.Debugf(b, "trying to resume deposit %d", depositId)
 		default:
 			// TODO: we may want to reuse a deposit to continue an interrupted
-			// deposit, e.g. --vault-continue-deposit 123
+			// deposit, e.g. --vault-resume-deposit-id 123
 			rdr := &api.RegisterDepositRequest{
 				TotalSize: totalSize,
 				Files:     files,
@@ -250,6 +252,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			// 204 then follow up with a POST.
 			//
 			// TODO: streamline the chunking part a bit
+			// TODO: we could parallelize chunk uploads
 			var (
 				chunker *Chunker
 				j       int64
