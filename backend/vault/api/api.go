@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -302,6 +303,48 @@ func (api *Api) CreateFolder(ctx context.Context, parent *TreeNode, name string)
 		},
 	}
 	resp, err := api.client.CallJSON(ctx, &opts, nil, nil)
+	if err != nil {
+		return err
+	}
+	return resp.Body.Close()
+}
+
+func (api *Api) SetModTime(ctx context.Context, t *TreeNode) error {
+	// Hack around immutable "modified_at" field, set the parent to the same value.
+	fs.Debugf(api, "set mod time for %v (%d)", t.Name, t.Id)
+	opts := rest.Opts{
+		Method: "PATCH",
+		Path:   fmt.Sprintf("/treenodes/%d/", t.Id),
+		ExtraHeaders: map[string]string{
+			"X-CSRFTOKEN": api.csrfToken(ctx),
+			"Referer":     api.refererURL("treenodes"),
+		},
+	}
+	payload := struct {
+		Name string `json:"name"`
+	}{
+		Name: t.Name + fmt.Sprintf("-%d", rand.Intn(9_999_999)),
+	}
+	resp, err := api.client.CallJSON(ctx, &opts, payload, nil)
+	if err != nil {
+		return err
+	}
+	time.Sleep(1 * time.Second)
+	// Rename again.
+	opts = rest.Opts{
+		Method: "PATCH",
+		Path:   fmt.Sprintf("/treenodes/%d/", t.Id),
+		ExtraHeaders: map[string]string{
+			"X-CSRFTOKEN": api.csrfToken(ctx),
+			"Referer":     api.refererURL("treenodes"),
+		},
+	}
+	payload = struct {
+		Name string `json:"name"`
+	}{
+		Name: t.Name,
+	}
+	resp, err = api.client.CallJSON(ctx, &opts, payload, nil)
 	if err != nil {
 		return err
 	}
