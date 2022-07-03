@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"path"
 	"strings"
 	"time"
@@ -143,14 +144,14 @@ func (f *Fs) Features() *fs.Features   { return f.features }
 // This should return ErrDirNotFound if the directory isn't
 // found.
 func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
-	fs.Debugf(f, "list dir %v", dir)
+	log.Printf("list: %v (%v)", f.absPath(dir), dir)
 	var (
 		entries fs.DirEntries
 		absPath = f.absPath(dir)
 	)
 	t, err := f.api.ResolvePath(absPath)
 	if err != nil {
-		if dir == "" && err == fs.ErrorObjectNotFound {
+		if err == fs.ErrorObjectNotFound {
 			return nil, fs.ErrorDirNotFound
 		}
 		return nil, err
@@ -267,7 +268,7 @@ func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	fs.Debugf(f, "mkdir: %v", dir)
 	var t, _ = f.api.ResolvePath(dir)
 	switch {
-	case t != nil && t.NodeType == "FOLDER":
+	case t != nil && (t.NodeType == "FOLDER" || t.NodeType == "COLLECTION"):
 		return nil
 	case t != nil:
 		return fmt.Errorf("path already exists: %v [%s]", dir, t.NodeType)
@@ -311,14 +312,15 @@ func (f *Fs) mkdir(ctx context.Context, dir string) error {
 
 // Rmdir deletes a folder.
 func (f *Fs) Rmdir(ctx context.Context, dir string) error {
+	fs.Debugf(f, "rmdir %v", f.absPath(dir))
 	t, err := f.api.ResolvePath(f.absPath(dir))
 	if err != nil {
 		return err
 	}
-	if t.NodeType != "FOLDER" {
-		return fmt.Errorf("can only drop folders, not %v", t.NodeType)
+	if t.NodeType == "FOLDER" {
+		return f.api.Remove(ctx, t)
 	}
-	return f.api.Remove(ctx, t)
+	return fmt.Errorf("cannot drop node type %v", strings.ToLower(t.NodeType))
 }
 
 // Fs extra
