@@ -11,7 +11,7 @@ func New() *Cache {
 	return &Cache{
 		m: make(map[string]interface{}),
 		groupKeyFunc: func(k, g string) string {
-			return fmt.Sprint("%s-%s", k, g)
+			return fmt.Sprintf("%s-%s", k, g)
 		},
 	}
 }
