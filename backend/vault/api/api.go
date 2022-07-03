@@ -248,7 +248,7 @@ func (api *Api) ResolvePath(p string) (*TreeNode, error) {
 func (api *Api) DepositStatus(id int64) (*DepositStatus, error) {
 	opts := rest.Opts{
 		Method: "GET",
-		Path:   "deposit_status",
+		Path:   "/deposit_status",
 		Parameters: url.Values{
 			"deposit_id": []string{fmt.Sprintf("%d", id)},
 		},
