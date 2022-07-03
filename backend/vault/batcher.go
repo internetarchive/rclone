@@ -151,11 +151,12 @@ func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 	if err != nil {
 		return nil, err
 	}
+	numChunks := int64(math.Ceil(float64(fi.Size()) / float64(chunkSize)))
 	return &Chunker{
 		f:         f,
 		chunkSize: chunkSize,
 		fileSize:  fi.Size(),
-		numChunks: int64(math.Ceil(float64(fi.Size()) / float64(chunkSize))),
+		numChunks: numChunks,
 	}, nil
 }
 
