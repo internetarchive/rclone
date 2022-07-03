@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -10,13 +11,14 @@ import (
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
-	pkgapi "github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/extra"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
 )
+
+var ErrVersionMismatch = errors.New("api version mismatch")
 
 func init() {
 	fs.Register(&fs.RegInfo{
@@ -65,7 +67,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
-		return nil, pkgapi.ErrVersionMismatch
+		return nil, ErrVersionMismatch
 	}
 	f := &Fs{
 		name: name,
