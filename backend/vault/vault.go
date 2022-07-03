@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"path"
 	"strconv"
 	"strings"
@@ -51,6 +50,27 @@ func init() {
 				Name:    "resume_deposit_id",
 				Help:    "Resume a deposit",
 				Default: 0,
+			},
+		},
+		CommandHelp: []fs.CommandHelp{
+			fs.CommandHelp{
+				Name:  "ds",
+				Short: "show deposit status",
+				Long: `Display status of deposit, pass deposit id (e.g. 752) as argument.
+
+Example: rclone backend ds vault: 752
+
+Will return a JSON like this:
+
+    {
+      "assembled_files": 6,
+      "errored_files": 0,
+      "file_queue": 0,
+      "in_storage_files": 0,
+      "total_files": 6,
+      "uploaded_files": 0
+    }
+`,
 			},
 		},
 	})
@@ -485,10 +505,8 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 }
 
 func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
+	// TODO: fixity reports, distribution, ...
 	switch name {
-	case "info":
-		log.Printf("args: %v", args)
-		log.Printf("opts: %v", opt)
 	case "deposit-status", "ds":
 		if len(args) == 0 {
 			return nil, fmt.Errorf("deposit id required")
@@ -499,11 +517,11 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 		}
 		ds, err := f.api.DepositStatus(int64(id))
 		if err != nil {
-			return nil, fmt.Errorf("failed to get deposit status: %w", err)
+			return nil, fmt.Errorf("failed to get deposit status")
 		}
 		return ds, nil
 	}
-	return nil, nil
+	return nil, fmt.Errorf("command not found")
 }
 
 // Fs helpers
