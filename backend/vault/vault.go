@@ -563,9 +563,10 @@ func (o *Object) Storable() bool { return true }
 // Object Ops
 // ----------
 
-func (o *Object) SetModTime(ctx context.Context, t time.Time) error {
-	fs.Debugf(o, "noop: set mod time")
-	return nil
+// SetModTime set the modified at time to the current time.
+func (o *Object) SetModTime(ctx context.Context, _ time.Time) error {
+	fs.Debugf(o, "set mod time (now)")
+	return o.fs.api.SetModTime(ctx, o.treeNode)
 }
 func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadCloser, error) {
 	fs.Debugf(o, "reading object contents")
