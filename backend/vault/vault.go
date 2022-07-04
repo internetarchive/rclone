@@ -57,9 +57,9 @@ func init() {
 			fs.CommandHelp{
 				Name:  "ds",
 				Short: "show deposit status",
-				Long: `Display status of deposit, pass deposit id (e.g. 752) as argument.
+				Long: `Display status of deposit, pass deposit id (e.g. 752) as argument, e.g.:
 
-Example: rclone backend ds vault: 752
+    $ rclone backend ds vault: 752
 
 Will return a JSON like this:
 
@@ -264,8 +264,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		return nil, err
 	}
 	fs.Debugf(f, "fetched %v to %v", src.Remote(), filename)
-	// TODO: with retries, we may add the same object twice or more; check that
-	// each batch contains unique elements
 	f.batcher.Add(&batchItem{
 		root:     f.root,
 		filename: filename,
