@@ -20,7 +20,7 @@ import (
 
 // defaultLimit is the limit used for queries againts rest API. We currently do
 // not implement pagination, so we try to get all results at once.
-const defaultLimit = 10000
+const defaultLimit = "10000"
 
 // Organization represents a single document.
 type Organization struct {
