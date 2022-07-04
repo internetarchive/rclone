@@ -8,7 +8,7 @@ import (
 
 // TestIntegration runs integration tests against the remote
 func TestIntegration(t *testing.T) {
-	// Setup fresh vault, e.g. with testcontainers.
+	// TODO: Setup fresh vault, e.g. with testcontainers.
 	fstests.Run(t, &fstests.Opt{
 		RemoteName: "VaultTest:",
 		NilObject:  (*Object)(nil),
