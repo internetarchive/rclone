@@ -18,6 +18,10 @@ import (
 	"github.com/rclone/rclone/lib/rest"
 )
 
+// defaultLimit is the limit used for queries againts rest API. We currently do
+// not implement pagination, so we try to get all results at once.
+const defaultLimit = 10000
+
 // Organization represents a single document.
 type Organization struct {
 	Name       string `json:"name"`
@@ -491,6 +495,10 @@ func (api *Api) GetPlan(id string) (*Plan, error) {
 // ------------
 
 func (api *Api) FindUsers(vs url.Values) (result []*User, err error) {
+	if !vs.Has("limit") && !vs.Has("offset") {
+		vs.Set("offset", "0")
+		vs.Set("limit", defaultLimit) // TODO: implement pagination
+	}
 	if v := api.cache.GetGroup(cache.Atos(vs), "users"); v != nil {
 		return v.([]*User), nil
 	}
@@ -518,6 +526,10 @@ func (api *Api) FindUsers(vs url.Values) (result []*User, err error) {
 }
 
 func (api *Api) FindOrganizations(vs url.Values) (result []*Organization, err error) {
+	if !vs.Has("limit") && !vs.Has("offset") {
+		vs.Set("offset", "0")
+		vs.Set("limit", defaultLimit) // TODO: implement pagination
+	}
 	var (
 		opts = rest.Opts{
 			Method:     "GET",
@@ -543,7 +555,7 @@ func (api *Api) FindOrganizations(vs url.Values) (result []*Organization, err er
 func (api *Api) FindCollections(vs url.Values) (result []*Collection, err error) {
 	if !vs.Has("limit") && !vs.Has("offset") {
 		vs.Set("offset", "0")
-		vs.Set("limit", "5000") // TODO: implement pagination
+		vs.Set("limit", defaultLimit) // TODO: implement pagination
 	}
 	var (
 		opts = rest.Opts{
@@ -589,7 +601,7 @@ func (api *Api) FindTreeNodes(vs url.Values) (result []*TreeNode, err error) {
 	}
 	if !vs.Has("limit") && !vs.Has("offset") {
 		vs.Set("offset", "0")
-		vs.Set("limit", "5000") // TODO: implement pagination
+		vs.Set("limit", defaultLimit) // TODO: implement pagination
 	}
 	var (
 		opts = rest.Opts{
