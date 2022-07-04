@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -358,7 +359,11 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 	switch v := t.ContentURL.(type) {
 	case string:
 		// TODO: may want to url encode
-		return v, nil
+		u, err := url.Parse(v)
+		if err != nil {
+			return "", err
+		}
+		return u.String(), nil
 	default:
 		return "", fmt.Errorf("link not available for treenode %v", t.Id)
 	}
