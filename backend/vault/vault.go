@@ -510,7 +510,7 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
 	// TODO: fixity reports, distribution, ...
 	switch name {
-	case "deposit-status", "ds":
+	case "deposit-status", "ds", "dst":
 		if len(args) == 0 {
 			return nil, fmt.Errorf("deposit id required")
 		}
