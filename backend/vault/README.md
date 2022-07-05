@@ -1,28 +1,39 @@
-# Rclone with Vault support
+# Rclone with Vault Support
 
-[Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
+> [Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
 
-We are developing an rclone backend for Vault Digital Preservation System
+We are developing an Rclone backend for Vault Digital Preservation System
 ([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
 developed at the [Internet Archive](https://archive.org/) and release versions here.
 
 This is work in progress and we are happy about feedback: [vault@archive.org](mailto:vault@archive.org).
 
-With this version of rclone, you can **list your collections** in Vault and **upload files
-and folders** conveniently from **local disk** or other **cloud providers**.
+With this version of Rclone, you can **list your collections** in Vault and
+**upload files and folders** conveniently from **local disk** or other **cloud
+providers**. We are basing our releases on the latest version of the Rclone
+upstream project.
 
-## Download Rclone with Vault support
+## Download Rclone with Vault Support
 
 Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
+
+We currently support the following operating systems and platforms:
+
+* Linux (ARM64)
+* Linux (Intel)
+* MacOS (Intel)
+* MacOS (M1)
+* Windows (ARM64)
+* Windows (Intel)
 
 Releases follow a versioning scheme that includes the rclone version, timestamp and commit, e.g. like:
 `v1.57.0-vault-20220627142057-e4798bf85`.
 
 Drop the downloaded binary into your
 [PATH](https://en.wikipedia.org/wiki/PATH_(variable)). You may want to rename
-the binary to a more conventient name; you may also need to set executable
+the binary to a more convenient name; you may also need to set executable
 permissions:
 
 ```shell
@@ -55,11 +66,13 @@ Configuration file is stored at:
 /Users/fdr/.config/rclone/rclone.conf
 ```
 
-In your rclone configuration file, add the following section for vault (the
+In your rclone configuration file, add the following section for Vault (the
 section name is arbitrary; it will be used to refer to the remote in commands,
 e.g. `rclone ls vault:/x/y/z`).
 
 ```ini
+# The section name is used to refer to the remote on the command line. The
+# `type` needs to be `vault`, however.
 [vault]
 type = vault
 username = Roosevelt
@@ -68,7 +81,7 @@ endpoint = https://vault.archive-it.org/vault/api/
 ```
 
 To check if everything works, you can e.g. run `rclone config userinfo` to
-display information about the user:
+display information about the configured Vault user:
 
 ```shell
 $ rclone config userinfo vault:
@@ -82,19 +95,19 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: admin
 ```
 
-## Known limitations
+## Known Limitations
 
 This is a working prototype and while continuously tested against our
-development and QA vault instances, limitations and rough edges remain.
+development and QA Vault instances, limitations and rough edges remain.
 
 * read and write support **only on the command line** level (mount and serve are read only)
-* currently, if you copy data from another cloud service to vault, data needs
-  to be stored temporarily on the machine where rclone runs
+* currently, if you copy data from another cloud service to vault, data will be
+  stored temporarily on the machine where rclone runs
 
-## Example commands
+## Example Commands
 
-Note: Most examples show abbreviated outputs. To show debug output, append `-v`
-or `-vv` to the command.
+Rclone has [great docs on its own](https://rclone.org/docs/); the following are
+just a few typical usage examples.
 
 ### Quota and Usage
 
@@ -122,7 +135,7 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: admin
 ```
 
-### Listing files
+### Listing Files
 
 * [x] ls
 * [x] lsl
@@ -202,7 +215,7 @@ $ rclone lsjson vault:/ | head -10
 ...
 ```
 
-### Listing files and folders as tree
+### Listing Files and Folders as a Tree
 
 Similar to the linux [tree](https://en.wikipedia.org/wiki/Tree_(command))
 command, rclone can render files and folder as a tree as well. Note that this
@@ -266,7 +279,7 @@ they do not exist:
 $ rclone mkdir vault:/X2/a/b/c
 ```
 
-### Depositing / Uploading single files and directories
+### Depositing / Uploading files and directories
 
 * [x] copy
 * [x] copyto
@@ -287,7 +300,7 @@ vault).
 $ rclone copy dropbox:/iris-data.csv vault:/C104
 ```
 
-#### Resuming an interrupted deposit
+#### Resuming an Interrupted Deposit
 
 It is possible to resume an interrupted deposit.
 
@@ -319,7 +332,7 @@ Sync is similar to copy, can be used to successively sync file to vault.
 $ rclone sync ~/tmp/somedir vault:/ExampleCollection/somedir
 ```
 
-### Downloading files and folders
+### Downloading Files and Folders
 
 * [x] copy
 
@@ -329,7 +342,7 @@ Copy can be used to copy a file or folder from vault to local disk.
 $ rclone copy vault:/ExampleCollection/somedir ~/tmp/somecopy
 ```
 
-### Streaming files
+### Streaming Files
 
 * [x] cat
 
@@ -337,7 +350,7 @@ $ rclone copy vault:/ExampleCollection/somedir ~/tmp/somecopy
 $ rclone cat vault:/ExampleCollection/somedir/f.txt
 ```
 
-### Deleting files and folders
+### Deleting Files and Folders
 
 * [x] delete
 
@@ -351,7 +364,7 @@ A whole folder or collection can be deleted as well.
 $ rclone delete vault:/C123
 ```
 
-### Show disk usage
+### Show Disk Usage
 
 * [x] ncdu
 
@@ -364,7 +377,7 @@ $ rclone ncdu vault:/
 
 Works for folders as well. Running this against large collections may take a while.
 
-### Listing hashes
+### Listing Hashes
 
 * [x] md5sum
 * [x] sha1sum
@@ -432,6 +445,10 @@ rclone v1.59.0-beta.6244.66b9ef95f.sample
 - go/linking: dynamic
 - go/tags: none
 ```
+
+## Debug output
+
+To show debug output, append `-v` or `-vv` to the command.
 
 ## TODO
 
