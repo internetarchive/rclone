@@ -19,7 +19,7 @@ Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
-> **Note MacOS users**: We recommended to download the binary with [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/), like:
+> **Note MacOS users**: We recommended to download the binary with [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/), like (your download link may vary):
 
 ```
 $ curl --output rclone -sL https://github.com/internetarchive/rclone/releases/download/v1.57.0-vault-20220705203604-61a421a1e/rclone_1.57.0-vault-20220705203604-61a421a1e_Darwin_x86_64
@@ -45,6 +45,11 @@ permissions:
 ```shell
 $ mv rclone_1.57.0-vault-20220701222624-3e2968a05_Darwin_x86_64 rclone
 $ chmod +x rclone
+```
+
+Check if the binary works fine:
+
+```
 $ rclone version
 rclone v1.57.0-vault-20220702021915-4e51866c5
 - os/version: ubuntu 20.04 (64 bit)
