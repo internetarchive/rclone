@@ -19,6 +19,12 @@ Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
+> **Note MacOS users**: We recommended to download the binary with [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/), like:
+
+```
+$ curl --output rclone -sL https://github.com/internetarchive/rclone/releases/download/v1.57.0-vault-20220705203604-61a421a1e/rclone_1.57.0-vault-20220705203604-61a421a1e_Darwin_x86_64
+```
+
 We currently support the following operating systems and platforms:
 
 * Linux (ARM64)
