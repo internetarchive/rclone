@@ -6,6 +6,8 @@ We are developing an rclone backend for Vault Digital Preservation System
 ([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
 developed at the [Internet Archive](https://archive.org/) and release versions here.
 
+This is work in progress and we are happy about feedback: [vault@archive.org](mailto:vault@archive.org).
+
 With this version of rclone, you can **list your collections** in Vault and **upload files
 and folders** conveniently from **local disk** or other **cloud providers**.
 
@@ -78,7 +80,16 @@ DefaultFixityFrequency: TWICE_YEARLY
                   Plan: Basic
             QuotaBytes: 1099511627776
               Username: admin
- ```
+```
+
+## Known limitations
+
+This is a working prototype and while continuously tested against our
+development and QA vault instances, limitations and rough edges remain.
+
+* read and write support **only on the command line** level (mount and serve are read only)
+* currently, if you copy data from another cloud service to vault, data needs
+  to be stored temporarily on the machine where rclone runs
 
 ## Example commands
 
@@ -200,7 +211,7 @@ inspected. Hence this command can take a while on large folders.
 
 Options: `-d`, `-s`, ...
 
-```
+```shell
 $ rclone tree vault:/C100
 /
 ├── a
@@ -217,7 +228,7 @@ $ rclone tree vault:/C100
 │   ├── first.md
 │   ├── index.html
 │   ├── second.md
-│   └── xxxx.txt
+│   └── third.txt
 ├── c
 │   └── myblog
 │       ├── content
@@ -232,7 +243,7 @@ $ rclone tree vault:/C100
     ├── first.md
     ├── index.html
     ├── second.md
-    └── xxxx.txt
+    └── third.txt
 
 12 directories, 18 files
 ```
@@ -251,11 +262,11 @@ $ rclone mkdir vault:/X1
 By default, behaviour is similar to `mkdir -p`, i.e. parents are created, if
 they do not exist:
 
-```
+```shell
 $ rclone mkdir vault:/X2/a/b/c
 ```
 
-### Uploading single files and directories
+### Depositing / Uploading single files and directories
 
 * [x] copy
 * [x] copyto
@@ -263,16 +274,40 @@ $ rclone mkdir vault:/X2/a/b/c
 
 Copy operations to vault will create directories as needed:
 
-```
+```shell
 $ rclone copy ~/tmp/somedir vault:/ExampleCollection/somedir
 ```
 
 If you configure other remotes, like Dropbox, Google Drive, Amazon S3, etc. you
-can copy files directly from there to vault:
+can copy files directly from there to Vault (note that currently the
+transferred files need to be stored temporarily on the machine that runs
+vault).
 
-```
+```shell
 $ rclone copy dropbox:/iris-data.csv vault:/C104
 ```
+
+#### Resuming an interrupted deposit
+
+It is possible to resume an interrupted deposit.
+
+Assuming we want to copy local path "A" to vault "B" - we can start a deposit by
+copying files. You'll see the deposit id logged to the terminal (e.g. 742):
+
+```shell
+$ rclone copy A vault:/B
+<5>NOTICE: vault (v1): deposit registered: 742
+...
+```
+
+You can interrupt the deposit e.g. with CTRL-C. To resume, add the
+`--vault-resume-deposit-id` flag:
+
+```shell
+$ rclone copy A vault:/B --vault-resume-deposit-id 742
+```
+
+Note that resuming only makes sense when the source and destination path are the same.
 
 ### Sync
 
@@ -363,31 +398,22 @@ a6cfd6fc383e5856da20444a633ee5e4c23b603b27f807459186118035ed2441  d/first.md
 ...
 ```
 
-## Resuming an interrupted deposit
+### Vault Specific Commands
 
-It is possible to resume an interrupted deposit.
+Backends can implement custom commands.
 
-Assuming we want to copy local path "A" to vault "B", we can start a deposit by
-copying files. You'll the the deposit id in the logs (e.g. 742):
+#### Deposit Status (ds, dst, deposit-status)
 
+For vault we currently have a single command, that returns the deposit status,
+given the deposit id (e.g. 742).
+
+```shell
+$ rclone backend ds vault:/ 742
 ```
-$ rclone copy A vault:/B
-<5>NOTICE: vault (v1): deposit registered: 742
-...
-```
-
-You can interrupt the deposit e.g. with CTRL-C. To resume:
-
-```
-$ rclone copy A vault:/B --vault-resume-deposit 742
-```
-
-Note that resuming only makes sense when the source and destination path are the same.
-
 
 # Misc
 
-## Building the custom rclone binary
+## Building the custom rclone binary from source
 
 Building requires the Go toolchain installed.
 
@@ -407,15 +433,16 @@ rclone v1.59.0-beta.6244.66b9ef95f.sample
 - go/tags: none
 ```
 
-
 ## TODO
+
+A few issues to address.
 
 * [x] issue with `max-depth`
 * [ ] ncdu performance
 * [x] resumable deposits
 * [ ] cli access to various reports (fixity, ...)
 * [ ] test harness
-
+* [ ] full read-write support for "mount" and "serve" mode
 
 ## Forum
 
@@ -423,11 +450,3 @@ rclone v1.59.0-beta.6244.66b9ef95f.sample
 changes, discussing it here:
 [https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336](https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336)
 
-
-## Review (MW) Notes
-
-> ls --max-depth={1,2,..} are producing unexpected results: ...
-
-The [ls](https://rclone.org/commands/rclone_ls/) subcommand lists size and path
-of **objects only** - our root is the organization, the first level are
-COLLECTION items, there is no FILE that has a an ORG as a parent
