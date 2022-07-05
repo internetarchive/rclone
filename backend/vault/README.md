@@ -75,7 +75,7 @@ e.g. `rclone ls vault:/x/y/z`).
 # `type` needs to be `vault`, however.
 [vault]
 type = vault
-username = Roosevelt
+username = roosevelt
 password = 4tJ3RGIDZw4P
 endpoint = https://vault.archive-it.org/vault/api/
 ```
@@ -92,7 +92,7 @@ DefaultFixityFrequency: TWICE_YEARLY
           Organization: SuperOrg
                   Plan: Basic
             QuotaBytes: 1099511627776
-              Username: admin
+              Username: roosevelt
 ```
 
 ## Known Limitations
