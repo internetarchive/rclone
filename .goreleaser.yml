@@ -45,9 +45,9 @@ release:
     name: rclone
   disable: false
   header: |
-    ## rclone with vault support (experimental)
+    ## Rclone with Vault support (experimental)
 
-    This is an release of rclone with support for the Vault
+    This is a release of Rclone with support for the Vault
     Digital Preservation System, developed at the [Internet
     Archive](https://archive.org).
 
