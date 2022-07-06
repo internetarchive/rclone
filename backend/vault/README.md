@@ -2,7 +2,7 @@
 
 > [Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
 
-We are developing an Rclone backend for Vault Digital Preservation System
+We are developing an Rclone backend for the Vault Digital Preservation System
 ([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
 developed at the [Internet Archive](https://archive.org/) and release versions here.
 
@@ -11,7 +11,8 @@ This is work in progress and we are happy about feedback: [vault@archive.org](ma
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
 providers**. We are basing our releases on the latest version of the Rclone
-upstream project.
+upstream project (perspectivaly, we would like to include this backend into the
+main Rclone project).
 
 ## Download Rclone with Vault Support
 
