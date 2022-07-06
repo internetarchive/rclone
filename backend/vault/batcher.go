@@ -218,7 +218,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		}
 		b.parent = t
 		// Prepare deposit request.
-		fs.Debugf(b, "preparing %d files for deposit", len(b.items))
+		fs.Logf(b, "preparing %d files for deposit", len(b.items))
 		for _, item := range b.items {
 			totalSize += item.src.Size()
 			files = append(files, item.ToFile(ctx))
