@@ -118,12 +118,12 @@ development and QA Vault instances, limitations and rough edges remain.
 
 ## Example Commands
 
+Rclone has [great docs on its own](https://rclone.org/docs/); the following are
+just a few typical usage examples.
+
 ## Quick Tour
 
 ![static/506601.cast](static/506601.gif)
-
-Rclone has [great docs on its own](https://rclone.org/docs/); the following are
-just a few typical usage examples.
 
 ### Quota and Usage
 
