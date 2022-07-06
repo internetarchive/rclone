@@ -54,6 +54,10 @@ release:
     More information about this backend can be found in
     [backend/vault/README.md](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
 
+    Note MacOS users: We recommended to download the binary on the command line
+    with [curl](https://curl.se/) or
+    [wget](https://www.gnu.org/software/wget/).
+
     * Date: {{ .Date }}
     * Version: {{ .Version }}
     * Branch: {{ .Branch }}
