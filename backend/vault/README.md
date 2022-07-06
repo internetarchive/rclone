@@ -28,12 +28,12 @@ $ curl --output rclone -sL https://github.com/internetarchive/rclone/releases/do
 
 We currently support the following operating systems and platforms:
 
-* Linux (ARM64)
-* Linux (Intel)
-* MacOS (Intel)
-* MacOS (M1)
-* Windows (ARM64)
-* Windows (Intel)
+* Linux (arm/64)
+* Linux (intel x86/64)
+* MacOS (intel x86/64)
+* MacOS (arm/64) -- [M1](https://en.wikipedia.org/wiki/Apple_M1), ...
+* Windows (arm/64)
+* Windows (intel x86/64)
 
 Releases follow a versioning scheme that includes the rclone version, timestamp and commit, e.g. like:
 `v1.57.0-vault-20220627142057-e4798bf85`.
