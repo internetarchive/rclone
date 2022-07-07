@@ -140,7 +140,7 @@ func (api *Api) Login() (err error) {
 	data.Set("csrfmiddlewaretoken", token)
 	req, err := http.NewRequest("POST", loginURL, strings.NewReader(data.Encode()))
 	if err != nil {
-		return err
+		return fmt.Errorf("login failed: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	// You are seeing this message because this HTTPS site requires a "Referer
@@ -484,7 +484,7 @@ func (api *Api) User() (*User, error) {
 func (api *Api) Organization() (*Organization, error) {
 	u, err := api.User()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 	return api.GetOrganization(u.OrganizationIdentifier())
 }
