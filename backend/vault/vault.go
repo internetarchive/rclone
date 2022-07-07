@@ -57,9 +57,9 @@ func init() {
 			fs.CommandHelp{
 				Name:  "ds",
 				Short: "show deposit status",
-				Long: `Display status of deposit, pass deposit id (e.g. 752) as argument, e.g.:
+				Long: `Display status of deposit, pass deposit id (e.g. 742) as argument, e.g.:
 
-    $ rclone backend ds vault: 752
+    $ rclone backend ds vault: 742
 
 Will return a JSON like this:
 
