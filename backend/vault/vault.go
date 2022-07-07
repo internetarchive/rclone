@@ -371,11 +371,11 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 func (f *Fs) About(ctx context.Context) (*fs.Usage, error) {
 	organization, err := f.api.Organization()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("api organization failed: %w", err)
 	}
 	stats, err := f.api.GetCollectionStats()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("api collection failed: %w", err)
 	}
 	var (
 		numFiles = stats.NumFiles()
