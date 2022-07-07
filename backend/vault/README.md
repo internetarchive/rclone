@@ -91,7 +91,7 @@ e.g. `rclone ls vault:/x/y/z`).
 type = vault
 username = roosevelt
 password = 4tJ3RGIDZw4P
-endpoint = https://vault.archive-it.org/vault/api/
+endpoint = https://vault.archive-it.org/api/
 ```
 
 To check if everything works, you can e.g. run `rclone config userinfo` to
