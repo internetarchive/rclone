@@ -478,6 +478,7 @@ A few issues to address.
 * [ ] cli access to various reports (fixity, ...)
 * [ ] test harness
 * [ ] full read-write support for "mount" and "serve" mode
+* [ ] when a deposit is interrupted, a few stale files may remain, leading to unexpected results
 
 ## Forum
 
