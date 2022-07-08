@@ -226,7 +226,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		switch {
 		case b.resumeDepositId > 0:
 			depositId = b.resumeDepositId
-			fs.Debugf(b, "trying to resume deposit %d", depositId)
+			fs.Logf(b, "trying to resume deposit %d", depositId)
 		default:
 			// TODO: we may want to reuse a deposit to continue an interrupted
 			// deposit, e.g. --vault-resume-deposit-id 123
