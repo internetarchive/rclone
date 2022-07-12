@@ -622,7 +622,7 @@ func (o *Object) Hash(ctx context.Context, ty hash.Type) (string, error) {
 	}
 	// TODO: we may want hash.ErrUnsupported, but we get an err, via:
 	// https://github.com/rclone/rclone/blob/c85fbebce6f7166350c79e11fae763c8264ef865/fs/operations/operations.go#L105
-	return "", nil
+	return "", hash.ErrUnsupported
 }
 func (o *Object) Storable() bool { return true }
 
