@@ -270,7 +270,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		err      error
 	)
 	fs.Debugf(f, "fetching remote file temporarily")
-	if filename, err = extra.TempFileFromReader(in); err != nil {
+	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
+	if err != nil {
+		return nil, err
+	}
+	tee := io.TeeReader(in, hasher)
+	if filename, err = extra.TempFileFromReader(tee); err != nil {
 		return nil, err
 	}
 	fs.Debugf(f, "fetched %v to %v", src.Remote(), filename)
@@ -280,10 +285,15 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		src:      src,
 		options:  options,
 	})
+	sums := hasher.Sums()
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
 		treeNode: &api.TreeNode{
+			Md5Sum:     sums[hash.MD5],
+			Sha1Sum:    sums[hash.SHA1],
+			Sha256Sum:  sums[hash.SHA256],
+			NodeType:   "FILE",
 			ObjectSize: src.Size(),
 		},
 	}, nil
