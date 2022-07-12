@@ -77,7 +77,7 @@ Will return a JSON like this:
 	})
 }
 
-// NewFS sets up a new filesystem.
+// NewFS sets up a new filesystem for vault.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
 	var opt Options
 	err := configstruct.Set(m, &opt)
@@ -120,7 +120,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	return f, nil
 }
 
-// Options for vault.
+// Options for Vault.
 type Options struct {
 	Username            string `config:"username"`
 	Password            string `config:"password"`
@@ -129,19 +129,19 @@ type Options struct {
 	ResumeDepositId     int64  `config:"resume_deposit_id"`
 }
 
-// EndpointNormalized returns a normalized endpoint.
+// EndpointNormalized handles trailing slashes.
 func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
 
-// Fs is the main vault filesystem. Most operations are accessed through the
-// api. A batch helper is required to model the deposit-style upload of a
-// potentially large set of files.
+// Fs is the main Vault filesystem. Most operations are accessed through the
+// api. A batch helper is required to model the deposit-style upload of a set
+// of files.
 type Fs struct {
 	name     string
 	root     string
 	opt      Options
-	api      *api.Api     // vault api wrapper
+	api      *api.Api     // Vault API wrapper
 	features *fs.Features // optional features
 	batcher  *batcher     // batching for deposits
 }
@@ -149,19 +149,29 @@ type Fs struct {
 // Fs Info
 // -------
 
-func (f *Fs) Name() string             { return f.name }
-func (f *Fs) Root() string             { return f.root }
-func (f *Fs) String() string           { return f.name }
+// Name returns the name of the filesystem.
+func (f *Fs) Name() string { return f.name }
+
+// Root returns the filesystem root.
+func (f *Fs) Root() string { return f.root }
+
+// String returns the name of the filesystem.
+func (f *Fs) String() string { return f.name }
+
+// Precision returns the support precision.
 func (f *Fs) Precision() time.Duration { return 1 * time.Second }
-func (f *Fs) Hashes() hash.Set         { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
-func (f *Fs) Features() *fs.Features   { return f.features }
+
+// Hashes returns the supported hashes.
+func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
+
+// Features returns optional features.
+func (f *Fs) Features() *fs.Features { return f.features }
 
 // Fs Ops
 // ------
 
-// List the objects and directories in dir into entries.  The
-// entries can be returned in any order but should be for a
-// complete directory.
+// List the objects and directories in dir into entries. The entries can be
+// returned in any order but should be for a complete directory.
 //
 // dir should be "" to list the root, and should not have
 // trailing slashes.
@@ -633,7 +643,7 @@ func (o *Object) MimeType(ctx context.Context) string {
 	return o.treeNode.MimeType()
 }
 
-// ID returns treenode path, which should be unique for any object in vault.
+// ID returns treenode path, which should be unique for any object in Vault.
 func (o *Object) ID() string {
 	if o.treeNode == nil {
 		return ""
