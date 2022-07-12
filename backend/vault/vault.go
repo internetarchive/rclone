@@ -610,20 +610,31 @@ func (o *Object) Hash(ctx context.Context, ty hash.Type) (string, error) {
 	case hash.MD5:
 		if v, ok := o.treeNode.Md5Sum.(string); ok {
 			return v, nil
+		} else {
+			return "", nil
 		}
 	case hash.SHA1:
 		if v, ok := o.treeNode.Sha1Sum.(string); ok {
 			return v, nil
+		} else {
+			return "", nil
 		}
 	case hash.SHA256:
 		if v, ok := o.treeNode.Sha256Sum.(string); ok {
 			return v, nil
+		} else {
+			return "", nil
 		}
+	case hash.None:
+		// Testing systems sometimes miss a hashes, so we just skip it.
+		return "", nil
 	}
 	// TODO: we may want hash.ErrUnsupported, but we get an err, via:
 	// https://github.com/rclone/rclone/blob/c85fbebce6f7166350c79e11fae763c8264ef865/fs/operations/operations.go#L105
 	return "", hash.ErrUnsupported
 }
+
+// Storable returns true, since all we should be able to save all them.
 func (o *Object) Storable() bool { return true }
 
 // Object Ops
