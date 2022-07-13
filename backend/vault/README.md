@@ -2,13 +2,14 @@
 
 > [Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
 
-We are developing an Rclone backend for the Vault Digital Preservation System
+We are working on an Rclone backend for the Vault Digital Preservation System
 ([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/),
 [Docs](https://support.archive-it.org/hc/en-us/sections/7581093252628-Vault)),
 developed at the [Internet Archive](https://archive.org/) and release versions
 here.
 
-This is work in progress and we are happy about feedback: [vault@archive.org](mailto:vault@archive.org).
+These releases are tested extensively, yet still prototypical and we are happy
+about feedback: [vault@archive.org](mailto:vault@archive.org).
 
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
@@ -80,9 +81,9 @@ Configuration file is stored at:
 /Users/fdr/.config/rclone/rclone.conf
 ```
 
-In your rclone configuration file, add the following section for Vault (the
+In your rclone configuration file, add the following section for Vault -- the
 section name is arbitrary; it will be used to refer to the remote in commands,
-e.g. `rclone ls vault:/x/y/z`).
+e.g. `rclone ls vault:/x/y/z`.
 
 ```ini
 # The section name is used to refer to the remote on the command line. The
@@ -115,8 +116,8 @@ This is a working prototype and while continuously tested against our
 development and QA Vault instances, limitations and rough edges remain.
 
 * read and write support **only on the command line** level (mount and serve are read only)
-* currently, if you copy data from another cloud service to vault, data will be
-  stored temporarily on the machine where rclone runs
+* currently, if you copy data from another cloud service to vault, **data will be
+  stored temporarily on the machine where rclone runs**
 
 ## Example Commands
 
