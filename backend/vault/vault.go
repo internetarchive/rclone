@@ -19,7 +19,16 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 )
 
-var ErrVersionMismatch = errors.New("api version mismatch")
+const (
+	MaxPathLength     = 4096
+	MaxFilenameLength = 255
+)
+
+var (
+	ErrPathTooLong     = errors.New("path too long")
+	ErrFilenameTooLong = errors.New("filename too long")
+	ErrVersionMismatch = errors.New("api version mismatch")
+)
 
 func init() {
 	fs.Register(&fs.RegInfo{
@@ -237,6 +246,9 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
+	if len(remote) > MaxPathLength {
+		return nil, ErrPathTooLong
+	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
 	if err != nil {
 		return nil, err
@@ -562,6 +574,11 @@ func pathSegments(p string, sep string) (result []string) {
 		result = append(result, strings.Trim(v, sep))
 	}
 	return result
+}
+
+// isValidPath returns an error, if that path could not be stored in petabox.
+func (f *Fs) isValidPath(p string) error {
+	return nil
 }
 
 // Object
