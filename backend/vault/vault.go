@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/extra"
@@ -20,14 +22,17 @@ import (
 )
 
 const (
-	MaxPathLength     = 4096
-	MaxFilenameLength = 255
+	MaxPathLength = 4096 // PATH_MAX
+	MaxNameLength = 255  // NAME_MAX
 )
 
 var (
 	ErrPathTooLong     = errors.New("path too long")
 	ErrFilenameTooLong = errors.New("filename too long")
 	ErrVersionMismatch = errors.New("api version mismatch")
+
+	// VaultItemPrefix are used to do basic filename sanity checks.
+	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
 func init() {
@@ -246,9 +251,6 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
-	if len(remote) > MaxPathLength {
-		return nil, ErrPathTooLong
-	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
 	if err != nil {
 		return nil, err
@@ -579,6 +581,69 @@ func pathSegments(p string, sep string) (result []string) {
 // isValidPath returns an error, if that path could not be stored in petabox.
 func (f *Fs) isValidPath(p string) error {
 	return nil
+}
+
+// IsValidPath returns true, if the path can be used in a petabox item using a
+// set of predeclared prefixes for item names.
+func IsValidPath(remote string) bool {
+	for _, bucketPrefix := range VaultItemPrefixes {
+		if !IsValidPathBucketPrefix(remote, bucketPrefix) {
+			return false
+		}
+	}
+	return true
+}
+
+// IsValidPath returns true, if the path can be used in a petabox item with a given name prefix.
+func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
+	if remote == "" {
+		return false
+	}
+	invalidSuffixes := []string{
+		"_files.xml",
+		"_meta.xml",
+		"_meta.sqlite",
+		"_reviews.xml",
+	}
+	for _, suffix := range invalidSuffixes {
+		if strings.HasPrefix(strings.TrimLeft(remote, "/"), bucketPrefix) && strings.HasSuffix(remote, suffix) {
+			return false
+		}
+	}
+	if remote == "/" {
+		return false
+	}
+	if strings.Contains(remote, "//") {
+		return false
+	}
+	if len(remote) > MaxPathLength {
+		return false
+	}
+	segments := strings.Split(remote, "/")
+	for _, s := range segments {
+		if s == "." || s == ".." {
+			return false
+		}
+		if len(s) > MaxNameLength {
+			return false
+		}
+	}
+	invalidChars := []string{string('\x00'), string('\x0a'), string('\x0d')}
+	for _, c := range invalidChars {
+		if strings.Contains(remote, c) {
+			return false
+		}
+	}
+	if !utf8.ValidString(remote) {
+		return false
+	}
+	// Try to use path in XML, cf. self.contains_xml_incompatible_characters
+	var dummy interface{}
+	dec := xml.NewDecoder(strings.NewReader(fmt.Sprintf("<x>%s</x>", remote)))
+	if err := dec.Decode(&dummy); err != nil {
+		return false
+	}
+	return true
 }
 
 // Object
