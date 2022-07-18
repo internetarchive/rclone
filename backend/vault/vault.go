@@ -30,7 +30,8 @@ var (
 	ErrInvalidPath     = errors.New("invalid path")
 	ErrVersionMismatch = errors.New("api version mismatch")
 
-	// VaultItemPrefix are used to do basic filename sanity checks.
+	// VaultItemPrefix are used to do basic filename sanity checks. If any more
+	// prefixes are to be used, we need to add them here.
 	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
