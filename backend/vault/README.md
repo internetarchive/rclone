@@ -469,6 +469,30 @@ rclone v1.59.0-beta.6244.66b9ef95f.sample
 
 To show debug output, append `-v` or `-vv` to the command.
 
+## Valid Vault Path Rules
+
+As per `assert_key_valid_for_write` method from PB.
+
+> bucket is the pbox identifier
+
+> key is the file path not including the bucket
+
+* [x] key cannot be empty
+* [x] name cannot be bucket + `_files.xml`
+* [x] name cannot be bucket + `_meta.xml`
+* [x] name cannot be bucket + `_meta.sqlite`
+* [x] name cannot be bucket + `_reviews.xml`
+* [x] key cannot start with a slash
+* [x] key cannot contain consecutive slashes, e.g. `//`
+* [x] cannot exceed `PATH_MAX`
+* [x] when key is split on `/` it cannot contain `.` or `..`
+* [x] components cannot be longer than `NAME_MAX`
+* [x] key cannot contain NULL byte
+* [x] key cannot contain newline
+* [x] key cannot contain carriage return
+* [x] key must be valid unicode
+* [x] `contains_xml_incompatible_characters` must be false
+
 ## TODO
 
 A few issues to address.
