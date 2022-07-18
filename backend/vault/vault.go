@@ -27,8 +27,7 @@ const (
 )
 
 var (
-	ErrPathTooLong     = errors.New("path too long")
-	ErrFilenameTooLong = errors.New("filename too long")
+	ErrInvalidPath     = errors.New("invalid path")
 	ErrVersionMismatch = errors.New("api version mismatch")
 
 	// VaultItemPrefix are used to do basic filename sanity checks.
@@ -251,6 +250,9 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
+	if !IsValidPath(remote) {
+		return nil, ErrInvalidPath
+	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
 	if err != nil {
 		return nil, err
@@ -279,6 +281,9 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 // upload at rclone exit time.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
+	if !IsValidPath(src.Remote()) {
+		return nil, ErrInvalidPath
+	}
 	var (
 		filename string
 		err      error
@@ -576,11 +581,6 @@ func pathSegments(p string, sep string) (result []string) {
 		result = append(result, strings.Trim(v, sep))
 	}
 	return result
-}
-
-// isValidPath returns an error, if that path could not be stored in petabox.
-func (f *Fs) isValidPath(p string) error {
-	return nil
 }
 
 // IsValidPath returns true, if the path can be used in a petabox item using a
