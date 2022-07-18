@@ -69,7 +69,7 @@ func init() {
 		},
 		CommandHelp: []fs.CommandHelp{
 			fs.CommandHelp{
-				Name:  "ds",
+				Name:  "status",
 				Short: "show deposit status",
 				Long: `Display status of deposit, pass deposit id (e.g. 742) as argument, e.g.:
 
@@ -86,6 +86,11 @@ Will return a JSON like this:
       "uploaded_files": 0
     }
 `,
+			},
+			fs.CommandHelp{
+				Name:  "dashboard",
+				Short: "show Vault dashboard",
+				Long:  "Show a terminal rendering of the Vault dashboard",
 			},
 		},
 	})
@@ -550,7 +555,7 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
 	// TODO: fixity reports, distribution, ...
 	switch name {
-	case "deposit-status", "ds", "dst":
+	case "status", "st", "deposit-status", "ds", "dst":
 		if len(args) == 0 {
 			return nil, fmt.Errorf("deposit id required")
 		}
@@ -563,6 +568,9 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 			return nil, fmt.Errorf("failed to get deposit status")
 		}
 		return ds, nil
+	case "dashboard", "d", "db", "dash":
+		fs.Logf(f, "rendering dashboard")
+		return nil, nil
 	}
 	return nil, fmt.Errorf("command not found")
 }
