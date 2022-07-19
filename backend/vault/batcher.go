@@ -14,7 +14,6 @@ import (
 	"path"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/fs"
@@ -40,24 +39,32 @@ type batcher struct {
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
 type batchItem struct {
-	root     string // the fs root
-	filename string // some (temporary) file with contents
-	src      fs.ObjectInfo
-	options  []fs.OpenOption
+	root     string          // the fs root
+	filename string          // some (temporary) file with contents
+	src      fs.ObjectInfo   // object info
+	options  []fs.OpenOption // open options
+}
+
+// randomFlowIdentifier returns a unique flow identifier.
+func randomFlowIdentifier() string {
+	var (
+		prefix  = "rclone-vault-flow"
+		randInt = 100_000_000 + rand.Intn(899_999_999) // fixed length
+	)
+	return fmt.Sprintf("%s-%d", prefix, randInt)
 }
 
 // ToFile turns a batch item into a File for a deposit request.  This method
 // sets the flow identifier. TODO: For resumable uploads, we need to derive the
 // flow identifier from the file itself.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
+	if item == nil || item.src == nil {
+		return nil
+	}
 	flowIdentifier, err := item.deriveFlowIdentifier()
 	if err != nil {
 		fs.Debugf(item, "falling back to synthetic flow id (deposit will not be resumable [err: %v])", err)
-		var (
-			randInt    = 100_000_000 + rand.Intn(899_999_999) // fixed length
-			randSuffix = fmt.Sprintf("%s-%d", time.Now().Format("20060102030405"), randInt)
-		)
-		flowIdentifier = fmt.Sprintf("rclone-vault-flow-%s", randSuffix)
+		flowIdentifier = randomFlowIdentifier()
 	}
 	return &api.File{
 		Name:                 path.Base(item.src.Remote()),
