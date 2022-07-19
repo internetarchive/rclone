@@ -30,7 +30,7 @@ func TestIsPathValidBucketPrefix(t *testing.T) {
 		{"illegal xml", P, "ab\x11c", false},
 	}
 	for _, c := range cases {
-		result := isValidPath(c.Path, c.BucketPrefix)
+		result := IsValidPathBucketPrefix(c.Path, c.BucketPrefix)
 		if result != c.Result {
 			t.Errorf("[%v] got %v, want %v", c.Path, result, c.Result)
 		}
