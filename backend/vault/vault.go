@@ -30,8 +30,10 @@ var (
 	ErrInvalidPath     = errors.New("invalid path")
 	ErrVersionMismatch = errors.New("api version mismatch")
 
-	// VaultItemPrefix are used to do basic filename sanity checks. If any more
-	// prefixes are to be used, we need to add them here.
+	// VaultItemPrefix are expected item name prefixes. If any more prefixes
+	// are to be used, we need to add them here. Example:
+	// archive.org/details/IA-DPS-VAULT-QA-... We use these to reject certain
+	// prohibited filenames.
 	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
@@ -733,18 +735,20 @@ func (o *Object) Storable() bool { return true }
 
 // SetModTime set the modified at time to the current time.
 func (o *Object) SetModTime(ctx context.Context, _ time.Time) error {
-	fs.Debugf(o, "set mod time (now)")
+	fs.Debugf(o, "set mod time (now) for ", o.ID())
 	return o.fs.api.SetModTime(ctx, o.treeNode)
 }
 func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadCloser, error) {
-	fs.Debugf(o, "reading object contents")
+	fs.Debugf(o, "reading object contents from %v", o.ID())
 	return o.treeNode.Content(options...)
 }
 func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) error {
+	fs.Debugf(o, "updating object contents at %v", o.ID())
 	_, err := o.fs.Put(ctx, in, src, options...)
 	return err
 }
 func (o *Object) Remove(ctx context.Context) error {
+	fs.Debugf(o, "removing object: %v", o.ID())
 	return o.fs.api.Remove(ctx, o.treeNode)
 }
 
