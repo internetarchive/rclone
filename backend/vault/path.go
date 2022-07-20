@@ -7,6 +7,19 @@ import (
 	"unicode/utf8"
 )
 
+const (
+	MaxPathLength = 4096 // PATH_MAX
+	MaxNameLength = 255  // NAME_MAX
+)
+
+var (
+	// VaultItemPrefix are expected item name prefixes. If any more prefixes
+	// are to be used, we need to add them here. Example:
+	// archive.org/details/IA-DPS-VAULT-QA-... We use these to reject certain
+	// prohibited filenames.
+	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
+)
+
 // IsValidPath returns true, if the path can be used in a petabox item using a
 // set of predeclared prefixes for item names.
 func IsValidPath(remote string) bool {
