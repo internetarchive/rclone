@@ -19,20 +19,9 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 )
 
-const (
-	MaxPathLength = 4096 // PATH_MAX
-	MaxNameLength = 255  // NAME_MAX
-)
-
 var (
 	ErrInvalidPath     = errors.New("invalid path")
 	ErrVersionMismatch = errors.New("api version mismatch")
-
-	// VaultItemPrefix are expected item name prefixes. If any more prefixes
-	// are to be used, we need to add them here. Example:
-	// archive.org/details/IA-DPS-VAULT-QA-... We use these to reject certain
-	// prohibited filenames.
-	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
 func init() {
