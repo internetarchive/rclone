@@ -13,17 +13,17 @@ const (
 )
 
 var (
-	// VaultItemPrefix are expected item name prefixes. If any more prefixes
-	// are to be used, we need to add them here. Example:
+	// DefaultVaultItemPrefixes are expected item name prefixes. If any more
+	// prefixes are to be used, we need to add them here. Example:
 	// archive.org/details/IA-DPS-VAULT-QA-... We use these to reject certain
 	// prohibited filenames.
-	VaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
+	DefaultVaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
 // IsValidPath returns true, if the path can be used in a petabox item using a
 // set of predeclared prefixes for item names.
 func IsValidPath(remote string) bool {
-	for _, bucketPrefix := range VaultItemPrefixes {
+	for _, bucketPrefix := range DefaultVaultItemPrefixes {
 		if !IsValidPathBucketPrefix(remote, bucketPrefix) {
 			return false
 		}
@@ -36,6 +36,18 @@ func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
 	if remote == "" {
 		return false
 	}
+	if remote == "/" {
+		return false
+	}
+	if len(remote) > MaxPathLength {
+		return false
+	}
+	if strings.Contains(remote, "//") {
+		return false
+	}
+	if !utf8.ValidString(remote) {
+		return false
+	}
 	invalidSuffixes := []string{
 		"_files.xml",
 		"_meta.xml",
@@ -43,18 +55,11 @@ func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
 		"_reviews.xml",
 	}
 	for _, suffix := range invalidSuffixes {
-		if strings.HasPrefix(strings.TrimLeft(remote, "/"), bucketPrefix) && strings.HasSuffix(remote, suffix) {
+		hasInvalidPrefix := strings.HasPrefix(strings.TrimLeft(remote, "/"), bucketPrefix)
+		hasInvalidSuffix := strings.HasSuffix(remote, suffix)
+		if hasInvalidPrefix && hasInvalidSuffix {
 			return false
 		}
-	}
-	if remote == "/" {
-		return false
-	}
-	if strings.Contains(remote, "//") {
-		return false
-	}
-	if len(remote) > MaxPathLength {
-		return false
 	}
 	segments := strings.Split(remote, "/")
 	for _, s := range segments {
@@ -65,14 +70,15 @@ func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
 			return false
 		}
 	}
-	invalidChars := []string{string('\x00'), string('\x0a'), string('\x0d')}
+	invalidChars := []string{
+		string('\x00'),
+		string('\x0a'),
+		string('\x0d'),
+	}
 	for _, c := range invalidChars {
 		if strings.Contains(remote, c) {
 			return false
 		}
-	}
-	if !utf8.ValidString(remote) {
-		return false
 	}
 	// Try to use path in XML, cf. self.contains_xml_incompatible_characters
 	var dummy interface{}
