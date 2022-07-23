@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -9,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/url"
 	"regexp"
 	"strings"
@@ -148,6 +150,9 @@ func (api *Api) Login() (err error) {
 	// is required for security reasons, to ensure that your browser is not
 	// being hijacked by third parties.
 	req.Header.Set("Referer", loginURL)
+	b, _ := httputil.DumpRequest(req, true)
+	fs.Debugf(api, "login request ----8<----\n%v", string(b))
+	fs.Debugf(api, "----8<----\n")
 	resp, err = client.Do(req)
 	if err != nil {
 		return fmt.Errorf("vault login: %w", err)
@@ -157,6 +162,15 @@ func (api *Api) Login() (err error) {
 		b, _ := ioutil.ReadAll(resp.Body)
 		fs.LogPrintf(fs.LogLevelError, api, string(b))
 		return fmt.Errorf("login failed with: %v", resp.StatusCode)
+	}
+	b, _ = httputil.DumpResponse(resp, true)
+	if bytes.Contains(b, []byte(`Your username and password didn't match`)) {
+		return fmt.Errorf("username and password did not match")
+	}
+	if len(jar.Cookies(u)) < 2 {
+		msg := "expected at least two cookies for session"
+		fs.Debugf(api, msg)
+		return fmt.Errorf(msg)
 	}
 	api.client.SetCookie(jar.Cookies(u)...)
 	return nil
