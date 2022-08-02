@@ -300,6 +300,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		options:  options,
 	})
 	sums := hasher.Sums()
+	fs.Debugf(f, "added file to batch (%s, %v)", filename, sums)
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
