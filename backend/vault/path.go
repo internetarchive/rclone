@@ -13,9 +13,9 @@ const (
 )
 
 var (
-	// DefaultVaultItemPrefixes are expected item name prefixes. If any more
-	// prefixes are to be used, we need to add them here. Example:
-	// archive.org/details/IA-DPS-VAULT-QA-... We use these to reject certain
+	// DefaultVaultItemPrefixes are expected petabox item name prefixes. If any
+	// more prefixes are to be used, we need to add them here. Example:
+	// archive.org/details/IA-DPS-VAULT-QA-... We need this to reject certain
 	// prohibited filenames.
 	DefaultVaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
@@ -23,16 +23,17 @@ var (
 // IsValidPath returns true, if the path can be used in a petabox item using a
 // set of predeclared prefixes for item names.
 func IsValidPath(remote string) bool {
-	for _, bucketPrefix := range DefaultVaultItemPrefixes {
-		if !IsValidPathBucketPrefix(remote, bucketPrefix) {
+	for _, prefix := range DefaultVaultItemPrefixes {
+		if !IsValidPathPrefix(remote, prefix) {
 			return false
 		}
 	}
 	return true
 }
 
-// IsValidPath returns true, if the path can be used in a petabox item with a given name prefix.
-func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
+// IsValidPathPrefix returns true, if the path can be used in a petabox item
+// with a given item name (bucket) prefix.
+func IsValidPathPrefix(remote, bucketPrefix string) bool {
 	if remote == "" {
 		return false
 	}
@@ -50,8 +51,8 @@ func IsValidPathBucketPrefix(remote, bucketPrefix string) bool {
 	}
 	invalidSuffixes := []string{
 		"_files.xml",
-		"_meta.xml",
 		"_meta.sqlite",
+		"_meta.xml",
 		"_reviews.xml",
 	}
 	for _, suffix := range invalidSuffixes {
