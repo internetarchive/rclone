@@ -54,8 +54,8 @@ func randomFlowIdentifier() string {
 	return fmt.Sprintf("%s-%d", prefix, randInt)
 }
 
-// ToFile turns a batch item into a File for a deposit request.  This method
-// sets the flow identifier. TODO: For resumable uploads, we need to derive the
+// ToFile turns a batch item into a File for a deposit request. This method
+// sets the flow identifier. TODO(martin): For resumable uploads, we need to derive the
 // flow identifier from the file itself.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	if item == nil || item.src == nil {
@@ -132,11 +132,13 @@ func (b *batcher) Add(item *batchItem) {
 	if _, ok := b.seen[item.filename]; !ok {
 		b.items = append(b.items, item)
 		b.seen[item.filename] = struct{}{}
+	} else {
+		fs.Debugf(b, "ignoring already batched file: %v", item.filename)
 	}
 	b.mu.Unlock()
 }
 
-// Chunker allows to read file in chunks.
+// Chunker allows to read file in chunks of fixed sizes.
 type Chunker struct {
 	chunkSize int64
 	fileSize  int64
@@ -235,8 +237,6 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			depositId = b.resumeDepositId
 			fs.Logf(b, "trying to resume deposit %d", depositId)
 		default:
-			// TODO: we may want to reuse a deposit to continue an interrupted
-			// deposit, e.g. --vault-resume-deposit-id 123
 			rdr := &api.RegisterDepositRequest{
 				TotalSize: totalSize,
 				Files:     files,
@@ -263,9 +263,6 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			progressBar = progressbar.DefaultBytes(totalSize, "<5>NOTICE: depositing")
 		}
 		for i, item := range b.items {
-			// Upload file with a single chunk. First issue a GET, if that is a
-			// 204 then follow up with a POST.
-			//
 			// TODO: streamline the chunking part a bit
 			// TODO: we could parallelize chunk uploads
 			var (
@@ -283,7 +280,12 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 					currentChunkSize = chunker.FileSize() - ((j - 1) * b.chunkSize)
 				}
 				fs.Debugf(b, "[%d/%d] %d %d %s",
-					j, chunker.NumChunks(), currentChunkSize, chunker.FileSize(), item.filename)
+					j,
+					chunker.NumChunks(),
+					currentChunkSize,
+					chunker.FileSize(),
+					item.filename,
+				)
 				params := url.Values{
 					"depositId":            []string{strconv.Itoa(int(depositId))},
 					"flowChunkNumber":      []string{strconv.Itoa(int(j))},
@@ -294,7 +296,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 					"flowRelativePath":     []string{files[i].RelativePath},
 					"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
 					"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
-					"upload_token":         []string{"my_token"}, // just copy'n'pasting ...
+					"upload_token":         []string{"my_token"}, // TODO(martin): just copy'n'pasting ...
 				}
 				fs.Debugf(b, "params: %v", params)
 				opts := rest.Opts{
@@ -315,13 +317,16 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				} else {
 					fs.Debugf(b, "GET returned: %v", resp.StatusCode)
 				}
-				var r io.Reader
+				var (
+					r    io.Reader
+					chr  = chunker.ChunkReader(j - 1)
+					size = currentChunkSize // size will get mutated during request
+				)
 				if b.showDepositProgress {
-					r = io.TeeReader(chunker.ChunkReader(j-1), progressBar)
+					r = io.TeeReader(chr, progressBar)
 				} else {
-					r = chunker.ChunkReader(j - 1)
+					r = chr
 				}
-				size := currentChunkSize
 				opts = rest.Opts{
 					Method:               "POST",
 					Path:                 "/flow_chunk",
