@@ -62,7 +62,7 @@ chmod +x rclone
 ```
 
 To run the command you can either put the binary (or a symlink to it) into your
-[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable), or you can stay in the
+[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
 directory where the binary lives and run the binary from there:
 
 ```
