@@ -29,25 +29,25 @@ Download the latest release from:
 For Intel Macs:
 
 ```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Darwin_x86_64
+curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64
 chmod +x rclone
 ```
 
 For ARM Macs (M1, M2, ...):
 
 ```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Darwin_arm64
+curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64
 chmod +x rclone
 ```
 
 We currently support the following operating systems and platforms:
 
-* [Apple ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Darwin_arm64)
-* [Apple Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Darwin_x86_64)
-* [Linux ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Linux_arm64)
-* [Linux Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Linux_x86_64)
-* [Windows ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Windows_arm64.exe)
-* [Windows Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220719153323-8199b147f/rclone_1.59.0-vault-20220719153323-8199b147f_Windows_x86_64.exe)
+* [Apple ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64)
+* [Apple Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64)
+* [Linux ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_arm64)
+* [Linux Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_x86_64)
+* [Windows ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe)
+* [Windows Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe)
 
 
 Releases follow a versioning scheme that includes the rclone version, timestamp and commit, e.g. like:
@@ -528,4 +528,3 @@ A few issues to address.
 * [x] Trying to move from "atexit" to "Shutdown", but that would require additional
 changes, discussing it here:
 [https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336](https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336)
-
