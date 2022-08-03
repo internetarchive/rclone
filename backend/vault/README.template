@@ -23,6 +23,8 @@ Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
+----
+
 > **Note MacOS users**: We recommended to download the binary with
 > [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
 
@@ -39,6 +41,8 @@ For ARM Macs (M1, M2, ...):
 curl --output rclone -L RELEASE_ASSET_DARWIN_ARM
 chmod +x rclone
 ```
+
+----
 
 We currently support the following operating systems and platforms:
 
@@ -95,13 +99,8 @@ You can configure your vault endpoint using the `config` subcommand:
 
 This will create a configuration file, if it did not exist. There is a single
 configuration file for rclone, located by default under your [HOME
-directory](https://en.wikipedia.org/wiki/Home_directory):
-
-```
-~/.config/rclone/rclone.conf
-```
-
-You can also ask rclone, where your configuration file is located:
+directory](https://en.wikipedia.org/wiki/Home_directory). You can ask rclone,
+where your configuration file is located:
 
 ```
 ./rclone config file

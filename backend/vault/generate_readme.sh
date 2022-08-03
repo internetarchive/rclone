@@ -9,7 +9,7 @@ TEMPLATE=README.template
 for link in $(curl -sL $LATEST | grep -Eo "/internetarchive/rclone/releases/download/[^\"]*" | grep -v "checksums" | awk '{print "https://github.com"$0}'); do
 	case $link in
 	*Darwin_arm64)
-		v="Apple ARM"
+        v="Apple ARM (M1, M2, ...)"
 		RELEASE_ASSET_DARWIN_ARM=$link
 		;;
 	*Darwin_x86_64)
