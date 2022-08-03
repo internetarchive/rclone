@@ -23,6 +23,8 @@ Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
+----
+
 > **Note MacOS users**: We recommended to download the binary with
 > [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
 
@@ -40,9 +42,11 @@ curl --output rclone -L https://github.com/internetarchive/rclone/releases/downl
 chmod +x rclone
 ```
 
+----
+
 We currently support the following operating systems and platforms:
 
-* [Apple ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64)
+* [Apple ARM (M1, M2, ...)](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64)
 * [Apple Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64)
 * [Linux ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_arm64)
 * [Linux Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_x86_64)
@@ -101,13 +105,8 @@ You can configure your vault endpoint using the `config` subcommand:
 
 This will create a configuration file, if it did not exist. There is a single
 configuration file for rclone, located by default under your [HOME
-directory](https://en.wikipedia.org/wiki/Home_directory):
-
-```
-~/.config/rclone/rclone.conf
-```
-
-You can also ask rclone, where your configuration file is located:
+directory](https://en.wikipedia.org/wiki/Home_directory). You can ask rclone,
+where your configuration file is located:
 
 ```
 ./rclone config file
