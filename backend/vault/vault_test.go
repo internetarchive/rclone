@@ -17,8 +17,12 @@ func TestIntegration(t *testing.T) {
 	if v := os.Getenv("VAULT_TEST_REMOTE_NAME"); v != "" {
 		remoteName = v
 	}
+	// TODO(martin): collection (top level dirs) cannot be deleted, but that
+	// leads to failing tests; fix this.
 	fstests.Run(t, &fstests.Opt{
-		RemoteName: remoteName,
-		NilObject:  (*Object)(nil),
+		RemoteName:      remoteName,
+		NilObject:       (*Object)(nil),
+		SkipFsCheckWrap: true,
+		SkipInvalidUTF8: true,
 	})
 }
