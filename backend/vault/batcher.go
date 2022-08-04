@@ -3,7 +3,6 @@ package vault
 import (
 	"context"
 	"crypto/md5"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"math"
@@ -105,17 +104,21 @@ func (item *batchItem) deriveFlowIdentifier() (string, error) {
 		return "", err
 	}
 	defer f.Close()
-	const maxBytes = 1 << 30 // 1GB
+	const maxBytes = 1 << 24 // 16MB
 	h := md5.New()
 	if _, err := io.Copy(h, io.LimitReader(f, maxBytes)); err != nil {
 		return "", err
 	}
+	if _, err := io.WriteString(h, item.root); err != nil {
+		return "", err
+	}
+	if _, err = io.WriteString(h, item.src.Remote()); err != nil {
+		return "", err
+	}
 	// Filename and root would probably be enough. For the moment we include a
 	// partial MD5 sum of the file.
-	return fmt.Sprintf("rclone-vault-flow-%x-%s-%s",
-		h.Sum(nil),
-		hex.EncodeToString([]byte(item.root)),
-		hex.EncodeToString([]byte(item.src.Remote()))), nil
+	// TODO: the resulting string must not be longer than 255 chars
+	return fmt.Sprintf("rclone-vault-flow-%x", h.Sum(nil)), nil
 }
 
 // String will most likely show up in debug messages.
