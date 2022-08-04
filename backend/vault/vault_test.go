@@ -20,9 +20,10 @@ func TestIntegration(t *testing.T) {
 	// TODO(martin): collection (top level dirs) cannot be deleted, but that
 	// leads to failing tests; fix this.
 	fstests.Run(t, &fstests.Opt{
-		RemoteName:      remoteName,
-		NilObject:       (*Object)(nil),
-		SkipFsCheckWrap: true,
-		SkipInvalidUTF8: true,
+		RemoteName:               remoteName,
+		NilObject:                (*Object)(nil),
+		SkipFsCheckWrap:          true,
+		SkipInvalidUTF8:          true,
+		SkipBadWindowsCharacters: true,
 	})
 }
