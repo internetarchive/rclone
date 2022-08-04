@@ -367,7 +367,7 @@ func (f *Fs) mkdir(ctx context.Context, dir string) error {
 	return nil
 }
 
-// Rmdir deletes a folder.
+// Rmdir deletes a folder. Collections cannot be removed.
 func (f *Fs) Rmdir(ctx context.Context, dir string) error {
 	fs.Debugf(f, "rmdir %v", f.absPath(dir))
 	t, err := f.api.ResolvePath(f.absPath(dir))
@@ -377,7 +377,7 @@ func (f *Fs) Rmdir(ctx context.Context, dir string) error {
 	if t.NodeType == "FOLDER" {
 		return f.api.Remove(ctx, t)
 	}
-	return fmt.Errorf("cannot drop node type %v", strings.ToLower(t.NodeType))
+	return fmt.Errorf("cannot delete node type %v", strings.ToLower(t.NodeType))
 }
 
 // Fs extra
