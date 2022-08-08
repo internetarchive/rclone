@@ -19,6 +19,36 @@ main Rclone project).
 
 ## Download Rclone with Vault Support
 
+We currently support MacOS, Windows and Linux.
+
+### MacOS
+
+We support both classic Intel-based Macs and the current Apple Silicon Macs
+(Apple Support: [Mac computers with Apple
+silicon](https://support.apple.com/en-us/HT211814) -- the Apple Silicon chips
+carry designations like [M1, M2,
+...](https://en.wikipedia.org/wiki/Apple_silicon#M_series)).
+
+#### Intel-based Macs
+
+```shell
+curl --output rclone -L RELEASE_ASSET_DARWIN_INTEL
+chmod +x rclone
+```
+
+#### Apple Silicon Macs
+
+```shell
+curl --output rclone -L RELEASE_ASSET_DARWIN_ARM
+chmod +x rclone
+```
+
+### Windows
+
+You can click on ...
+
+### Linux
+
 Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
