@@ -19,6 +19,35 @@ main Rclone project).
 
 ## Download Rclone with Vault Support
 
+We support MacOS, Windows and Linux.
+
+### MacOS
+
+> **Note MacOS users**: We recommended to download the binary with
+> [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
+
+For Intel-based Macs:
+
+```shell
+curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64
+chmod +x rclone
+```
+
+For newer, Apple Silicon (ARM-based) MacBooks (M1, M2, ...):
+
+```shell
+curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64
+chmod +x rclone
+```
+
+### Windows
+
+...
+
+### Linux
+
+...
+
 Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
