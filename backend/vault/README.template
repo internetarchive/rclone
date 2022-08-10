@@ -45,7 +45,9 @@ chmod +x rclone
 
 ### Windows
 
-You can click on ...
+Download the binary with your browser:
+
+* [rclone.exe](RELEASE_ASSET_WINDOWS_INTEL)
 
 ### Linux
 
@@ -53,24 +55,8 @@ Download the latest release from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
-----
-
-> **Note MacOS users**: We recommended to download the binary with
-> [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
-
-For Intel Macs:
-
-```shell
-curl --output rclone -L RELEASE_ASSET_DARWIN_INTEL
-chmod +x rclone
-```
-
-For ARM Macs (M1, M2, ...):
-
-```shell
-curl --output rclone -L RELEASE_ASSET_DARWIN_ARM
-chmod +x rclone
-```
+* [Intel x86-64](RELEASE_ASSET_LINUX_INTEL)
+* [ARM64](RELEASE_ASSET_LINUX_ARM)
 
 ----
 
