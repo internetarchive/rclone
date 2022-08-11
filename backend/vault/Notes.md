@@ -69,3 +69,73 @@ dev-postgres-1  | 2022-08-04 13:26:47.197 UTC [3434] STATEMENT:  INSERT INTO "va
     --- FAIL: TestIntegration/FsShutdown (0.23s)
 FAIL
 ```
+
+----
+
+# Development Notes
+
+## Building the custom rclone binary from source
+
+Building requires the Go toolchain installed.
+
+```
+$ git clone git@github.com:internetarchive/rclone.git
+$ cd rclone
+$ git checkout ia-wt-1168
+$ make
+$ ./rclone version
+rclone v1.59.0-beta.6244.66b9ef95f.sample
+- os/version: ubuntu 20.04 (64 bit)
+- os/kernel: 5.13.0-48-generic (x86_64)
+- os/type: linux
+- os/arch: amd64
+- go/version: go1.18.3
+- go/linking: dynamic
+- go/tags: none
+```
+
+## Debug output
+
+To show debug output, append `-v` or `-vv` to the command.
+
+## Valid Vault Path Rules
+
+As per `assert_key_valid_for_write` method from PetaBox.
+
+> bucket is the pbox identifier
+
+> key is the file path not including the bucket
+
+* [x] key cannot be empty
+* [x] name cannot be bucket + `_files.xml`
+* [x] name cannot be bucket + `_meta.xml`
+* [x] name cannot be bucket + `_meta.sqlite`
+* [x] name cannot be bucket + `_reviews.xml`
+* [x] key cannot start with a slash
+* [x] key cannot contain consecutive slashes, e.g. `//`
+* [x] cannot exceed `PATH_MAX`
+* [x] when key is split on `/` it cannot contain `.` or `..`
+* [x] components cannot be longer than `NAME_MAX`
+* [x] key cannot contain NULL byte
+* [x] key cannot contain newline
+* [x] key cannot contain carriage return
+* [x] key must be valid unicode
+* [x] `contains_xml_incompatible_characters` must be false
+
+## TODO
+
+A few issues to address.
+
+* [x] issue with `max-depth`
+* [ ] ncdu performance
+* [x] resumable deposits
+* [ ] cli access to various reports (fixity, ...)
+* [ ] test harness
+* [ ] full read-write support for "mount" and "serve" mode
+* [ ] when a deposit is interrupted, a few stale files may remain, leading to unexpected results
+
+## Forum
+
+* [x] Trying to move from "atexit" to "Shutdown", but that would require additional
+changes, discussing it here:
+[https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336](https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336)
