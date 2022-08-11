@@ -18,15 +18,19 @@ for link in $(curl -sL $LATEST | grep -Eo "/internetarchive/rclone/releases/down
 		;;
 	*Linux_arm64)
 		v="Linux ARM"
+		RELEASE_ASSET_LINUX_ARM=$link
 		;;
 	*Linux_x86_64)
 		v="Linux Intel"
+		RELEASE_ASSET_LINUX_INTEL=$link
 		;;
 	*Windows_arm64.exe)
 		v="Windows ARM"
+		RELEASE_ASSET_WINDOWS_ARM=$link
 		;;
 	*Windows_x86_64.exe)
 		v="Windows Intel"
+		RELEASE_ASSET_WINDOWS_INTEL=$link
 		;;
 	*) ;;
 	esac
@@ -35,4 +39,8 @@ done
 
 sed -e "s@RELEASE_ASSET_LINKS@$snippet@" $TEMPLATE |
 	sed -e "s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@" |
-	sed -e "s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@"
+	sed -e "s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@" |
+	sed -e "s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@" |
+	sed -e "s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@" |
+	sed -e "s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@" |
+	sed -e "s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@"
