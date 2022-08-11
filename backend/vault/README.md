@@ -13,108 +13,89 @@ about feedback: [vault@archive.org](mailto:vault@archive.org).
 
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
-providers**. We are basing our releases on the latest version of the Rclone
-upstream project (perspectivaly, we would like to include this backend into the
-main Rclone project).
+providers** and **download files or folders**. We are basing our releases on
+the latest version of the Rclone upstream project (perspectivaly, we would like
+to include this backend into the main Rclone project).
 
 ## Download Rclone with Vault Support
 
-We support MacOS, Windows and Linux.
+We currently support MacOS, Windows and Linux. Releases follow a versioning
+scheme that includes the rclone version, timestamp and commit, e.g. like:
+`v1.57.0-vault-20220627142057-e4798bf85` (where `v1.57.0` is the latest version
+tag of rclone, `20220627142057` is the build timestamp and `e4798bf85` is the
+commit hash).
 
 ### MacOS
 
-> **Note MacOS users**: We recommended to download the binary with
-> [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
+We support both classic Intel-based Macs and the newer Apple Silicon Macs
+(Apple Support: [Mac computers with Apple
+silicon](https://support.apple.com/en-us/HT211814) -- the Apple Silicon chips
+carry designations like [M1, M2,
+...](https://en.wikipedia.org/wiki/Apple_silicon#M_series)).
 
-For Intel-based Macs:
+#### Intel-based Macs
 
 ```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64
-chmod +x rclone
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64
+$ chmod +x rclone
 ```
 
-For newer, Apple Silicon (ARM-based) MacBooks (M1, M2, ...):
+#### Apple Silicon Macs
 
 ```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64
-chmod +x rclone
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64
+$ chmod +x rclone
 ```
 
 ### Windows
 
-...
+Download the binary (e.g. with your browser):
+
+* [rclone.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe)
+
+In case you have an ARM based computer running Windows, please download [rclone.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe)
 
 ### Linux
 
-...
-
-Download the latest release from:
+Download the latest release depending on your architecture from:
 
 [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
-----
 
-> **Note MacOS users**: We recommended to download the binary with
-> [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/):
-
-For Intel Macs:
-
-```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64
-chmod +x rclone
-```
-
-For ARM Macs (M1, M2, ...):
-
-```shell
-curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64
-chmod +x rclone
-```
-
-----
-
-We currently support the following operating systems and platforms:
-
-* [Apple ARM (M1, M2, ...)](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_arm64)
-* [Apple Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Darwin_x86_64)
-* [Linux ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_arm64)
-* [Linux Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_x86_64)
-* [Windows ARM](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe)
-* [Windows Intel](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe)
-
-
-Releases follow a versioning scheme that includes the rclone version, timestamp and commit, e.g. like:
-`v1.57.0-vault-20220627142057-e4798bf85`.
+## Rename the downloaded file
 
 If you downloaded the file through your browser then it will be convenient to
-rename the file, e.g. to `rclone` (you can do that in your file explorer or on
-the command line).
+rename the file (which may have a long name containing version information), to
+e.g. `rclone` (you can do that in your file explorer or on the command line).
 
-On Linux you'll have to set executable permissions (assuming you renamed the file to `rclone`):
+On MacOS and Linux, this can be done one the command line with the
+[`mv`](https://man7.org/linux/man-pages/man1/mv.1.html) command.
+
+
+## Setting executable permissions
+
+On MacOS and Linux you'll have to set executable permissions (assuming you
+renamed the file to `rclone`):
 
 ```
-chmod +x rclone
+$ chmod +x rclone
 ```
 
 To run the command you can either put the binary (or a symlink to it) into your
-[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable), or you can stay in the
-directory where the binary lives and run the binary from there:
+[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
+directory where the binary lives and run the binary from there.
 
 ```
-./rclone
+$ rclone
 ```
+
+## First run
 
 You can now check if the binary works fine by printing out version information
 about the program (your output may vary):
 
 ```
-./rclone version
-```
-
-The output would look something like this:
-
-```
-rclone v1.57.0-vault-20220702021915-4e51866c5
+$ rclone version
 - os/version: ubuntu 20.04 (64 bit)
 - os/kernel: 5.13.0-52-generic (x86_64)
 - os/type: linux
@@ -124,28 +105,34 @@ rclone v1.57.0-vault-20220702021915-4e51866c5
 - go/tags: none
 ```
 
-## Configuration
+## Configuring the Vault Backend
 
-You can configure your vault endpoint using the `config` subcommand:
-
-```
-./rclone config create vault vault username=alice password=secret endpoint=https://vault.archive-it.org/api
-```
-
-This will create a configuration file, if it did not exist. There is a single
-configuration file for rclone, located by default under your [HOME
-directory](https://en.wikipedia.org/wiki/Home_directory). You can ask rclone,
-where your configuration file is located:
+To access Vault, Rclone will need to know your credentials. You can configure
+your Vault username, password and API endpoint using the `config` subcommand of
+rclone, like so (replace `alice` and `secret` to match your credentials):
 
 ```
-./rclone config file
+$ rclone config create vault vault username=alice password=secret endpoint=https://vault.archive-it.org/api
 ```
+
+This will create a configuration file - if it did not exist - and will create a
+section for vault. There is a single configuration file for rclone, located by
+default under your [HOME directory](https://en.wikipedia.org/wiki/Home_directory).
+
+If sure, you can always ask rclone to show you where your configuration file is
+located:
+
+```
+$ rclone config file
+```
+
+## First steps with the Rclone Vault backend
 
 To check if everything works, you can e.g. run `rclone config userinfo` to
 display information about the configured Vault user:
 
 ```shell
-$ ./rclone config userinfo vault:
+$ rclone config userinfo vault:
 DefaultFixityFrequency: TWICE_YEARLY
              FirstName:
              LastLogin: 2022-07-02T00:29:20.364793Z
@@ -156,19 +143,282 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: roosevelt
 ```
 
+If you see this screen, congratulations - your rclone with vault support is now
+ready to use.
+
 ## Known Limitations
 
 This is a working prototype and while continuously tested against our
-development and QA Vault instances, limitations and rough edges remain.
+development and QA Vault instances, limitations remain.
 
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be
   stored temporarily on the machine where rclone runs**
 
+## Tasks
+
+There are a few common tasks around Vault:
+
+* [Depositing a single file](...)
+* [Depositing a directory](...)
+* [Listing a collection](...)
+* [Listing directory contents](...)
+* [Syncing a local folder to Vault](...)
+* [Download a single file](...)
+* [Download a directory or collection](...)
+
+For the example tasks we use an example local directory structure that looks
+like this. We also assume for the moment that nothing has been uploaded so far.
+
+```shell
+$ tree data
+data
+├── a.pdf
+├── b.pdf
+├── c.pdf
+├── d.png
+└── extra
+    ├── e.png
+    └── examples
+        └── f.png
+
+2 directories, 6 files
+```
+
+### Creating a collection
+
+A collection in Vault can be create explicitly with the `mkdir` command - every
+top level directory corresponds to a collection in Vault.
+
+For example, I can create a new collection called `TempSpace1` with the
+following command:
+
+```shell
+$ rclone mkdir vault:/TempSpace1
+```
+
+Note that once created, collections cannot be deleted - they can only be renamed.
+
+### Depositing a single file and inspecting the result
+
+I can work with single files, e.g. if we want to deposit `a.pdf` into
+`TempSpace1` collection, you can run:
+
+```shell
+$ rclone copy data/a.pdf vault:/TempSpace1
+<5>NOTICE: vault batcher: preparing 1 file(s) for deposit
+<5>NOTICE: vault (v1): deposit registered: 16
+<5>NOTICE: depositing 100% |██████████████████████████████████████ ....| (341/341 kB, 3.396 MB/s)
+<5>NOTICE: vault batcher: upload done (16), deposited 340.609Ki, 1 item(s)
+```
+
+To view the remote collection, you can use the `rclone ls ...` subcommand.
+
+```shell
+$ rclone ls vault:/TempSpace1
+   348784 a.pdf
+```
+
+An extended listing can be show with the `lsl` subcommand:
+
+```shell
+$ rclone lsl vault:/TempSpace1
+   348784 2022-08-11 22:25:27.000000000 a.pdf
+```
+
+### Depositing a directory
+
+Often you want to deposit a whole directory and its content, recursively. Let's
+deposit the whole `data` directory into a collection named `TempSpace2`.
+
+The `data` folder looked like this:
+
+```
+$ tree data
+data
+├── a.pdf
+├── b.pdf
+├── c.pdf
+├── d.png
+└── extra
+    ├── e.png
+    └── examples
+        └── f.png
+
+2 directories, 6 files
+```
+
+Note that we do not need to create the collection first, rclone will do that for us.
+
+```
+$ rclone copy data vault:/TempSpace2
+<5>NOTICE: vault batcher: preparing 5 file(s) for deposit
+<5>NOTICE: vault (v1): deposit registered: 25
+<5>NOTICE: depositing 100% |██████████████████████████████████████████████████████| (5.7/5.7 MB, 6.024 MB/s)
+<5>NOTICE: vault batcher: upload done (25), deposited 5.698Mi, 5 item(s)
+```
+
+We can verify that the folder has been uploaded conveniently with the `tree` subcommand:
+
+
+```shell
+$ rclone tree vault:/TempSpace2
+/
+├── a.pdf
+├── b.pdf
+├── c.pdf
+├── d.png
+└── extra
+    ├── e.png
+    └── examples
+        └── f.png
+
+2 directories, 6 files
+```
+
+### Listing a collections and folders
+
+You can list all you collections or just specific ones, of just a folder or
+subfolder.
+
+```shell
+$ rclone tree vault:/
+/
+├── TempSpace1
+│   └── a.pdf
+└── TempSpace2
+    ├── a.pdf
+    ├── b.pdf
+    ├── c.pdf
+    ├── d.png
+    └── extra
+        ├── e.png
+        └── examples
+            └── f.png
+```
+
+To only list everything under `TempSpace2/extra` we can specify the path in the command:
+
+```shell
+$ rclone tree vault:/TempSpace2/extra
+/
+├── e.png
+└── examples
+    └── f.png
+
+1 directories, 2 files
+```
+
+### Syncing a folder to Vault
+
+If you want to regularly sync a directory to Vault, you can use the `sync`
+subcommand. By default, this will try to synchronize your local files with the
+files in Vault.
+
+As an example, let's sync our tree into a new collection `TempSpace3`.
+
+```shell
+$ rclone sync data vault:/TempSpace3
+<5>NOTICE: vault batcher: preparing 6 file(s) for deposit
+<5>NOTICE: vault (v1): deposit registered: 26
+<5>NOTICE: depositing 100% |████████████████████████████████████████████| (6.0/6.0 MB, 5.449 MB/s)
+<5>NOTICE: vault batcher: upload done (26), deposited 6.031Mi, 6 item(s)
+```
+
+Let's check if all went well:
+
+```shell
+$ rclone ls vault:/TempSpace3
+   348784 a.pdf
+  1021176 b.pdf
+   455725 c.pdf
+    55183 d.png
+  2235016 extra/e.png
+  2207711 extra/examples/f.png
+```
+
+Looks good. We can run sync again, in which case nothing should happen, since all files are already in Vault.
+
+```shell
+$ rclone sync data vault:/TempSpace3
+```
+
+Indeed, there's no output - there was nothing to transfer.
+
+Now let's add another file to our local directory tree:
+
+```
+$ echo "NEW" > data/new.file
+```
+
+Our local tree looks like this now:
+
+```shell
+$ tree data
+data
+├── a.pdf
+├── b.pdf
+├── c.pdf
+├── d.png
+├── extra
+│   ├── e.png
+│   └── examples
+│       └── f.png
+└── new.file
+
+2 directories, 7 files
+```
+
+Now let's run `sync` again:
+
+```shell
+$ rclone sync data vault:/TempSpace3
+<5>NOTICE: vault batcher: preparing 1 file(s) for deposit
+<5>NOTICE: vault (v1): deposit registered: 27
+<5>NOTICE: depositing 100% |█████████████████████████████████████████████████████████| ( 4/ 4B, 0.068 kB/s)
+<5>NOTICE: vault batcher: upload done (27), deposited 4, 1 item(s)
+```
+
+Rclone noticed 1 new file and deposited it accordingly - let's see it in Vault:
+
+```shell
+$ rclone ls vault:/TempSpace3
+   348784 a.pdf
+  1021176 b.pdf
+   455725 c.pdf
+    55183 d.png
+        4 new.file
+  2235016 extra/e.png
+  2207711 extra/examples/f.png
+```
+
+Indeed, `new.file` has been uploaded.
+
+### Download a single file
+
+You can download a single file from vault with the `copy` command. Note that
+the last argument needs to be the target directory, e.g. `.` for the current
+directory.
+
+```shell
+$ rclone copy vault:/TempSpace3/a.pdf .
+```
+
+### Download a collection or directory
+
+Similarly, you can download a whole tree structure (e.g. a collection or a
+specific folder from a collection) with the `copy` subcommand:
+
+```
+$ rclone copy vault:/TempSpace3 Downloads
+```
+
+----
+
 ## Example Commands
 
 Rclone has [great docs on its own](https://rclone.org/docs/); the following are
-just a few typical usage examples.
+a few more usage examples.
 
 ## Quick Tour
 
@@ -176,20 +426,18 @@ just a few typical usage examples.
 
 ### Quota and Usage
 
-* [x] about
-
 ```
-./rclone about vault:/
+$ rclone about vault:/
 Total:   1 TiB
 Used:    2.891 GiB
 Free:    1021.109 GiB
 Objects: 19.955k
 ```
 
-* [x] config userinfo
+Information about the user
 
 ```
-./rclone config userinfo vault:/
+$ rclone config userinfo vault:/
 DefaultFixityFrequency: TWICE_YEARLY
              FirstName:
              LastLogin: 2022-06-14T17:09:11.222339Z
@@ -202,14 +450,8 @@ DefaultFixityFrequency: TWICE_YEARLY
 
 ### Listing Files
 
-* [x] ls
-* [x] lsl
-* [x] lsf
-* [x] lsd, lsd -R
-* [x] lsjson
-
 ```shell
-./rclone ls vault:/
+$ rclone ls vault:/
         8 C00/VERSION
         0 C1/abc.txt
      3241 C123/about.go
@@ -222,7 +464,7 @@ DefaultFixityFrequency: TWICE_YEARLY
       886 C123/ls.go
       ...
 
-./rclone lsl vault:/
+$ rclone lsl vault:/
         0 2022-06-08 23:49:10.000000000 C1/abc.txt
         8 2022-05-31 16:17:21.000000000 C00/VERSION
      3241 2022-05-31 17:13:45.000000000 C123/about.go
@@ -235,7 +477,7 @@ DefaultFixityFrequency: TWICE_YEARLY
       886 2022-05-31 17:06:59.000000000 C123/ls.go
       ...
 
-./rclone lsf vault:/
+$ rclone lsf vault:/
 .Trash-1000/
 C00/
 C1/
@@ -248,7 +490,7 @@ C50/
 C51/
 ...
 
-./rclone lsd vault:/
+$ rclone lsd vault:/
            0 2022-05-31 16:05:24         0 .Trash-1000
            0 2022-05-31 16:17:05         2 C00
            0 2022-06-08 23:49:06         1 C1
@@ -261,12 +503,12 @@ C51/
            0 2022-06-08 14:34:18         2 C51
            ...
 
-./rclone lsd -R vault:/C40
+$ rclone lsd -R vault:/C40
            0 2022-06-07 15:33:32         1 myblog
            0 2022-06-07 15:33:36         0 myblog/templates
            ...
 
-./rclone lsjson vault:/ | head -10
+$ rclone lsjson vault:/ | head -10
 [
 {"Path":".Trash-1000","Name":".Trash-1000","Size":0,"MimeType":"inode/directory","ModTime":"2022-05-31T14:05:24Z","IsDir":true,"ID":"1.12"},
 {"Path":"C00","Name":"C00","Size":0,"MimeType":"inode/directory","ModTime":"2022-05-31T14:17:05Z","IsDir":true,"ID":"1.25"},
@@ -290,7 +532,7 @@ inspected. Hence this command can take a while on large folders.
 Options: `-d`, `-s`, ...
 
 ```shell
-./rclone tree vault:/C100
+$ rclone tree vault:/C100
 /
 ├── a
 │   └── myblog
@@ -331,29 +573,23 @@ Options: `-d`, `-s`, ...
 Collections and folders are handled transparently (e.g. first path component
 will be the name of the collection, and anything below: folders).
 
-* [x] mkdir
-
 ```shell
-./rclone mkdir vault:/X1
+$ rclone mkdir vault:/X1
 ```
 
 By default, behaviour is similar to `mkdir -p`, i.e. parents are created, if
 they do not exist:
 
 ```shell
-./rclone mkdir vault:/X2/a/b/c
+$ rclone mkdir vault:/X2/a/b/c
 ```
 
 ### Depositing / Uploading files and directories
 
-* [x] copy
-* [x] copyto
-* [x] copyurl
-
 Copy operations to vault will create directories as needed:
 
 ```shell
-./rclone copy ~/tmp/somedir vault:/ExampleCollection/somedir
+$ rclone copy ~/tmp/somedir vault:/ExampleCollection/somedir
 ```
 
 If you configure other remotes, like Dropbox, Google Drive, Amazon S3, etc. you
@@ -362,7 +598,7 @@ transferred files need to be stored temporarily on the machine that runs
 vault).
 
 ```shell
-./rclone copy dropbox:/iris-data.csv vault:/C104
+$ rclone copy dropbox:/iris-data.csv vault:/C104
 ```
 
 #### Resuming an Interrupted Deposit
@@ -373,7 +609,7 @@ Assuming we want to copy local path "A" to vault "B" - we can start a deposit by
 copying files. You'll see the deposit id logged to the terminal (e.g. 742):
 
 ```shell
-./rclone copy A vault:/B
+$ rclone copy A vault:/B
 <5>NOTICE: vault (v1): deposit registered: 742
 ...
 ```
@@ -382,76 +618,65 @@ You can interrupt the deposit e.g. with CTRL-C. To resume, add the
 `--vault-resume-deposit-id` flag:
 
 ```shell
-./rclone copy A vault:/B --vault-resume-deposit-id 742
+$ rclone copy A vault:/B --vault-resume-deposit-id 742
 ```
 
 Note that resuming only makes sense when the source and destination path are the same.
 
 ### Sync
 
-* [x] sync
-
 Sync is similar to copy, can be used to successively sync file to vault.
 
 ```
-./rclone sync ~/tmp/somedir vault:/ExampleCollection/somedir
+$ rclone sync ~/tmp/somedir vault:/ExampleCollection/somedir
 ```
 
 ### Downloading Files and Folders
 
-* [x] copy
-
 Copy can be used to copy a file or folder from vault to local disk.
 
 ```
-./rclone copy vault:/ExampleCollection/somedir ~/tmp/somecopy
+$ rclone copy vault:/ExampleCollection/somedir ~/tmp/somecopy
 ```
 
 ### Streaming Files
 
-* [x] cat
-
 ```
-./rclone cat vault:/ExampleCollection/somedir/f.txt
+$ rclone cat vault:/ExampleCollection/somedir/f.txt
 ```
 
 ### Deleting Files and Folders
 
-* [x] delete
+Note that currently, there are a few limitations around deletes: You currently
+cannot reupload a file with the name of a file that has been deleted before.
 
 ```
-./rclone delete vault:/C123/a/f.txt
+$ rclone delete vault:/C123/a/f.txt
 ```
 
 A whole folder or collection can be deleted as well.
 
 ```
-./rclone delete vault:/C123
+$ rclone delete vault:/C123
 ```
 
 ### Show Disk Usage
-
-* [x] ncdu
 
 Similar to [ncdu](https://en.wikipedia.org/wiki/Ncdu), rclone can show what
 dirs consume most disk space.
 
 ```
-./rclone ncdu vault:/
+$ rclone ncdu vault:/
 ```
 
 Works for folders as well. Running this against large collections may take a while.
 
 ### Listing Hashes
 
-* [x] md5sum
-* [x] sha1sum
-* [x] hashsum
-
 Vault keeps track of MD5, SHA1 and SHA256 of objects and rclone is natively interested in those.
 
 ```
-./rclone md5sum vault:/
+$ rclone md5sum vault:/
 d41d8cd98f00b204e9800998ecf8427e  C103/testing-touch.txt
 127a60cc6951b43d8ec9f2fbc566f53d  C102/base.org
 d6c43639164bd159609fde47ae1477cc  C102/uuuu.txt
@@ -460,14 +685,14 @@ c4b44a7043b45e0e03664827874739c9  240/Zwyns_Lbova_2018.pdf
 275cc2f7f947d45c8a632dab13a8522c  240/midas.pdf
 ...
 
-./rclone sha1sum vault:/C100
+$ rclone sha1sum vault:/C100
 a2b0031c595250996b9fd671ba543a5178a86c02  d/blog.html
 e38c7b27a15bb492766686bc61cf27765f34f97e  d/base.html
 785096246f488bce480e8fadcd7d4e7863c08773  d/config.toml
 be3ad0ee54239c370d616b60f02736dd10137dc7  d/second.md
 ...
 
-./rclone hashsum sha256 vault:/C100
+$ rclone hashsum sha256 vault:/C100
 59739d7135e335183b260fa83428df7d2fba108f8398a4a21ef1da706315f2f1  d/blog.html
 3aafe178d8e5bb9994bc2ecc0feb92eb63adc3023fdf0901c10bbe906542d05b  d/base.html
 0d0a57a6ecb72d8f9fffb6b092037a99490d1fe20a30675b29caa0e24008dd28  d/blog-page.html
@@ -486,73 +711,6 @@ For vault we currently have a single command, that returns the deposit status,
 given the deposit id (e.g. 742).
 
 ```shell
-./rclone backend ds vault:/ 742
+$ rclone backend ds vault:/ 742
 ```
 
-# Misc
-
-## Building the custom rclone binary from source
-
-Building requires the Go toolchain installed.
-
-```
-$ git clone git@github.com:internetarchive/rclone.git
-$ cd rclone
-$ git checkout ia-wt-1168
-$ make
-$ ./rclone version
-rclone v1.59.0-beta.6244.66b9ef95f.sample
-- os/version: ubuntu 20.04 (64 bit)
-- os/kernel: 5.13.0-48-generic (x86_64)
-- os/type: linux
-- os/arch: amd64
-- go/version: go1.18.3
-- go/linking: dynamic
-- go/tags: none
-```
-
-## Debug output
-
-To show debug output, append `-v` or `-vv` to the command.
-
-## Valid Vault Path Rules
-
-As per `assert_key_valid_for_write` method from PB.
-
-> bucket is the pbox identifier
-
-> key is the file path not including the bucket
-
-* [x] key cannot be empty
-* [x] name cannot be bucket + `_files.xml`
-* [x] name cannot be bucket + `_meta.xml`
-* [x] name cannot be bucket + `_meta.sqlite`
-* [x] name cannot be bucket + `_reviews.xml`
-* [x] key cannot start with a slash
-* [x] key cannot contain consecutive slashes, e.g. `//`
-* [x] cannot exceed `PATH_MAX`
-* [x] when key is split on `/` it cannot contain `.` or `..`
-* [x] components cannot be longer than `NAME_MAX`
-* [x] key cannot contain NULL byte
-* [x] key cannot contain newline
-* [x] key cannot contain carriage return
-* [x] key must be valid unicode
-* [x] `contains_xml_incompatible_characters` must be false
-
-## TODO
-
-A few issues to address.
-
-* [x] issue with `max-depth`
-* [ ] ncdu performance
-* [x] resumable deposits
-* [ ] cli access to various reports (fixity, ...)
-* [ ] test harness
-* [ ] full read-write support for "mount" and "serve" mode
-* [ ] when a deposit is interrupted, a few stale files may remain, leading to unexpected results
-
-## Forum
-
-* [x] Trying to move from "atexit" to "Shutdown", but that would require additional
-changes, discussing it here:
-[https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336](https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336)
