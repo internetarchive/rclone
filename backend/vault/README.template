@@ -38,6 +38,11 @@ Silicon](https://support.apple.com/en-us/HT211814) -- the Apple Silicon chips
 carry designations like [M1, M2,
 ...](https://en.wikipedia.org/wiki/Apple_silicon#M_series)).
 
+We suggest you use
+[Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
+terminal emulator) and [curl](https://curl.se/) or
+[wget](https://www.gnu.org/software/wget/) to download the binary.
+
 #### Intel-based Macs
 
 ```shell
@@ -60,7 +65,26 @@ Download the binary (e.g. with your browser):
 
 In case you have an ARM based computer running Windows, please download [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
 
-Note that on Windows, before you can run the file, you will see various popup windows asking for confirmation.
+**Important**: We do not sign the executable, and so Windows will issue warnings
+about an untrusted source and will suggest that you delete the file.
+
+To ensure the downloaded file is the same as the one we published, you can
+compare the checksum of the file you downloaded against a list of checksums we
+publish alongside each
+[release](https://github.com/internetarchive/rclone/releases). The filename
+ends with `_checksums.txt` - on Windows you can generate various hash sums of a
+file with
+[certutil](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certutil),
+a pre-installed command line utility;
+[examples](https://superuser.com/a/898377))
+
+![](static/Windows_GitHub_Checksum.png)
+
+Once downloaded, it may be convenient to rename the file. You can do this in your Explorer or with the Command Prompt with the
+[ren](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ren)
+command. Please make sure the file has an `.exe` extension, otherwise Windows
+may not recognize it (an error you may see would be *rclone is not a
+recognized internal or external command*).
 
 ### Linux
 
@@ -69,39 +93,24 @@ Download the latest release depending on your architecture:
 * [x64 64-bit](RELEASE_ASSET_LINUX_INTEL)
 * [ARM64](RELEASE_ASSET_LINUX_ARM)
 
-## Rename the downloaded file
+For convenient, you can rename the downloaded file to e.g. `rclone` with your
+File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
+command.
 
-If you downloaded the file through your browser then it will be convenient to
-rename the file (which may have a long name containing version information), to
-e.g. `rclone` or `rclone.exe` (you can do that in your file explorer or on the
-command line).
-
-On MacOS and Linux, this can be done one the command line with the
-[`mv`](https://man7.org/linux/man-pages/man1/mv.1.html) command. In the Windows
-Command Prompt, the command is called
-[ren](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ren).
-
-## Setting executable permissions
-
-On MacOS and Linux you'll have to set executable permissions (assuming you
-renamed the file to `rclone`):
+Finally, set executable permissions:
 
 ```
 $ chmod +x rclone
 ```
+
+## Checkpoint: First Run
 
 To run the command you can either put the binary (or a symlink to it) into your
 [`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
 directory where the binary lives and run the binary from there (runnable on
 MacOS and Linux with `./rclone`, on Windows with just `rclone`).
 
-```
-$ rclone
-```
-
-## First run
-
-You can now check if the binary works fine by printing out version information
+You can check if the binary works fine by printing out version information
 about the program (your output may vary):
 
 ```
@@ -117,20 +126,21 @@ $ rclone version
 
 ## Configuring Rclone Vault Backend
 
-To access Vault, Rclone will need to know your Vault credentials. You can configure
-your Vault username, password and API endpoint using the `config` subcommand of
-rclone, like so (replace `alice` and `secret` to match your credentials):
+To access Vault, Rclone will need to know your Vault credentials and the Vault
+API endpoint. You can configure your Vault username, password and API endpoint
+using the `config` subcommand of rclone, like so (replace `alice` and `secret`
+to match your credentials):
 
 ```
 $ rclone config create vault vault username=alice password=secret endpoint=https://vault.archive-it.org/api
 ```
 
-This will create a configuration file - if it did not exist before - and will
-create a section for vault. There is a single configuration file for rclone,
+This will create a configuration file (or extend it, if if already existed) -
+and will add a section for Vault. Rclone uses a single configuration file,
 located by default under your [HOME
 directory](https://en.wikipedia.org/wiki/Home_directory).
 
-You can always ask rclone to show you where your configuration file is located:
+You can always ask Rclone to show you where your configuration file is located:
 
 ```
 $ rclone config file
