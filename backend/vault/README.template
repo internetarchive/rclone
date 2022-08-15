@@ -136,7 +136,7 @@ $ rclone version
 To access Vault, Rclone will need to know your Vault credentials and the Vault
 API endpoint.
 
-> The default Vault API endpoint currently is: [https://vault.archive-it.org/api](https://vault.archive-it.org/api)
+> The current Vault API endpoint is at: [https://vault.archive-it.org/api](https://vault.archive-it.org/api)
 
 You can configure your Vault username, password and API endpoint using the
 `config` subcommand of rclone, like so (replace `alice` and `secret` to match
@@ -174,7 +174,7 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: roosevelt
 ```
 
-If you see a similar output, congratulations - your rclone with vault support
+If you see a similar output, congratulations - your Rclone with Vault support
 is now ready to use!
 
 ## Known Limitations
