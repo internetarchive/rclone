@@ -80,7 +80,7 @@ warnings about an untrusted source and will suggest that you delete the file.
 To ensure the downloaded file is the same as the one we published, you can
 compare the checksum of the file you downloaded against a list of checksums we
 publish alongside each
-[release](https://github.com/internetarchive/rclone/releases). The filename
+[release](https://github.com/internetarchive/rclone/releases) (see Screenshot below). The filename
 ends with `_checksums.txt` - on Windows you can generate various hash sums of a
 file with
 [certutil](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certutil),
@@ -102,11 +102,9 @@ Download the latest release depending on your architecture:
 * [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_x86_64)
 * [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_arm64)
 
-For convenient, you can rename the downloaded file to e.g. `rclone` with your
+For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
-command.
-
-Finally, set executable permissions:
+command. Finally, set executable permissions:
 
 ```
 $ chmod +x rclone
@@ -116,8 +114,8 @@ $ chmod +x rclone
 
 To run the command you can either put the binary (or a symlink to it) into your
 [`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
-directory where the binary lives and run the binary from there (runnable on
-MacOS and Linux with `./rclone`, on Windows with just `rclone`).
+directory where the binary is located and run it from there (runnable on
+MacOS and Linux with `./rclone`, on Windows with just `rclone.exe`).
 
 You can check if the binary works fine by printing out version information
 about the program (your output may vary):
@@ -136,9 +134,13 @@ $ rclone version
 ## Configuring Rclone Vault Backend
 
 To access Vault, Rclone will need to know your Vault credentials and the Vault
-API endpoint. You can configure your Vault username, password and API endpoint
-using the `config` subcommand of rclone, like so (replace `alice` and `secret`
-to match your credentials):
+API endpoint.
+
+> The current Vault API endpoint is at: [https://vault.archive-it.org/api](https://vault.archive-it.org/api)
+
+You can configure your Vault username, password and API endpoint using the
+`config` subcommand of rclone, like so (replace `alice` and `secret` to match
+your credentials):
 
 ```
 $ rclone config create vault vault username=alice password=secret endpoint=https://vault.archive-it.org/api
@@ -172,7 +174,7 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: roosevelt
 ```
 
-If you see a similar output, congratulations - your rclone with vault support
+If you see a similar output, congratulations - your Rclone with Vault support
 is now ready to use!
 
 ## Known Limitations
