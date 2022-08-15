@@ -6,7 +6,7 @@ We are working on an Rclone backend for the [Vault Digital Preservation System](
 ([Docs](https://support.archive-it.org/hc/en-us/sections/7581093252628-Vault),
 [Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
 developed at the [Internet Archive](https://archive.org/). Currently, we
-maintain this fork of Rclone and release versions here (but perspectivaly, we
+maintain this fork of Rclone and release versions here (but perspectively, we
 would like to include this backend into the main Rclone project). We are basing
 our releases on the latest version of the Rclone upstream project.
 
@@ -31,11 +31,11 @@ scheme that includes the Rclone version, timestamp and commit, e.g. like:
 tag of rclone, `20220627142057` is the build timestamp and `e4798bf85` is the
 commit hash).
 
-* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#macos)
-* [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#windows)
-* [Install in Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#linux)
+* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-macos)
+* [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-windows)
+* [Install on Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-linux)
 
-### MacOS
+### Install on MacOS
 
 We support both classic Intel-based Macs and the newer Apple Silicon Macs
 (Apple Support: [Mac computers with Apple
@@ -46,7 +46,8 @@ carry designations like [M1, M2,
 We suggest you use
 [Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
 terminal emulator) and [curl](https://curl.se/) or
-[wget](https://www.gnu.org/software/wget/) to download the binary.
+[wget](https://www.gnu.org/software/wget/) to download the binary (otherwise
+you get a warnings about unsigned software).
 
 #### Intel-based Macs
 
@@ -62,16 +63,16 @@ $ curl --output rclone -L https://github.com/internetarchive/rclone/releases/dow
 $ chmod +x rclone
 ```
 
-### Windows
+### Install on Windows
 
-Download the binary (e.g. with your browser):
+Download the latest binary (e.g. with your browser):
 
-* [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe](RELEASE_ASSET_WINDOWS_INTEL)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe)
 
-In case you have an ARM based computer running Windows, please download [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe](RELEASE_ASSET_WINDOWS_ARM).
+In case you have an ARM based computer running Windows, please download: [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe).
 
-**Important**: We do not sign the executable, and so Windows will issue warnings
-about an untrusted source and will suggest that you delete the file.
+**Important**: We do not sign the executables, which is why Windows will issue
+warnings about an untrusted source and will suggest that you delete the file.
 
 To ensure the downloaded file is the same as the one we published, you can
 compare the checksum of the file you downloaded against a list of checksums we
@@ -83,7 +84,7 @@ file with
 a pre-installed command line utility;
 [examples](https://superuser.com/a/898377))
 
-![](static/Windows_GitHub_Checksum.png)
+![Using certutil to verify a SHA256 checksum](static/Windows_GitHub_Checksum.png)
 
 Once downloaded, it may be convenient to rename the file. You can do this in your Explorer or with the Command Prompt with the
 [ren](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ren)
@@ -91,7 +92,7 @@ command. Please make sure the file has an `.exe` extension, otherwise Windows
 may not recognize it (an error you may see would be *rclone is not a
 recognized internal or external command*).
 
-### Linux
+### Install on Linux
 
 Download the latest release depending on your architecture:
 
