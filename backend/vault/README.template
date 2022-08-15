@@ -6,7 +6,7 @@ We are working on an Rclone backend for the [Vault Digital Preservation System](
 ([Docs](https://support.archive-it.org/hc/en-us/sections/7581093252628-Vault),
 [Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
 developed at the [Internet Archive](https://archive.org/). Currently, we
-maintain this fork of Rclone and release versions here (but perspectivaly, we
+maintain this fork of Rclone and release versions here (but perspectively, we
 would like to include this backend into the main Rclone project). We are basing
 our releases on the latest version of the Rclone upstream project.
 
@@ -64,14 +64,14 @@ $ chmod +x rclone
 
 ### Windows
 
-Download the binary (e.g. with your browser):
+Download the latest binary (e.g. with your browser):
 
-* [RELEASE_ASSET_WINDOWS_INTEL](RELEASE_ASSET_WINDOWS_INTEL)
+* Rclone with Vault for Windows x64 64bit: [RELEASE_ASSET_WINDOWS_INTEL](RELEASE_ASSET_WINDOWS_INTEL)
 
-In case you have an ARM based computer running Windows, please download [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
+In case you have an ARM based computer running Windows, please download: [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
 
-**Important**: We do not sign the executable, and so Windows will issue warnings
-about an untrusted source and will suggest that you delete the file.
+**Important**: We do not sign the executables, which is why Windows will issue
+warnings about an untrusted source and will suggest that you delete the file.
 
 To ensure the downloaded file is the same as the one we published, you can
 compare the checksum of the file you downloaded against a list of checksums we
@@ -83,7 +83,7 @@ file with
 a pre-installed command line utility;
 [examples](https://superuser.com/a/898377))
 
-![](static/Windows_GitHub_Checksum.png)
+![Using certutil to verify a SHA256 checksum](static/Windows_GitHub_Checksum.png)
 
 Once downloaded, it may be convenient to rename the file. You can do this in your Explorer or with the Command Prompt with the
 [ren](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ren)
