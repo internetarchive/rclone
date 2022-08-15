@@ -194,11 +194,10 @@ There are a few common tasks around Vault:
 * [Creating a collection](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#creating-a-collection)
 * [Depositing a single file](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#depositing-a-single-file-and-inspecting-the-result)
 * [Depositing a directory](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#depositing-a-directory)
-* [Listing a collection](...)
-* [Listing directory contents](...)
-* [Syncing a local folder to Vault](...)
-* [Download a single file](...)
-* [Download a directory or collection](...)
+* [Listing a collection and folders](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#listing-collections-and-folders)
+* [Syncing a local folder to Vault](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#syncing-a-folder-to-vault)
+* [Download a single file](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#download-a-single-file)
+* [Download a directory or collection](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#download-a-collection-or-directory)
 
 For the example tasks we use an example local directory structure that looks
 like this. We also assume for the moment that nothing has been uploaded so far.
@@ -455,7 +454,7 @@ $ rclone copy vault:/TempSpace3 Downloads
 Rclone has [great docs on its own](https://rclone.org/docs/); the following are
 a few more usage examples.
 
-## Quick Tour
+### Quick Tour
 
 ![static/506601.cast](static/506601.gif)
 
