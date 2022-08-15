@@ -191,13 +191,13 @@ development and QA Vault instances, limitations remain.
 
 There are a few common tasks around Vault:
 
-* [Depositing a single file](...)
-* [Depositing a directory](...)
-* [Listing a collection](...)
-* [Listing directory contents](...)
-* [Syncing a local folder to Vault](...)
-* [Download a single file](...)
-* [Download a directory or collection](...)
+* [Creating a collection](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#creating-a-collection)
+* [Depositing a single file](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#depositing-a-single-file-and-inspecting-the-result)
+* [Depositing a directory](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#depositing-a-directory)
+* [Listing a collection and folders](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#listing-collections-and-folders)
+* [Syncing a local folder to Vault](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#syncing-a-folder-to-vault)
+* [Download a single file](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#download-a-single-file)
+* [Download a directory or collection](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#download-a-collection-or-directory)
 
 For the example tasks we use an example local directory structure that looks
 like this. We also assume for the moment that nothing has been uploaded so far.
@@ -308,7 +308,7 @@ $ rclone tree vault:/TempSpace2
 2 directories, 6 files
 ```
 
-### Listing a collections and folders
+### Listing collections and folders
 
 You can list all you collections or just specific ones, of just a folder or
 subfolder.
@@ -369,7 +369,8 @@ $ rclone ls vault:/TempSpace3
   2207711 extra/examples/f.png
 ```
 
-Looks good. We can run sync again, in which case nothing should happen, since all files are already in Vault.
+Looks good. We can run sync again, in which case nothing should happen, since
+all files are already in Vault.
 
 ```shell
 $ rclone sync data vault:/TempSpace3
@@ -426,11 +427,14 @@ $ rclone ls vault:/TempSpace3
 
 Indeed, `new.file` has been uploaded.
 
+Note: A current limitation is that an already deposited file cannot be altered
+- that is, you cannot upload a file with a existing name in Vault with
+different content.
+
 ### Download a single file
 
 You can download a single file from vault with the `copy` command. Note that
-the last argument needs to be the target directory, e.g. `.` for the current
-directory.
+the last argument is the target directory, e.g. `.` for the current directory.
 
 ```shell
 $ rclone copy vault:/TempSpace3/a.pdf .
@@ -445,14 +449,12 @@ specific folder from a collection) with the `copy` subcommand:
 $ rclone copy vault:/TempSpace3 Downloads
 ```
 
-----
-
-## Example Commands
+## Appendix: Example Commands
 
 Rclone has [great docs on its own](https://rclone.org/docs/); the following are
 a few more usage examples.
 
-## Quick Tour
+### Quick Tour
 
 ![static/506601.cast](static/506601.gif)
 
