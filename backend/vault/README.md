@@ -2,36 +2,51 @@
 
 > [Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
 
-We are working on an Rclone backend for the Vault Digital Preservation System
-([Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/),
-[Docs](https://support.archive-it.org/hc/en-us/sections/7581093252628-Vault)),
-developed at the [Internet Archive](https://archive.org/) and release versions
-here frequently.
+We are working on an Rclone backend for the [Vault Digital Preservation System](https://vault.archive-it.org/)
+([Docs](https://support.archive-it.org/hc/en-us/sections/7581093252628-Vault),
+[Pilot](https://archive-it.org/blog/post/archive-it-partner-news-september-2021/)),
+developed at the [Internet Archive](https://archive.org/). Currently, we
+maintain this fork of Rclone and release versions here (but perspectivaly, we
+would like to include this backend into the main Rclone project). We are basing
+our releases on the latest version of the Rclone upstream project.
 
 These releases are tested extensively, yet still prototypical and we are happy
 about feedback: [vault@archive.org](mailto:vault@archive.org).
 
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
-providers** and **download files or folders**. We are basing our releases on
-the latest version of the Rclone upstream project (perspectivaly, we would like
-to include this backend into the main Rclone project).
+providers** and **download files or folders**.
 
-## Download Rclone with Vault Support
+## Requirements
+
+* MacOS, Windows or Linux
+* basic familiarity with the command line
+* a [Vault](https://vault.archive-it.org/) account
+
+## Install Rclone with Vault Support
 
 We currently support MacOS, Windows and Linux. Releases follow a versioning
-scheme that includes the rclone version, timestamp and commit, e.g. like:
+scheme that includes the Rclone version, timestamp and commit, e.g. like:
 `v1.57.0-vault-20220627142057-e4798bf85` (where `v1.57.0` is the latest version
 tag of rclone, `20220627142057` is the build timestamp and `e4798bf85` is the
 commit hash).
+
+* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#macos)
+* [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#windows)
+* [Install in Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#linux)
 
 ### MacOS
 
 We support both classic Intel-based Macs and the newer Apple Silicon Macs
 (Apple Support: [Mac computers with Apple
-silicon](https://support.apple.com/en-us/HT211814) -- the Apple Silicon chips
+Silicon](https://support.apple.com/en-us/HT211814) -- the Apple Silicon chips
 carry designations like [M1, M2,
 ...](https://en.wikipedia.org/wiki/Apple_silicon#M_series)).
+
+We suggest you use
+[Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
+terminal emulator) and [curl](https://curl.se/) or
+[wget](https://www.gnu.org/software/wget/) to download the binary.
 
 #### Intel-based Macs
 
@@ -51,47 +66,56 @@ $ chmod +x rclone
 
 Download the binary (e.g. with your browser):
 
-* [rclone.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe)
+* [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_x86_64.exe](RELEASE_ASSET_WINDOWS_INTEL)
 
-In case you have an ARM based computer running Windows, please download [rclone.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe)
+In case you have an ARM based computer running Windows, please download [https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Windows_arm64.exe](RELEASE_ASSET_WINDOWS_ARM).
+
+**Important**: We do not sign the executable, and so Windows will issue warnings
+about an untrusted source and will suggest that you delete the file.
+
+To ensure the downloaded file is the same as the one we published, you can
+compare the checksum of the file you downloaded against a list of checksums we
+publish alongside each
+[release](https://github.com/internetarchive/rclone/releases). The filename
+ends with `_checksums.txt` - on Windows you can generate various hash sums of a
+file with
+[certutil](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certutil),
+a pre-installed command line utility;
+[examples](https://superuser.com/a/898377))
+
+![](static/Windows_GitHub_Checksum.png)
+
+Once downloaded, it may be convenient to rename the file. You can do this in your Explorer or with the Command Prompt with the
+[ren](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/ren)
+command. Please make sure the file has an `.exe` extension, otherwise Windows
+may not recognize it (an error you may see would be *rclone is not a
+recognized internal or external command*).
 
 ### Linux
 
-Download the latest release depending on your architecture from:
+Download the latest release depending on your architecture:
 
-[https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.0-vault-20220804001220-3d9c4eaca/rclone_1.59.0-vault-20220804001220-3d9c4eaca_Linux_arm64)
 
+For convenient, you can rename the downloaded file to e.g. `rclone` with your
+File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
+command.
 
-## Rename the downloaded file
-
-If you downloaded the file through your browser then it will be convenient to
-rename the file (which may have a long name containing version information), to
-e.g. `rclone` (you can do that in your file explorer or on the command line).
-
-On MacOS and Linux, this can be done one the command line with the
-[`mv`](https://man7.org/linux/man-pages/man1/mv.1.html) command.
-
-
-## Setting executable permissions
-
-On MacOS and Linux you'll have to set executable permissions (assuming you
-renamed the file to `rclone`):
+Finally, set executable permissions:
 
 ```
 $ chmod +x rclone
 ```
 
+## Checkpoint: First Run
+
 To run the command you can either put the binary (or a symlink to it) into your
 [`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
-directory where the binary lives and run the binary from there.
+directory where the binary lives and run the binary from there (runnable on
+MacOS and Linux with `./rclone`, on Windows with just `rclone`).
 
-```
-$ rclone
-```
-
-## First run
-
-You can now check if the binary works fine by printing out version information
+You can check if the binary works fine by printing out version information
 about the program (your output may vary):
 
 ```
@@ -105,22 +129,23 @@ $ rclone version
 - go/tags: none
 ```
 
-## Configuring the Vault Backend
+## Configuring Rclone Vault Backend
 
-To access Vault, Rclone will need to know your credentials. You can configure
-your Vault username, password and API endpoint using the `config` subcommand of
-rclone, like so (replace `alice` and `secret` to match your credentials):
+To access Vault, Rclone will need to know your Vault credentials and the Vault
+API endpoint. You can configure your Vault username, password and API endpoint
+using the `config` subcommand of rclone, like so (replace `alice` and `secret`
+to match your credentials):
 
 ```
 $ rclone config create vault vault username=alice password=secret endpoint=https://vault.archive-it.org/api
 ```
 
-This will create a configuration file - if it did not exist - and will create a
-section for vault. There is a single configuration file for rclone, located by
-default under your [HOME directory](https://en.wikipedia.org/wiki/Home_directory).
+This will create a configuration file (or extend it, if if already existed) -
+and will add a section for Vault. Rclone uses a single configuration file,
+located by default under your [HOME
+directory](https://en.wikipedia.org/wiki/Home_directory).
 
-If sure, you can always ask rclone to show you where your configuration file is
-located:
+You can always ask Rclone to show you where your configuration file is located:
 
 ```
 $ rclone config file
@@ -143,14 +168,15 @@ DefaultFixityFrequency: TWICE_YEARLY
               Username: roosevelt
 ```
 
-If you see this screen, congratulations - your rclone with vault support is now
-ready to use.
+If you see a similar output, congratulations - your rclone with vault support
+is now ready to use!
 
 ## Known Limitations
 
 This is a working prototype and while continuously tested against our
 development and QA Vault instances, limitations remain.
 
+* ...
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be
   stored temporarily on the machine where rclone runs**
