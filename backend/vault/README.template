@@ -31,11 +31,11 @@ scheme that includes the Rclone version, timestamp and commit, e.g. like:
 tag of rclone, `20220627142057` is the build timestamp and `e4798bf85` is the
 commit hash).
 
-* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#macos)
-* [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#windows)
-* [Install in Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#linux)
+* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-macos)
+* [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-windows)
+* [Install on Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-linux)
 
-### MacOS
+### Install on MacOS
 
 We support both classic Intel-based Macs and the newer Apple Silicon Macs
 (Apple Support: [Mac computers with Apple
@@ -46,7 +46,8 @@ carry designations like [M1, M2,
 We suggest you use
 [Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
 terminal emulator) and [curl](https://curl.se/) or
-[wget](https://www.gnu.org/software/wget/) to download the binary.
+[wget](https://www.gnu.org/software/wget/) to download the binary (otherwise
+you get a warnings about unsigned software).
 
 #### Intel-based Macs
 
@@ -62,7 +63,7 @@ $ curl --output rclone -L RELEASE_ASSET_DARWIN_ARM
 $ chmod +x rclone
 ```
 
-### Windows
+### Install on Windows
 
 Download the latest binary (e.g. with your browser):
 
@@ -91,7 +92,7 @@ command. Please make sure the file has an `.exe` extension, otherwise Windows
 may not recognize it (an error you may see would be *rclone is not a
 recognized internal or external command*).
 
-### Linux
+### Install on Linux
 
 Download the latest release depending on your architecture:
 
