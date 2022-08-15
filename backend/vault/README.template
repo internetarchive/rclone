@@ -25,11 +25,14 @@ providers** and **download files or folders**.
 
 ## Install Rclone with Vault Support
 
-We currently support MacOS, Windows and Linux. Releases follow a versioning
-scheme that includes the Rclone version, timestamp and commit, e.g. like:
-`v1.57.0-vault-20220627142057-e4798bf85` (where `v1.57.0` is the latest version
-tag of rclone, `20220627142057` is the build timestamp and `e4798bf85` is the
-commit hash).
+We currently support MacOS, Windows and Linux.
+
+> You can find the latest releases under: [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
+
+Releases follow a versioning scheme that includes the Rclone version, timestamp
+and commit, e.g. like: `v1.57.0-vault-20220627142057-e4798bf85` (where
+`v1.57.0` is the latest version tag of rclone, `20220627142057` is the build
+timestamp and `e4798bf85` is the commit hash).
 
 * [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-macos)
 * [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-windows)
