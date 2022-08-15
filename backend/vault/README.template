@@ -314,6 +314,19 @@ You can list all you collections or just specific ones, of just a folder or
 subfolder.
 
 ```shell
+$ rclone ls vault:/
+   348784 TempSpace1/a.pdf
+   348784 TempSpace2/a.pdf
+  1021176 TempSpace2/b.pdf
+   455725 TempSpace2/c.pdf
+    55183 TempSpace2/d.png
+  2235016 TempSpace2/extra/e.png
+  2207711 TempSpace2/extra/examples/f.png
+```
+
+The `tree` subcommand renders the file system hierarchy as well.
+
+```shell
 $ rclone tree vault:/
 /
 ├── TempSpace1
