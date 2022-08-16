@@ -1,33 +1,27 @@
 #!/usr/bin/env bash
 #
 # Generates a README from a template (below) - to use direct links to the
-# latest release. Run this *after* a new release has been published on GitHub.
-# Maybe a GitHub Action can take care of this as well.
+# latest release. Run this *after* a new release has been published.
 #
 # HERE docs would be more elegant, but the README is full of chars that would
 # need escaping.
 #
 # Usage:
 #
-#   $ GITHUB_TOKEN=ghp_12345678 ./README.gen.sh > README.md
+#   $ ./README.gen.sh > README.md
 #
 
 set -eu -o pipefail
 
-for cmd in curl grep sed awk jq; do
-	command -v $cmd >/dev/null 2>&1 || {
-		echo >&2 "error: $cmd is required, but not found"
-		exit 1
-	}
+for cmd in curl grep sed awk; do
+    command -v $cmd >/dev/null 2>&1 || { echo >&2 "error: $cmd is required, but not found"; exit 1; }
 done
 
-RELEASE_LINKS=$(curl --fail -sL \
-	-H "Accept: application/vnd.github+json" \
-	-H "Authorization: Bearer $GITHUB_TOKEN" \
-    https://api.github.com/repos/internetarchive/rclone/releases/latest |
-    jq -rc '.assets[].browser_download_url' |
-    grep -v "_checksums"
-)
+RELEASE_PAGE=https://github.com/internetarchive/rclone/releases/latest
+RELEASE_LINKS=$(curl --fail -sL $RELEASE_PAGE |
+	grep -Eo "/internetarchive/rclone/releases/download/[^\"]*" |
+	grep -v "checksums" |
+	awk '{print "https://github.com"$0}')
 
 for link in $RELEASE_LINKS; do
 	case $link in
@@ -57,19 +51,16 @@ for link in $RELEASE_LINKS; do
 		;;
 	*) ;;
 	esac
-    # TODO: $v may not be defined
-    if [[ -v v ]]; then
-	    snippet+="* [$v]($link)\n"
-    fi
+	snippet+="* [$v]($link)\n"
 done
 
 sed -e "s@RELEASE_ASSET_LINKS@$snippet@g;
-        s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@g;
-        s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@g;
-        s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@g;
-        s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@g;
-        s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@g;
-        s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@g" <<'TEMPLATE'
+		s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@g;
+	    s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@g;
+	    s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@g;
+	    s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@g;
+	    s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@g;
+	    s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@g" <<'TEMPLATE'
 
 # Rclone with Vault Support
 
@@ -84,7 +75,7 @@ would like to include this backend into the main Rclone project). We are basing
 our releases on the latest version of the Rclone upstream project.
 
 These releases are tested extensively, yet still prototypical and we are happy
-about feedback: [vault@archive.org](mailto:vault@archive.org). There are also some [known limitations](#known-limitations).
+about feedback: [vault@archive.org](mailto:vault@archive.org).
 
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
@@ -92,13 +83,13 @@ providers** and **download files or folders**.
 
 ## Requirements
 
-* An active [Vault](https://vault.archive-it.org/accounts/login/) account
-* A macOS (both classic Intel-based Macs and the newer Apple Silicon Macs), Windows, or Linux machine
-* Basic familiarity with the command line
+* MacOS, Windows or Linux
+* basic familiarity with the command line
+* a [Vault](https://vault.archive-it.org/) account
 
 ## Install Rclone with Vault Support
 
-We currently support macOS, Windows and Linux.
+We currently support MacOS, Windows and Linux.
 
 > You can find the latest releases under: [https://github.com/internetarchive/rclone/releases/latest](https://github.com/internetarchive/rclone/releases/latest)
 
@@ -107,11 +98,11 @@ and commit, e.g. like: `v1.57.0-vault-20220627142057-e4798bf85` (where
 `v1.57.0` is the latest version tag of rclone, `20220627142057` is the build
 timestamp and `e4798bf85` is the commit hash).
 
-* [Install on macOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-macos)
+* [Install on MacOS](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-macos)
 * [Install on Windows](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-windows)
 * [Install on Linux](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md#install-on-linux)
 
-### Install on macOS
+### Install on MacOS
 
 We support both classic Intel-based Macs and the newer Apple Silicon Macs
 (Apple Support: [Mac computers with Apple
@@ -123,12 +114,7 @@ We suggest you use
 [Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
 terminal emulator) and [curl](https://curl.se/) or
 [wget](https://www.gnu.org/software/wget/) to download the binary (otherwise
-you get warnings about unsigned software).
-Also, for the following step, please make sure that you do not have a file
-named "rclone" already in the folder where you are performing the download
-(this can lead to cryptic *zsh: killed* kind of errors).
-
-After download with `curl` or `wget` the file needs to be made executable with [chmod](https://man7.org/linux/man-pages/man1/chmod.1.html).
+you get a warnings about unsigned software).
 
 #### Intel-based Macs
 
@@ -150,8 +136,7 @@ Download the latest binary (e.g. with your browser):
 
 * Rclone with Vault for Windows x64 64bit: [RELEASE_ASSET_WINDOWS_INTEL](RELEASE_ASSET_WINDOWS_INTEL)
 
-In (the rare) case you have an ARM based computer running Windows, please
-download: [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
+In case you have an ARM based computer running Windows, please download: [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -191,17 +176,13 @@ $ chmod +x rclone
 
 ## Checkpoint: First Run
 
+To run the command you can either put the binary (or a symlink to it) into your
+[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
+directory where the binary is located and run it from there (runnable on
+MacOS and Linux with `./rclone`, on Windows with just `rclone.exe`).
 
-You can check if the binary works by printing out version information about the program (your output may vary depending on which system you are using).
-
-To run the command you can either:
-
-1. Stay in the directory where the binary is located and run it from there using:
-
-	1. `./rclone version` on macOS and Linux
-	2. `Rclone.exe version` on Windows
-
-2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
+You can check if the binary works fine by printing out version information
+about the program (your output may vary):
 
 ```
 $ rclone version
@@ -213,8 +194,6 @@ $ rclone version
 - go/linking: dynamic
 - go/tags: none
 ```
-
-> All following examples in the documentation will demonstrate commands using the *PATH approach*.
 
 ## Configuring Rclone Vault Backend
 
@@ -265,11 +244,12 @@ is now ready to use!
 ## Known Limitations
 
 This is a working prototype and while continuously tested against our
-development and QA Vault instances, a few limitations remain.
+development and QA Vault instances, limitations remain.
 
-* ~~**uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/) to upload or synchronize files without considering existing files)~~ fixed in production since 10/2022 and currently testing
+* uploaded files are currently not mutable - that is, you cannot update a file with the same name but with different content
 * read and write support **only on the command line** level (mount and serve are read only)
-* currently, if you copy data from another cloud service to vault, **data will be stored temporarily on the machine where rclone runs**, which means that if you want to transfer 10TB of data from a cloud service to vault, you will have to have at least 10TB of free disk space on the machine where rclone runs; if you want to upload files from the local filesystem to vault, this limitation does not apply
+* currently, if you copy data from another cloud service to vault, **data will be
+  stored temporarily on the machine where rclone runs**
 
 ## Tasks
 
@@ -306,7 +286,7 @@ data
 A collection in Vault can be create explicitly with the `mkdir` command - every
 top level directory corresponds to a collection in Vault.
 
-For example, you can create a new collection called `TempSpace1` with the
+For example, I can create a new collection called `TempSpace1` with the
 following command:
 
 ```shell
@@ -317,7 +297,7 @@ Note that once created, collections cannot be deleted - they can only be renamed
 
 ### Depositing a single file and inspecting the result
 
-You can work with single files, e.g. if you want to deposit `a.pdf` into
+I can work with single files, e.g. if we want to deposit `a.pdf` into
 `TempSpace1` collection, you can run:
 
 ```shell
@@ -374,7 +354,7 @@ $ rclone copy data vault:/TempSpace2
 <5>NOTICE: vault batcher: upload done (25), deposited 5.698Mi, 5 item(s)
 ```
 
-We can verify that the folder has been uploaded with the `tree` subcommand:
+We can verify that the folder has been uploaded conveniently with the `tree` subcommand:
 
 
 ```shell
@@ -440,9 +420,9 @@ $ rclone tree vault:/TempSpace2/extra
 
 ### Syncing a folder to Vault
 
-If you want to regularly synchronize a directory to Vault, you can use the
-`sync` subcommand. By default, this will try to synchronize your local files
-with the files in Vault.
+If you want to regularly sync a directory to Vault, you can use the `sync`
+subcommand. By default, this will try to synchronize your local files with the
+files in Vault.
 
 As an example, let's sync our tree into a new collection `TempSpace3`.
 
@@ -466,7 +446,7 @@ $ rclone ls vault:/TempSpace3
   2207711 extra/examples/f.png
 ```
 
-Looks good. We can run `sync` again, in which case nothing should happen, since
+Looks good. We can run sync again, in which case nothing should happen, since
 all files are already in Vault.
 
 ```shell
@@ -528,14 +508,6 @@ Note: A current limitation is that an already deposited file cannot be altered
 - that is, you cannot upload a file with a existing name in Vault with
 different content.
 
-To workaround this issue, you can use the `--ignore-existing` [global
-flag](https://rclone.org/flags/) which will skip files that exists on the
-remote already (albeit content may differ).
-
-```shell
-$ rclone copy data vault:/TempSpace4 --ignore-existing
-```
-
 ### Download a single file
 
 You can download a single file from vault with the `copy` command. Note that
@@ -553,25 +525,6 @@ specific folder from a collection) with the `copy` subcommand:
 ```
 $ rclone copy vault:/TempSpace3 Downloads
 ```
-
-Please note that Rclone use a convention when copying:
-
-> Note that it is always the **contents of the directory that is synced, not the
-> directory itself**. So when source:path is a directory, it's the contents of
-> source:path that are copied, not the directory name and contents. --
-> [https://rclone.org/commands/rclone_copy/](Rclone copy command documentation)
-
-In the above example files and folders from `vault:/TempSpace3/` are put into
-the `Downloads` directory (i.e. there is no `Downloads/TempSpace3` created).
-
-### Note about Upload Latency
-
-When Rclone runs commands, they are executed against the remote Vault service
-and when Rclone exits without any error, your data has been successfully
-transferred to Vault. Collection, file and folder *metadata* will be available
-immediately after Rclone finished successfully. However, file *contents* will
-be available only after a short delay, as data is processed by Vault (typically
-in the range of minutes).
 
 ## Appendix: Example Commands
 
