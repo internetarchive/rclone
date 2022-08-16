@@ -255,6 +255,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			case b.parent.NodeType == "FOLDER":
 				rdr.ParentNodeId = b.parent.Id
 			}
+			// TODO(martin): run against warning_deposit
 			depositId, err = b.fs.api.RegisterDeposit(ctx, rdr)
 			if err != nil {
 				err = fmt.Errorf("deposit failed: %w", err)
