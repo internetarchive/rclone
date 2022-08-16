@@ -452,8 +452,8 @@ func (api *Api) RegisterDeposit(ctx context.Context, rdr *RegisterDepositRequest
 			// deposit the same (e.g. sync) command is executed again. This
 			// leads to various integrity errors. However, once the files are
 			// assembled and in place, the command will work fine again.
-			return 0, fmt.Errorf(
-				`encountered HTTP 500 Internal Server Error, a manual retry after a short delay may succeed`)
+			fs.Debugf(api, "got an HTTP 500 while registering a deposit (may be clashing filenames)")
+			return 0, fmt.Errorf("cannot create deposit (probably name clashes)")
 		}
 		// TODO: we need warning deposit here to check whether files already
 		// exist; do some kind of "--force" by default
