@@ -1,3 +1,67 @@
+#!/usr/bin/env bash
+#
+# Generates a README from a template (below) - to use direct links to the
+# latest release. Run this *after* a new release has been published.
+#
+# HERE docs would be more elegant, but the README is full of chars that would
+# need escaping.
+#
+# Usage:
+#
+#   $ ./README.gen.sh > README.md
+#
+
+set -eu -o pipefail
+
+for cmd in curl grep sed awk; do
+    command -v $cmd >/dev/null 2>&1 || { echo >&2 "error: $cmd is required, but not found"; exit 1; }
+done
+
+RELEASE_PAGE=https://github.com/internetarchive/rclone/releases/latest
+RELEASE_LINKS=$(curl --fail -sL $RELEASE_PAGE |
+	grep -Eo "/internetarchive/rclone/releases/download/[^\"]*" |
+	grep -v "checksums" |
+	awk '{print "https://github.com"$0}')
+
+for link in $RELEASE_LINKS; do
+	case $link in
+	*Darwin_arm64)
+		v="Apple ARM (M1, M2, ...)"
+		RELEASE_ASSET_DARWIN_ARM=$link
+		;;
+	*Darwin_x86_64)
+		v="Apple Intel"
+		RELEASE_ASSET_DARWIN_INTEL=$link
+		;;
+	*Linux_arm64)
+		v="Linux ARM"
+		RELEASE_ASSET_LINUX_ARM=$link
+		;;
+	*Linux_x86_64)
+		v="Linux Intel"
+		RELEASE_ASSET_LINUX_INTEL=$link
+		;;
+	*Windows_arm64.exe)
+		v="Windows ARM"
+		RELEASE_ASSET_WINDOWS_ARM=$link
+		;;
+	*Windows_x86_64.exe)
+		v="Windows Intel"
+		RELEASE_ASSET_WINDOWS_INTEL=$link
+		;;
+	*) ;;
+	esac
+	snippet+="* [$v]($link)\n"
+done
+
+sed -e "s@RELEASE_ASSET_LINKS@$snippet@g;
+		s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@g;
+	    s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@g;
+	    s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@g;
+	    s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@g;
+	    s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@g;
+	    s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@g" <<'TEMPLATE'
+
 # Rclone with Vault Support
 
 > [Rclone](https://rclone.org/) is a command-line program to manage files on cloud storage.
@@ -760,4 +824,4 @@ given the deposit id (e.g. 742).
 ```shell
 $ rclone backend ds vault:/ 742
 ```
-
+TEMPLATE
