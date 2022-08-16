@@ -14,7 +14,10 @@
 set -eu -o pipefail
 
 for cmd in curl grep sed awk; do
-    command -v $cmd >/dev/null 2>&1 || { echo >&2 "error: $cmd is required, but not found"; exit 1; }
+	command -v $cmd >/dev/null 2>&1 || {
+		echo >&2 "error: $cmd is required, but not found"
+		exit 1
+	}
 done
 
 RELEASE_PAGE=https://github.com/internetarchive/rclone/releases/latest
@@ -55,12 +58,12 @@ for link in $RELEASE_LINKS; do
 done
 
 sed -e "s@RELEASE_ASSET_LINKS@$snippet@g;
-		s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@g;
-	    s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@g;
-	    s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@g;
-	    s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@g;
-	    s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@g;
-	    s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@g" <<'TEMPLATE'
+        s@RELEASE_ASSET_DARWIN_ARM@$RELEASE_ASSET_DARWIN_ARM@g;
+        s@RELEASE_ASSET_DARWIN_INTEL@$RELEASE_ASSET_DARWIN_INTEL@g;
+        s@RELEASE_ASSET_LINUX_ARM@$RELEASE_ASSET_LINUX_ARM@g;
+        s@RELEASE_ASSET_LINUX_INTEL@$RELEASE_ASSET_LINUX_INTEL@g;
+        s@RELEASE_ASSET_WINDOWS_ARM@$RELEASE_ASSET_WINDOWS_ARM@g;
+        s@RELEASE_ASSET_WINDOWS_INTEL@$RELEASE_ASSET_WINDOWS_INTEL@g" <<'TEMPLATE'
 
 # Rclone with Vault Support
 
