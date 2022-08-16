@@ -116,6 +116,17 @@ type RegisterDepositResponse struct {
 	ID int64 `json:"deposit_id"`
 }
 
+// WarningDepositResponse is returned by warning_deposit check.
+type WarningDepositResponse struct {
+	Objects []struct {
+		Id         int64  `json:"id"`
+		Name       string `json:"name"`
+		Parent     int64  `json:"parent"`
+		ParentName string `json:"parent_name"`
+	} `json:"objects"`
+	RelativePath []interface{} `json:"relative_path"`
+}
+
 // PathInfo can be obtained from an absolute path.
 type PathInfo struct {
 	CollectionTreeNode *TreeNode
