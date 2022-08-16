@@ -559,7 +559,7 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 		}
 		return ds, nil
 	case "dashboard", "d", "db", "dash":
-		fs.Logf(f, "rendering dashboard")
+		fs.Logf(f, "rendering dashboard (WIP)")
 		return nil, nil
 	}
 	return nil, fmt.Errorf("command not found")
