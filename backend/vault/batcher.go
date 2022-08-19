@@ -126,7 +126,8 @@ func (b *batcher) String() string {
 	return "vault batcher"
 }
 
-// Add a single item to the batch.
+// Add a single item to the batch. If the item has been added before (same
+// filename) it will be ignored.
 func (b *batcher) Add(item *batchItem) {
 	b.mu.Lock()
 	if b.seen == nil {
@@ -235,6 +236,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			totalSize += item.src.Size()
 			files = append(files, item.ToFile(ctx))
 		}
+		// TODO: We want to clean any file from the deposit request, that
+		// already exists on the remote until WT-1605 is resolved
 		switch {
 		case b.resumeDepositId > 0:
 			depositId = b.resumeDepositId
