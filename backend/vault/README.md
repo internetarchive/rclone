@@ -52,6 +52,9 @@ We suggest you use
 terminal emulator) and [curl](https://curl.se/) or
 [wget](https://www.gnu.org/software/wget/) to download the binary (otherwise
 you get a warnings about unsigned software).
+Also, for the following step, please make sure that you do not have a file
+named "rclone" already in the folder where you are performing the download
+(this can lead to cryptic *zsh: killed* kind of errors).
 
 #### Intel-based Macs
 
@@ -115,8 +118,9 @@ $ chmod +x rclone
 
 To run the command you can either put the binary (or a symlink to it) into your
 [`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
-directory where the binary is located and run it from there (runnable on
-MacOS and Linux with `./rclone`, on Windows with just `rclone.exe`).
+directory where the binary is located and run it from there - on MacOS and
+Linux with `./rclone`, on Windows with just `rclone.exe` (in the following
+examples we only show `rclone` - please adjust for your approach and OS).
 
 You can check if the binary works fine by printing out version information
 about the program (your output may vary):
@@ -462,6 +466,16 @@ specific folder from a collection) with the `copy` subcommand:
 ```
 $ rclone copy vault:/TempSpace3 Downloads
 ```
+
+Please note that Rclone use a convention when copying:
+
+> Note that it is always the **contents of the directory that is synced, not the
+> directory itself**. So when source:path is a directory, it's the contents of
+> source:path that are copied, not the directory name and contents. --
+> [https://rclone.org/commands/rclone_copy/](Rclone copy command documentation)
+
+In the above example files and folders from `vault:/TempSpace3/` are put into
+the `Downloads` directory (i.e. there is no `Downloads/TempSpace3` created).
 
 ## Appendix: Example Commands
 
