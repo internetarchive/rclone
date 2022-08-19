@@ -76,11 +76,6 @@ Will return a JSON like this:
     }
 `,
 			},
-			fs.CommandHelp{
-				Name:  "dashboard",
-				Short: "show Vault dashboard",
-				Long:  "Show a terminal rendering of the Vault dashboard",
-			},
 		},
 	})
 }
@@ -558,9 +553,7 @@ func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[st
 			return nil, fmt.Errorf("failed to get deposit status")
 		}
 		return ds, nil
-	case "dashboard", "d", "db", "dash":
-		fs.Logf(f, "rendering dashboard (WIP)")
-		return nil, nil
+		// Add more custom commands here.
 	}
 	return nil, fmt.Errorf("command not found")
 }
