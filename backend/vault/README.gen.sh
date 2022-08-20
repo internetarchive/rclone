@@ -251,9 +251,9 @@ is now ready to use!
 ## Known Limitations
 
 This is a working prototype and while continuously tested against our
-development and QA Vault instances, limitations remain.
+development and QA Vault instances, a few limitations remain.
 
-* uploaded files are currently not mutable - that is, you cannot update a file with the same name but with different content
+* **uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/))
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be
   stored temporarily on the machine where rclone runs**
@@ -514,6 +514,14 @@ Indeed, `new.file` has been uploaded.
 Note: A current limitation is that an already deposited file cannot be altered
 - that is, you cannot upload a file with a existing name in Vault with
 different content.
+
+To workaround this issue, you can use the `--ignore-existing` [global
+flag](https://rclone.org/flags/) which will skip files that exists on the
+remote already (albeit content may differ).
+
+```shell
+$ rclone copy data vault:/TempSpace4 --ignore-existing
+```
 
 ### Download a single file
 
