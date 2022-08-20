@@ -59,14 +59,14 @@ named "rclone" already in the folder where you are performing the download
 #### Intel-based Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Darwin_x86_64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Darwin_x86_64
 $ chmod +x rclone
 ```
 
 #### Apple Silicon Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Darwin_arm64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Darwin_arm64
 $ chmod +x rclone
 ```
 
@@ -74,9 +74,9 @@ $ chmod +x rclone
 
 Download the latest binary (e.g. with your browser):
 
-* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Windows_x86_64.exe)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Windows_x86_64.exe)
 
-In case you have an ARM based computer running Windows, please download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Windows_arm64.exe).
+In case you have an ARM based computer running Windows, please download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -103,8 +103,8 @@ recognized internal or external command*).
 
 Download the latest release depending on your architecture:
 
-* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Linux_x86_64)
-* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220816145112-7be907c4e/rclone_1.59.1-vault-20220816145112-7be907c4e_Linux_arm64)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220820174723-28e75c395/rclone_1.59.1-vault-20220820174723-28e75c395_Linux_arm64)
 
 For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
@@ -185,9 +185,9 @@ is now ready to use!
 ## Known Limitations
 
 This is a working prototype and while continuously tested against our
-development and QA Vault instances, limitations remain.
+development and QA Vault instances, a few limitations remain.
 
-* uploaded files are currently not mutable - that is, you cannot update a file with the same name but with different content
+* **uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/))
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be
   stored temporarily on the machine where rclone runs**
@@ -448,6 +448,14 @@ Indeed, `new.file` has been uploaded.
 Note: A current limitation is that an already deposited file cannot be altered
 - that is, you cannot upload a file with a existing name in Vault with
 different content.
+
+To workaround this issue, you can use the `--ignore-existing` [global
+flag](https://rclone.org/flags/) which will skip files that exists on the
+remote already (albeit content may differ).
+
+```shell
+$ rclone copy data vault:/TempSpace4 --ignore-existing
+```
 
 ### Download a single file
 
