@@ -266,9 +266,9 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
-// Put uploads a new object. This does not upload content immediately, but save
-// the source in a temporary file and add the file to the batcher, which will
-// upload at rclone exit time.
+// Put uploads a new object. This does not upload content immediately, but
+// copies the source to a temporary file and registers the file with the
+// batcher, which will upload all files at rclone shutdown time.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
 	if !IsValidPath(src.Remote()) {
