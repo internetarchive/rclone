@@ -453,7 +453,7 @@ func (api *Api) RegisterDeposit(ctx context.Context, rdr *RegisterDepositRequest
 			// leads to various integrity errors. However, once the files are
 			// assembled and in place, the command will work fine again.
 			fs.Debugf(api, "got an HTTP 500 while registering a deposit (may be clashing filenames)")
-			return 0, fmt.Errorf("cannot create deposit (probably name clashes)")
+			return 0, fmt.Errorf("cannot create deposit (probably name clashes), try to use --ignore-existing flag when uploading")
 		}
 		// TODO: we need warning deposit here to check whether files already
 		// exist; do some kind of "--force" by default
