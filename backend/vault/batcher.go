@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+
 	"crypto/md5"
 	"fmt"
 	"io"
@@ -23,7 +24,7 @@ import (
 
 const defaultUploadChunkSize = 1 << 20 // 1M
 
-// batcher is used to group files for a deposit.
+// batcher is used to group upload files (deposit).
 type batcher struct {
 	fs                  *Fs                 // fs.root will be the parent collection or folder
 	parent              *api.TreeNode       // resolved and possibly new parent treenode
@@ -54,8 +55,7 @@ func randomFlowIdentifier() string {
 }
 
 // ToFile turns a batch item into a File for a deposit request. This method
-// sets the flow identifier. TODO(martin): For resumable uploads, we need to derive the
-// flow identifier from the file itself.
+// sets the flow identifier.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	if item == nil || item.src == nil {
 		return nil
@@ -75,7 +75,8 @@ func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	}
 }
 
-// contentType tries to sniff the content type, or returns the empty string.
+// contentType detects the content type. Returns the empty string, if no
+// specific content type could be found.
 func (item *batchItem) contentType() string {
 	f, err := os.Open(item.filename)
 	if err != nil {
@@ -86,27 +87,27 @@ func (item *batchItem) contentType() string {
 	if _, err := f.Read(buf); err != nil {
 		return ""
 	}
-	switch v := http.DetectContentType(buf); v {
-	case "application/octet-stream":
+	if v := http.DetectContentType(buf); v == "application/octet-stream" {
 		// DetectContentType always returns a valid MIME type: if it cannot
 		// determine a more specific one, it returns
 		// "application/octet-stream".
 		return ""
-	default:
+	} else {
 		return v
 	}
 }
 
 // deriveFlowIdentifier from a file, faster than a whole file fingerprint.
 func (item *batchItem) deriveFlowIdentifier() (string, error) {
-	f, err := os.Open(item.filename)
+	var (
+		h      = md5.New()
+		f, err = os.Open(item.filename)
+	)
 	if err != nil {
 		return "", err
 	}
 	defer f.Close()
-	const maxBytes = 1 << 24 // 16MB
-	h := md5.New()
-	if _, err := io.Copy(h, io.LimitReader(f, maxBytes)); err != nil {
+	if _, err := io.Copy(h, io.LimitReader(f, 1<<24)); err != nil {
 		return "", err
 	}
 	if _, err := io.WriteString(h, item.root); err != nil {
@@ -115,9 +116,8 @@ func (item *batchItem) deriveFlowIdentifier() (string, error) {
 	if _, err = io.WriteString(h, item.src.Remote()); err != nil {
 		return "", err
 	}
-	// Filename and root would probably be enough. For the moment we include a
-	// partial MD5 sum of the file.
-	// TODO: the resulting string must not be longer than 255 chars
+	// Filename and root may be enough. For the moment we include a partial MD5
+	// sum of the file. We also want the filename length to be constant.
 	return fmt.Sprintf("rclone-vault-flow-%x", h.Sum(nil)), nil
 }
 
@@ -258,7 +258,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			case b.parent.NodeType == "FOLDER":
 				rdr.ParentNodeId = b.parent.Id
 			}
-			// TODO(martin): run against warning_deposit
+			// Register deposit.
 			depositId, err = b.fs.api.RegisterDeposit(ctx, rdr)
 			if err != nil {
 				err = fmt.Errorf("deposit failed: %w", err)
