@@ -485,6 +485,15 @@ Please note that Rclone use a convention when copying:
 In the above example files and folders from `vault:/TempSpace3/` are put into
 the `Downloads` directory (i.e. there is no `Downloads/TempSpace3` created).
 
+### Note about Upload Latency
+
+When Rclone runs commands, they are executed against the remote Vault service
+and when Rclone exits without any error, your data has been successfully
+transferred to Vault. Collection, file and folder *metadata* will be available
+immediately after Rclone finished successfully. However, file *contents* will
+be available only after a short delay, as data is processed by Vault (typically
+in the range of minutes).
+
 ## Appendix: Example Commands
 
 Rclone has [great docs on its own](https://rclone.org/docs/); the following are
