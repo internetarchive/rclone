@@ -192,7 +192,7 @@ To run the command you can either:
 	1. `./rclone` on MacOS and Linux
 	2. Rclone.exe on Windows
 
-2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) - the examples below demonstrate this approach:
+2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) - the example below demonstrates this approach:
 
 ```
 $ rclone version
