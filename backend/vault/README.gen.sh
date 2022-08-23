@@ -182,14 +182,17 @@ $ chmod +x rclone
 
 ## Checkpoint: First Run
 
-To run the command you can either put the binary (or a symlink to it) into your
-[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
-directory where the binary is located and run it from there - on MacOS and
-Linux with `./rclone`, on Windows with just `rclone.exe` (in the following
-examples we only show `rclone` - please adjust for your approach and OS).
 
-You can check if the binary works fine by printing out version information
-about the program (your output may vary):
+You can check if the binary works by printing out version information about the program (your output may vary depending on which system you are using).
+
+To run the command you can either:
+
+1. Stay in the directory where the binary is located and run it from there using:
+
+	1. `./rclone` on MacOS and Linux
+	2. Rclone.exe on Windows
+
+2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) - the examples below demonstrate this approach:
 
 ```
 $ rclone version
