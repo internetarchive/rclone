@@ -116,14 +116,17 @@ $ chmod +x rclone
 
 ## Checkpoint: First Run
 
-To run the command you can either put the binary (or a symlink to it) into your
-[`PATH`](https://en.wikipedia.org/wiki/PATH_(variable)), or you can stay in the
-directory where the binary is located and run it from there - on MacOS and
-Linux with `./rclone`, on Windows with just `rclone.exe` (in the following
-examples we only show `rclone` - please adjust for your approach and OS).
 
-You can check if the binary works fine by printing out version information
-about the program (your output may vary):
+You can check if the binary works by printing out version information about the program (your output may vary depending on which system you are using).
+
+To run the command you can either:
+
+1. Stay in the directory where the binary is located and run it from there using:
+
+	1. `./rclone` on MacOS and Linux
+	2. Rclone.exe on Windows
+
+2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) - the examples below demonstrate this approach:
 
 ```
 $ rclone version
@@ -187,7 +190,7 @@ is now ready to use!
 This is a working prototype and while continuously tested against our
 development and QA Vault instances, a few limitations remain.
 
-* **uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/))
+* **uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/) to upload or synchronize files without considering existing files)
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be
   stored temporarily on the machine where rclone runs**
