@@ -76,7 +76,8 @@ Download the latest binary (e.g. with your browser):
 
 * Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_x86_64.exe)
 
-In case you have an ARM based computer running Windows, please download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_arm64.exe).
+In (the rare) case you have an ARM based computer running Windows, please
+download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220823182214-4560d4f40/rclone_1.59.1-vault-20220823182214-4560d4f40_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
