@@ -142,7 +142,8 @@ Download the latest binary (e.g. with your browser):
 
 * Rclone with Vault for Windows x64 64bit: [RELEASE_ASSET_WINDOWS_INTEL](RELEASE_ASSET_WINDOWS_INTEL)
 
-In case you have an ARM based computer running Windows, please download: [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
+In (the rare) case you have an ARM based computer running Windows, please
+download: [RELEASE_ASSET_WINDOWS_ARM](RELEASE_ASSET_WINDOWS_ARM).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
