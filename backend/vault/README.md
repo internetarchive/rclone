@@ -123,10 +123,12 @@ To run the command you can either:
 
 1. Stay in the directory where the binary is located and run it from there using:
 
-	1. `./rclone` on MacOS and Linux
-	2. Rclone.exe on Windows
+	1. `./rclone version` on MacOS and Linux
+	2. `Rclone.exe version` on Windows
 
-2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)) - the example below demonstrates this approach:
+2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
+
+> All following examples in the documentation will demonstrate commands using the *PATH approach*.
 
 ```
 $ rclone version
