@@ -195,8 +195,6 @@ To run the command you can either:
 
 2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
 
-> All following examples in the documentation will demonstrate commands using the *PATH approach*.
-
 ```
 $ rclone version
 - os/version: ubuntu 20.04 (64 bit)
@@ -207,6 +205,8 @@ $ rclone version
 - go/linking: dynamic
 - go/tags: none
 ```
+
+> All following examples in the documentation will demonstrate commands using the *PATH approach*.
 
 ## Configuring Rclone Vault Backend
 
