@@ -51,10 +51,12 @@ We suggest you use
 [Terminal.app](https://en.wikipedia.org/wiki/Terminal_(macOS)) (or any other
 terminal emulator) and [curl](https://curl.se/) or
 [wget](https://www.gnu.org/software/wget/) to download the binary (otherwise
-you get a warnings about unsigned software).
+you get warnings about unsigned software).
 Also, for the following step, please make sure that you do not have a file
 named "rclone" already in the folder where you are performing the download
 (this can lead to cryptic *zsh: killed* kind of errors).
+
+After download with `curl` or `wget` the file needs to be made executable with [chmod](https://man7.org/linux/man-pages/man1/chmod.1.html).
 
 #### Intel-based Macs
 
