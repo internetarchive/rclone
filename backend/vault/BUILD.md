@@ -8,7 +8,20 @@ $ export GITHUB_TOKEN="ghp_mv4gc3lqnrssa5dpnnsw4idgojxw2idemv3gk3dpobsxeidtmv2hi
 $ goreleaser release --rm-dist
 ```
 
-A new release should be available under [https://github.com/internetarchive/rclone/releases](https://github.com/internetarchive/rclone/releases).
+A new release should be available under
+[https://github.com/internetarchive/rclone/releases](https://github.com/internetarchive/rclone/releases).
+The
+[README](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
+contains various link, which need to be updated after a new release has been
+published. There is a `README.gen.sh` generator script, that will inspect the
+latest release on GitHub and will print a README to stdout.
+
+```
+$ cd vault/backend
+$ ./README.gen.sh > README.md
+$ git commit -m "vault: update readme"
+$ git push
+```
 
 # Maintenance
 
