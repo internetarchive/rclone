@@ -61,14 +61,14 @@ After download with `curl` or `wget` the file needs to be made executable with [
 #### Intel-based Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Darwin_x86_64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Darwin_x86_64
 $ chmod +x rclone
 ```
 
 #### Apple Silicon Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Darwin_arm64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Darwin_arm64
 $ chmod +x rclone
 ```
 
@@ -76,10 +76,10 @@ $ chmod +x rclone
 
 Download the latest binary (e.g. with your browser):
 
-* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Windows_x86_64.exe)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Windows_x86_64.exe)
 
 In (the rare) case you have an ARM based computer running Windows, please
-download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Windows_arm64.exe).
+download: [https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -106,8 +106,8 @@ recognized internal or external command*).
 
 Download the latest release depending on your architecture:
 
-* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Linux_x86_64)
-* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220830184149-d81be41dc/rclone_1.59.1-vault-20220830184149-d81be41dc_Linux_arm64)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.1-vault-20220912141815-f3221bf0b/rclone_1.59.1-vault-20220912141815-f3221bf0b_Linux_arm64)
 
 For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
@@ -235,7 +235,7 @@ data
 A collection in Vault can be create explicitly with the `mkdir` command - every
 top level directory corresponds to a collection in Vault.
 
-For example, I can create a new collection called `TempSpace1` with the
+For example, you can create a new collection called `TempSpace1` with the
 following command:
 
 ```shell
@@ -246,7 +246,7 @@ Note that once created, collections cannot be deleted - they can only be renamed
 
 ### Depositing a single file and inspecting the result
 
-I can work with single files, e.g. if we want to deposit `a.pdf` into
+You can work with single files, e.g. if you want to deposit `a.pdf` into
 `TempSpace1` collection, you can run:
 
 ```shell
@@ -303,7 +303,7 @@ $ rclone copy data vault:/TempSpace2
 <5>NOTICE: vault batcher: upload done (25), deposited 5.698Mi, 5 item(s)
 ```
 
-We can verify that the folder has been uploaded conveniently with the `tree` subcommand:
+We can verify that the folder has been uploaded with the `tree` subcommand:
 
 
 ```shell
@@ -369,9 +369,9 @@ $ rclone tree vault:/TempSpace2/extra
 
 ### Syncing a folder to Vault
 
-If you want to regularly sync a directory to Vault, you can use the `sync`
-subcommand. By default, this will try to synchronize your local files with the
-files in Vault.
+If you want to regularly synchronize a directory to Vault, you can use the
+`sync` subcommand. By default, this will try to synchronize your local files
+with the files in Vault.
 
 As an example, let's sync our tree into a new collection `TempSpace3`.
 
@@ -395,7 +395,7 @@ $ rclone ls vault:/TempSpace3
   2207711 extra/examples/f.png
 ```
 
-Looks good. We can run sync again, in which case nothing should happen, since
+Looks good. We can run `sync` again, in which case nothing should happen, since
 all files are already in Vault.
 
 ```shell
