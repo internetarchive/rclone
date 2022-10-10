@@ -34,4 +34,4 @@ $ git push
 
 # Maintenance
 
-A long as we are developing Vault in a fork, we need to regularly include commit from the master branch.
+A long as we are developing Vault in a fork, we need to regularly include commits from the master branch (e.g. via rebase or merge).
