@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Generates a README from a template (below) - to use direct links to the
-# latest release. Run this *after* a new release has been published.
+# latest release. Run this *after* a new release has been published on GitHub.
+# Maybe a GitHub Action can take of this as well.
 #
 # HERE docs would be more elegant, but the README is full of chars that would
 # need escaping.
@@ -10,6 +11,9 @@
 #
 #   $ ./README.gen.sh > README.md
 #
+#
+# TODO(martin): GH release page not scrapable any more, need to use API;
+# piggyback on goreleaser credentials for API access
 
 set -eu -o pipefail
 
@@ -20,11 +24,13 @@ for cmd in curl grep sed awk; do
 	}
 done
 
-RELEASE_PAGE=https://github.com/internetarchive/rclone/releases/latest
-RELEASE_LINKS=$(curl --fail -sL $RELEASE_PAGE |
-	grep -Eo "/internetarchive/rclone/releases/download/[^\"]*" |
-	grep -v "checksums" |
-	awk '{print "https://github.com"$0}')
+RELEASE_LINKS=$(curl --fail -sL \
+	-H "Accept: application/vnd.github+json" \
+	-H "Authorization: Bearer $GITHUB_TOKEN" \
+    https://api.github.com/repos/internetarchive/rclone/releases/latest | \
+    jq -rc '.assets[].browser_download_url' |
+    grep -v "_checksums"
+)
 
 for link in $RELEASE_LINKS; do
 	case $link in
@@ -54,6 +60,7 @@ for link in $RELEASE_LINKS; do
 		;;
 	*) ;;
 	esac
+    # TODO: $v may not be defined
 	snippet+="* [$v]($link)\n"
 done
 
