@@ -61,7 +61,9 @@ for link in $RELEASE_LINKS; do
 	*) ;;
 	esac
     # TODO: $v may not be defined
-	snippet+="* [$v]($link)\n"
+    if [[ -v v ]]; then
+	    snippet+="* [$v]($link)\n"
+    fi
 done
 
 sed -e "s@RELEASE_ASSET_LINKS@$snippet@g;
