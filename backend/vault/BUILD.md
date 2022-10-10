@@ -6,6 +6,7 @@ access).
 
 ```shell
 $ git tag $(git tag -l | grep -E '^v[0-9\.]+$' | tail -1)-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
+$ # will result in something like: v1.59.1-vault-20221010201333-6eb36a82f
 $ export GITHUB_TOKEN="ghp_mv4gc3lqnrssa5dpnnsw4idgojxw2idemv3gk3dpobsxeidtmv2hi2lom5zqu"
 $ goreleaser release --rm-dist
 ```
