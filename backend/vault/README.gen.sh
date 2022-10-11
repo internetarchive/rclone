@@ -9,11 +9,8 @@
 #
 # Usage:
 #
-#   $ ./README.gen.sh > README.md
+#   $ GITHUB_TOKEN=ghp_12345678 ./README.gen.sh > README.md
 #
-#
-# TODO(martin): GH release page not scrapable any more, need to use API;
-# piggyback on goreleaser credentials for API access
 
 set -eu -o pipefail
 
@@ -24,10 +21,10 @@ for cmd in curl grep sed awk; do
 	}
 done
 
-RELEASE_LINKS=$(curl --fail -sL \
-	-H "Accept: application/vnd.github+json" \
-	-H "Authorization: Bearer $GITHUB_TOKEN" \
-    https://api.github.com/repos/internetarchive/rclone/releases/latest | \
+RELEASE_LINKS=$(curl --fail -sL
+	-H "Accept: application/vnd.github+json"
+	-H "Authorization: Bearer $GITHUB_TOKEN"
+    https://api.github.com/repos/internetarchive/rclone/releases/latest |
     jq -rc '.assets[].browser_download_url' |
     grep -v "_checksums"
 )
