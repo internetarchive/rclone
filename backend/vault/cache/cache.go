@@ -6,7 +6,7 @@ import (
 	"sync"
 )
 
-// New sets up a new in-memory cache.
+// New sets up a basic cache using a map.
 func New() *Cache {
 	return &Cache{
 		m: make(map[string]interface{}),
@@ -23,10 +23,11 @@ type Cache struct {
 	m            map[string]interface{}
 }
 
+// Reset clears the cache.
 func (c *Cache) Reset() {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.m = make(map[string]interface{})
+	c.mu.Unlock()
 }
 
 // SetGroup set a key within a group.
@@ -42,18 +43,19 @@ func (c *Cache) GetGroup(k, group string) interface{} {
 // Set value for a key.
 func (c *Cache) Set(k string, v interface{}) {
 	c.mu.Lock()
-	defer c.mu.Unlock()
 	c.m[k] = v
+	c.mu.Unlock()
 }
 
 // Get value for a key.
 func (c *Cache) Get(k string) interface{} {
 	c.mu.Lock()
-	defer c.mu.Unlock()
-	return c.m[k]
+	result := c.m[k]
+	c.mu.Unlock()
+	return result
 }
 
-// Atos stringifies a value.
+// Atos stringifies a value. Panics if the value cannot be marshalled.
 func Atos(v interface{}) string {
 	b, err := json.Marshal(v)
 	if err != nil {
