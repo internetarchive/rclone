@@ -15,25 +15,24 @@ const (
 var (
 	// DefaultVaultItemPrefixes are expected petabox item name prefixes. If any
 	// more prefixes are to be used, we need to add them here. Example:
-	// archive.org/details/IA-DPS-VAULT-QA-... We need this to reject certain
-	// prohibited filenames.
+	// archive.org/details/IA-DPS-VAULT-QA-... Filenames should not start with
+	// any of these prefixes. As it is possible to extend this list, there is a
+	// remote possibility that a once valid filename would become invalid.
 	DefaultVaultItemPrefixes = []string{"DPS-VAULT", "IA-DPS-VAULT"}
 )
 
 // IsValidPath returns true, if the path can be used in a petabox item using a
 // set of predeclared prefixes for item names.
 func IsValidPath(remote string) bool {
-	for _, prefix := range DefaultVaultItemPrefixes {
-		if !IsValidPathPrefix(remote, prefix) {
-			return false
-		}
+	if !isValidPath(remote, DefaultVaultItemPrefixes...) {
+		return false
 	}
 	return true
 }
 
-// IsValidPathPrefix returns true, if the path can be used in a petabox item
-// with a given item name (bucket) prefix.
-func IsValidPathPrefix(remote, bucketPrefix string) bool {
+// isValidPath returns true, if the path can be used in a petabox item
+// with a given bucket prefixes.
+func isValidPath(remote string, prefixes ...string) bool {
 	if remote == "" {
 		return false
 	}
@@ -55,11 +54,13 @@ func IsValidPathPrefix(remote, bucketPrefix string) bool {
 		"_meta.xml",
 		"_reviews.xml",
 	}
-	for _, suffix := range invalidSuffixes {
-		hasInvalidPrefix := strings.HasPrefix(strings.TrimLeft(remote, "/"), bucketPrefix)
-		hasInvalidSuffix := strings.HasSuffix(remote, suffix)
-		if hasInvalidPrefix && hasInvalidSuffix {
-			return false
+	for _, prefix := range prefixes {
+		hasInvalidPrefix := strings.HasPrefix(strings.TrimLeft(remote, "/"), prefix)
+		for _, suffix := range invalidSuffixes {
+			hasInvalidSuffix := strings.HasSuffix(remote, suffix)
+			if hasInvalidSuffix && hasInvalidPrefix {
+				return false
+			}
 		}
 	}
 	segments := strings.Split(remote, "/")
