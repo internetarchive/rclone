@@ -537,6 +537,7 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	return nil
 }
 
+// Command allows for custom commands. TODO(martin): We could have a cli dashboard or a deposit status command.
 func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
 	// TODO: fixity reports, distribution, ...
 	switch name {
@@ -637,7 +638,7 @@ func (o *Object) Hash(ctx context.Context, ty hash.Type) (string, error) {
 			return "", nil
 		}
 	case hash.None:
-		// Testing systems sometimes miss a hashes, so we just skip it.
+		// Testing systems sometimes miss a hash, so we just skip it.
 		return "", nil
 	}
 	// TODO: we may want hash.ErrUnsupported, but we get an err, via:
