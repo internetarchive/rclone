@@ -21,9 +21,9 @@ for cmd in curl grep sed awk; do
 	}
 done
 
-RELEASE_LINKS=$(curl --fail -sL
-	-H "Accept: application/vnd.github+json"
-	-H "Authorization: Bearer $GITHUB_TOKEN"
+RELEASE_LINKS=$(curl --fail -sL \
+	-H "Accept: application/vnd.github+json" \
+	-H "Authorization: Bearer $GITHUB_TOKEN" \
     https://api.github.com/repos/internetarchive/rclone/releases/latest |
     jq -rc '.assets[].browser_download_url' |
     grep -v "_checksums"
