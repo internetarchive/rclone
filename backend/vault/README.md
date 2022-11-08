@@ -61,14 +61,14 @@ After download with `curl` or `wget` the file needs to be made executable with [
 #### Intel-based Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Darwin_x86_64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Darwin_x86_64
 $ chmod +x rclone
 ```
 
 #### Apple Silicon Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Darwin_arm64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Darwin_arm64
 $ chmod +x rclone
 ```
 
@@ -76,10 +76,10 @@ $ chmod +x rclone
 
 Download the latest binary (e.g. with your browser):
 
-* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Windows_x86_64.exe)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Windows_x86_64.exe)
 
 In (the rare) case you have an ARM based computer running Windows, please
-download: [https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Windows_arm64.exe).
+download: [https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -106,8 +106,8 @@ recognized internal or external command*).
 
 Download the latest release depending on your architecture:
 
-* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Linux_x86_64)
-* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221101173302-54c30bc38/rclone_1.59.2-vault-20221101173302-54c30bc38_Linux_arm64)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.59.2-vault-20221108182226-15a920fef/rclone_1.59.2-vault-20221108182226-15a920fef_Linux_arm64)
 
 For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
