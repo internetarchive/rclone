@@ -14,7 +14,7 @@
 
 set -eu -o pipefail
 
-for cmd in curl grep sed awk; do
+for cmd in curl grep sed awk jq; do
 	command -v $cmd >/dev/null 2>&1 || {
 		echo >&2 "error: $cmd is required, but not found"
 		exit 1
