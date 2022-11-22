@@ -1,0 +1,723 @@
+=== RUN   TestBatchItemToFile
+--- PASS: TestBatchItemToFile (0.00s)
+=== RUN   TestIsPathValidBucketPrefix
+--- PASS: TestIsPathValidBucketPrefix (0.00s)
+=== RUN   TestIntegration
+    fstests.go:421: Using remote "v:"
+=== RUN   TestIntegration/FsCheckWrap
+    fstests.go:458: Skipping FsCheckWrap on this Fs
+=== RUN   TestIntegration/FsCommand
+=== RUN   TestIntegration/FsRmdirNotFound
+=== RUN   TestIntegration/FsString
+=== RUN   TestIntegration/FsName
+=== RUN   TestIntegration/FsRoot
+=== RUN   TestIntegration/FsRmdirEmpty
+    fstests.go:551: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:551
+        	Error:      	Received unexpected error:
+        	            	cannot delete node type collection
+        	Test:       	TestIntegration/FsRmdirEmpty
+=== RUN   TestIntegration/FsMkdir
+=== RUN   TestIntegration/FsMkdir/FsMkdirRmdirSubdir
+=== RUN   TestIntegration/FsMkdir/FsListEmpty
+=== RUN   TestIntegration/FsMkdir/FsListDirEmpty
+=== RUN   TestIntegration/FsMkdir/FsListRDirEmpty
+    fstests.go:382: FS has no ListR interface
+=== RUN   TestIntegration/FsMkdir/FsListDirNotFound
+2022/11/22 19:10:07 ERROR : does not exist: error listing: directory not found
+=== RUN   TestIntegration/FsMkdir/FsListRDirNotFound
+    fstests.go:382: FS has no ListR interface
+=== RUN   TestIntegration/FsMkdir/FsEncoding
+=== RUN   TestIntegration/FsMkdir/FsEncoding/control_chars
+    fstests.go:677: testing "␀␁␂␃␄␅␆␇␈␉␊␋␌␍␎␏␐␑␒␓␔␕␖␗␘␙␚␛␜␝␞␟␡"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/control_chars
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/control_chars
+        	Messages:   	␀␁␂␃␄␅␆␇␈␉␊␋␌␍␎␏␐␑␒␓␔␕␖␗␘␙␚␛␜␝␞␟␡/␀␁␂␃␄␅␆␇␈␉␊␋␌␍␎␏␐␑␒␓␔␕␖␗␘␙␚␛␜␝␞␟␡: Modification time difference too big |463650h10m10.999067496s| > 1s (want 2022-11-22 19:10:10.999067496 +0100 CET m=+43.649853711 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/control_chars
+=== RUN   TestIntegration/FsMkdir/FsEncoding/dot
+    fstests.go:677: testing "．"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot
+        	Messages:   	．/．: Modification time difference too big |463650h10m20.391277005s| > 1s (want 2022-11-22 19:10:20.391277005 +0100 CET m=+53.042063147 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot
+=== RUN   TestIntegration/FsMkdir/FsEncoding/dot_dot
+    fstests.go:677: testing "．．"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot_dot
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot_dot
+        	Messages:   	．．/．．: Modification time difference too big |463650h10m29.569369699s| > 1s (want 2022-11-22 19:10:29.569369699 +0100 CET m=+62.220155858 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/dot_dot
+=== RUN   TestIntegration/FsMkdir/FsEncoding/punctuation
+    fstests.go:677: testing "!\"#$%&'()*+,-.／:;<=>?@[\\]^_`{|}~"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/punctuation
+    fstests.go:152: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:152
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:168
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	invalid path
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/punctuation
+        	Messages:   	Put
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_space
+    fstests.go:677: testing " leading space"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_space
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_space
+        	Messages:   	 leading space/ leading space: Modification time difference too big |463650h10m40.043057142s| > 1s (want 2022-11-22 19:10:40.043057142 +0100 CET m=+72.693843359 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_space
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_tilde
+    fstests.go:677: testing "~leading tilde"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_tilde
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_tilde
+        	Messages:   	~leading tilde/~leading tilde: Modification time difference too big |463650h10m49.398542069s| > 1s (want 2022-11-22 19:10:49.398542069 +0100 CET m=+82.049328261 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_tilde
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_CR
+    fstests.go:677: testing "␍leading CR"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_CR
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_CR
+        	Messages:   	␍leading CR/␍leading CR: Modification time difference too big |463650h10m59.005080536s| > 1s (want 2022-11-22 19:10:59.005080536 +0100 CET m=+91.655866757 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_CR
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_LF
+    fstests.go:677: testing "␊leading LF"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_LF
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_LF
+        	Messages:   	␊leading LF/␊leading LF: Modification time difference too big |463650h11m8.72507731s| > 1s (want 2022-11-22 19:11:08.72507731 +0100 CET m=+101.375863457 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_LF
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_HT
+    fstests.go:677: testing "␉leading HT"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_HT
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_HT
+        	Messages:   	␉leading HT/␉leading HT: Modification time difference too big |463650h11m18.035468897s| > 1s (want 2022-11-22 19:11:18.035468897 +0100 CET m=+110.686255091 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_HT
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_VT
+    fstests.go:677: testing "␋leading VT"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_VT
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_VT
+        	Messages:   	␋leading VT/␋leading VT: Modification time difference too big |463650h11m27.742037478s| > 1s (want 2022-11-22 19:11:27.742037478 +0100 CET m=+120.392823691 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_VT
+=== RUN   TestIntegration/FsMkdir/FsEncoding/leading_dot
+    fstests.go:677: testing ".leading dot"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_dot
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_dot
+        	Messages:   	.leading dot/.leading dot: Modification time difference too big |463650h11m37.218225067s| > 1s (want 2022-11-22 19:11:37.218225067 +0100 CET m=+129.869011218 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/leading_dot
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_space
+    fstests.go:677: testing "trailing space "
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_space
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_space
+        	Messages:   	trailing space /trailing space : Modification time difference too big |463650h11m47.279138379s| > 1s (want 2022-11-22 19:11:47.279138379 +0100 CET m=+139.929924571 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_space
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_CR
+    fstests.go:677: testing "trailing CR␍"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_CR
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_CR
+        	Messages:   	trailing CR␍/trailing CR␍: Modification time difference too big |463650h11m57.197606902s| > 1s (want 2022-11-22 19:11:57.197606902 +0100 CET m=+149.848393046 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_CR
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_LF
+    fstests.go:677: testing "trailing LF␊"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_LF
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_LF
+        	Messages:   	trailing LF␊/trailing LF␊: Modification time difference too big |463650h12m6.478851339s| > 1s (want 2022-11-22 19:12:06.478851339 +0100 CET m=+159.129637574 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_LF
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_HT
+    fstests.go:677: testing "trailing HT␉"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_HT
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_HT
+        	Messages:   	trailing HT␉/trailing HT␉: Modification time difference too big |463650h12m16.863814853s| > 1s (want 2022-11-22 19:12:16.863814853 +0100 CET m=+169.514601067 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_HT
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_VT
+    fstests.go:677: testing "trailing VT␋"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_VT
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_VT
+        	Messages:   	trailing VT␋/trailing VT␋: Modification time difference too big |463650h12m26.70008649s| > 1s (want 2022-11-22 19:12:26.70008649 +0100 CET m=+179.350872709 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_VT
+=== RUN   TestIntegration/FsMkdir/FsEncoding/trailing_dot
+    fstests.go:677: testing "trailing dot."
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_dot
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_dot
+        	Messages:   	trailing dot./trailing dot.: Modification time difference too big |463650h12m36.479694768s| > 1s (want 2022-11-22 19:12:36.479694768 +0100 CET m=+189.130480985 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/trailing_dot
+=== RUN   TestIntegration/FsMkdir/FsEncoding/invalid_UTF-8
+    fstests.go:672: Skipping invalid UTF-8
+=== RUN   TestIntegration/FsMkdir/FsEncoding/URL_encoding
+    fstests.go:677: testing "test%46.txt"
+    fstests.go:678: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:678
+        	Error:      	Received unexpected error:
+        	            	HTTP error 409 (409 Conflict) returned body: "{\"detail\":\"request violates unique constraint\"}"
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/URL_encoding
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/URL_encoding
+        	Messages:   	test%46.txt/test%46.txt: Modification time difference too big |463650h12m46.687089272s| > 1s (want 2022-11-22 19:12:46.687089272 +0100 CET m=+199.337875461 vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:683
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsEncoding/URL_encoding
+=== RUN   TestIntegration/FsMkdir/FsNewObjectNotFound
+=== RUN   TestIntegration/FsMkdir/FsPutError
+    fstests.go:733: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:733
+        	Error:      	Not equal: 
+        	            	expected: &errors.errorString{s:"object not found"}
+        	            	actual  : &errors.errorString{s:"invalid path"}
+        	            	
+        	            	Diff:
+        	            	--- Expected
+        	            	+++ Actual
+        	            	@@ -1,3 +1,3 @@
+        	            	 (*errors.errorString)({
+        	            	- s: (string) (len=16) "object not found"
+        	            	+ s: (string) (len=12) "invalid path"
+        	            	 })
+        	Test:       	TestIntegration/FsMkdir/FsPutError
+=== RUN   TestIntegration/FsMkdir/FsPutZeroLength
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:244
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsPutZeroLength
+        	Messages:   	zero-length-file: Modification time difference too big |272548h5m6.499999999s| > 1s (want 2001-02-03 04:05:06.499999999 +0000 UTC vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:247
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsPutZeroLength
+=== RUN   TestIntegration/FsMkdir/FsOpenWriterAt
+    fstests.go:750: FS has no OpenWriterAt interface
+=== RUN   TestIntegration/FsMkdir/FsChangeNotify
+    fstests.go:786: FS has no ChangeNotify interface
+=== RUN   TestIntegration/FsMkdir/FsPutFiles
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:871
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsPutFiles
+        	Messages:   	file name.txt: Modification time difference too big |272548h5m6.499999999s| > 1s (want 2001-02-03 04:05:06.499999999 +0000 UTC vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:871
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsPutFiles
+=== RUN   TestIntegration/FsMkdir/FsPutChunked
+    fstests.go:1888: *vault.Fs does not implement SetUploadChunkSizer
+=== RUN   TestIntegration/FsMkdir/FsUploadUnknownSize
+=== RUN   TestIntegration/FsMkdir/FsUploadUnknownSize/FsPutUnknownSize
+    fstests.go:2005: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:2005
+        	Error:      	Received unexpected error:
+        	            	HTTP error 404 (404 Not Found) returned body: "{\"detail\":\"Not found.\"}"
+        	Test:       	TestIntegration/FsMkdir/FsUploadUnknownSize/FsPutUnknownSize
+        	Messages:   	successfully uploaded unknown-sized file but failed to remove
+=== RUN   TestIntegration/FsMkdir/FsUploadUnknownSize/FsUpdateUnknownSize
+    fstest.go:127: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:127
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:132
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstest.go:151
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:199
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:2016
+        	Error:      	Should be true
+        	Test:       	TestIntegration/FsMkdir/FsUploadUnknownSize/FsUpdateUnknownSize
+        	Messages:   	unknown-size-update.txt: Modification time difference too big |281308h5m6.499999999s| > 1s (want 2002-02-03 04:05:06.499999999 +0000 UTC vs got 1970-01-01 01:00:00 +0100 CET) (precision 1s)
+    fstests.go:131: Sleeping for 1s for findObject eventual consistency: 1/3 (object not found)
+    fstests.go:131: Sleeping for 1.5s for findObject eventual consistency: 2/3 (object not found)
+    fstests.go:131: Sleeping for 2.25s for findObject eventual consistency: 3/3 (object not found)
+    fstests.go:135: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:135
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:201
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:209
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:215
+        	            				/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:2016
+        	Error:      	Received unexpected error:
+        	            	object not found
+        	Test:       	TestIntegration/FsMkdir/FsUploadUnknownSize/FsUpdateUnknownSize
+=== RUN   TestIntegration/FsMkdir/FsRootCollapse
+=== CONT  TestIntegration/FsMkdir
+    fstests.go:2060: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:2060
+        	Error:      	Received unexpected error:
+        	            	can only purge folders, not COLLECTION
+        	Test:       	TestIntegration/FsMkdir
+=== RUN   TestIntegration/FsShutdown
+2022/11/22 19:13:28 NOTICE: vault batcher: preparing 21 file(s) for deposit
+    fstests.go:2086: 
+        	Error Trace:	/home/tir/code/git.archive.org/martin/rclone/backend/vault/fstests.go:2086
+        	Error:      	Received unexpected error:
+        	            	deposit failed: cannot create deposit (probably name clashes); try to use --ignore-existing flag when uploading
+        	Test:       	TestIntegration/FsShutdown
+--- FAIL: TestIntegration (243.11s)
+    --- SKIP: TestIntegration/FsCheckWrap (0.00s)
+    --- PASS: TestIntegration/FsCommand (0.00s)
+    --- PASS: TestIntegration/FsRmdirNotFound (2.60s)
+    --- PASS: TestIntegration/FsString (0.00s)
+    --- PASS: TestIntegration/FsName (0.00s)
+    --- PASS: TestIntegration/FsRoot (0.00s)
+    --- FAIL: TestIntegration/FsRmdirEmpty (0.27s)
+    --- FAIL: TestIntegration/FsMkdir (226.69s)
+        --- PASS: TestIntegration/FsMkdir/FsMkdirRmdirSubdir (17.23s)
+        --- PASS: TestIntegration/FsMkdir/FsListEmpty (1.67s)
+        --- PASS: TestIntegration/FsMkdir/FsListDirEmpty (1.01s)
+        --- SKIP: TestIntegration/FsMkdir/FsListRDirEmpty (0.00s)
+        --- PASS: TestIntegration/FsMkdir/FsListDirNotFound (0.94s)
+        --- SKIP: TestIntegration/FsMkdir/FsListRDirNotFound (0.00s)
+        --- FAIL: TestIntegration/FsMkdir/FsEncoding (166.70s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/control_chars (10.15s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/dot (8.76s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/dot_dot (9.25s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/punctuation (1.43s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_space (9.19s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_tilde (9.55s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_CR (9.38s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_LF (9.73s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_HT (9.69s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_VT (9.63s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/leading_dot (9.51s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_space (10.45s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_CR (8.98s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_LF (10.19s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_HT (10.21s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_VT (9.79s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/trailing_dot (9.89s)
+            --- SKIP: TestIntegration/FsMkdir/FsEncoding/invalid_UTF-8 (0.00s)
+            --- FAIL: TestIntegration/FsMkdir/FsEncoding/URL_encoding (9.82s)
+        --- PASS: TestIntegration/FsMkdir/FsNewObjectNotFound (1.90s)
+        --- FAIL: TestIntegration/FsMkdir/FsPutError (0.00s)
+        --- FAIL: TestIntegration/FsMkdir/FsPutZeroLength (8.08s)
+        --- SKIP: TestIntegration/FsMkdir/FsOpenWriterAt (0.00s)
+        --- SKIP: TestIntegration/FsMkdir/FsChangeNotify (0.00s)
+        --- FAIL: TestIntegration/FsMkdir/FsPutFiles (7.73s)
+        --- SKIP: TestIntegration/FsMkdir/FsPutChunked (0.00s)
+        --- FAIL: TestIntegration/FsMkdir/FsUploadUnknownSize (8.53s)
+            --- FAIL: TestIntegration/FsMkdir/FsUploadUnknownSize/FsPutUnknownSize (0.63s)
+            --- FAIL: TestIntegration/FsMkdir/FsUploadUnknownSize/FsUpdateUnknownSize (7.90s)
+        --- PASS: TestIntegration/FsMkdir/FsRootCollapse (5.47s)
+    --- FAIL: TestIntegration/FsShutdown (3.22s)
+FAIL
+FAIL	github.com/rclone/rclone/backend/vault	243.123s
+?   	github.com/rclone/rclone/backend/vault/api	[no test files]
+?   	github.com/rclone/rclone/backend/vault/cache	[no test files]
+?   	github.com/rclone/rclone/backend/vault/extra	[no test files]
+FAIL
