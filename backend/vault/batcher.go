@@ -202,7 +202,6 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 	fs.Debugf(b, "shutdown started")
 	b.shutOnce.Do(func() {
 		if len(b.items) == 0 {
-			fs.Debugf(b, "nothing to deposit")
 			return
 		}
 		var (
