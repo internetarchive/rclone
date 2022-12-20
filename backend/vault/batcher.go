@@ -256,6 +256,9 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				rdr.CollectionId = c.Identifier()
 			case b.parent.NodeType == "FOLDER":
 				rdr.ParentNodeId = b.parent.Id
+			default:
+				err = fmt.Errorf("copying files to the root folder is not supported in vault, please create a directory/collection first")
+				return
 			}
 			// Register deposit.
 			depositId, err = b.fs.api.RegisterDeposit(ctx, rdr)
