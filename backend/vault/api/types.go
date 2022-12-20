@@ -408,6 +408,9 @@ func (api *Api) GetUser(id string) (*User, error) {
 
 // GetOrganization returns the organization for a given id.
 func (api *Api) GetOrganization(id string) (*Organization, error) {
+	if id == "" {
+		return nil, fmt.Errorf("missing organization identifier - is the user associated with an organization?")
+	}
 	if v := api.cache.GetGroup(id, "organization"); v != nil {
 		return v.(*Organization), nil
 	}
