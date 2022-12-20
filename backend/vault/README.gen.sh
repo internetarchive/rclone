@@ -2,7 +2,7 @@
 #
 # Generates a README from a template (below) - to use direct links to the
 # latest release. Run this *after* a new release has been published on GitHub.
-# Maybe a GitHub Action can take of this as well.
+# Maybe a GitHub Action can take care of this as well.
 #
 # HERE docs would be more elegant, but the README is full of chars that would
 # need escaping.
