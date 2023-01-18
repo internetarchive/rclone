@@ -58,6 +58,7 @@ type Api struct {
 // this time.
 func New(endpoint, username, password string) *Api {
 	ctx := context.Background()
+	// TODO: add retry on a lower level, e.g. via pester or other library
 	return &Api{
 		Endpoint:         endpoint,
 		Username:         username,
