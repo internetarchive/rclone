@@ -292,9 +292,13 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	switch {
 	case src.Fs().Name() == "local":
 		filename = path.Join(src.Fs().Root(), src.String())
-		if _, err := io.Copy(io.Discard, tee); err != nil {
-			return nil, err
-		}
+		//
+		// NOTE: we removed this during a debugging session, in conjunction
+		// with hashing; re-add, if necessary
+		//
+		// if _, err := io.Copy(io.Discard, tee); err != nil {
+		// 	return nil, err
+		// }
 		fs.Debugf(f, "adding local file to batch: %v", filename)
 	default:
 		fs.Debugf(f, "fetching remote file temporarily")
@@ -317,9 +321,9 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		fs:     f,
 		remote: src.Remote(),
 		treeNode: &api.TreeNode{
-			Md5Sum:     sums[hash.MD5],
-			Sha1Sum:    sums[hash.SHA1],
-			Sha256Sum:  sums[hash.SHA256],
+			// Md5Sum:     sums[hash.MD5],
+			// Sha1Sum:    sums[hash.SHA1],
+			// Sha256Sum:  sums[hash.SHA256],
 			NodeType:   "FILE",
 			ObjectSize: src.Size(),
 		},
