@@ -101,16 +101,19 @@ func (item *batchItem) contentType() string {
 // deriveFlowIdentifier from a file, faster than a whole file fingerprint.
 func (item *batchItem) deriveFlowIdentifier() (string, error) {
 	var (
-		h      = md5.New()
-		f, err = os.Open(item.filename)
+		h   = md5.New()
+		err error
+		// f, err = os.Open(item.filename)
 	)
-	if err != nil {
-		return "", err
-	}
-	defer f.Close()
-	if _, err := io.Copy(h, io.LimitReader(f, 1<<24)); err != nil {
-		return "", err
-	}
+	// if err != nil {
+	// 	return "", err
+	// }
+	// defer f.Close()
+	// Note: debugging session optimization
+	//
+	// if _, err := io.Copy(h, io.LimitReader(f, 1<<24)); err != nil {
+	// 	return "", err
+	// }
 	if _, err := io.WriteString(h, item.root); err != nil {
 		return "", err
 	}
