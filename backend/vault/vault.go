@@ -164,8 +164,9 @@ func (f *Fs) String() string { return f.name }
 // Precision returns the support precision.
 func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 
-// Hashes returns the supported hashes.
-func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
+// Hashes returns the supported hashes.  TODO(martin): remove all hashes, since
+// hashing 1-2T of files; previously, we used MD5, SHA1, SHA256.
+func (f *Fs) Hashes() hash.Set { return hash.Set(hash.None) }
 
 // Features returns optional features.
 func (f *Fs) Features() *fs.Features { return f.features }
