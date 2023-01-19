@@ -39,10 +39,11 @@ type batcher struct {
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
 type batchItem struct {
-	root     string          // the fs root
-	filename string          // some (temporary) file with contents
-	src      fs.ObjectInfo   // object info
-	options  []fs.OpenOption // open options
+	root                    string          // the fs root
+	filename                string          // some file with contents, may be temporary
+	src                     fs.ObjectInfo   // object info
+	options                 []fs.OpenOption // open options
+	deleteFileAfterTransfer bool            // only set this to true, if you are using temporary files
 }
 
 // randomFlowIdentifier returns a unique flow identifier.
@@ -359,9 +360,11 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				fs.LogPrintf(fs.LogLevelError, b, "close: %v", err)
 				return
 			}
-			if err = os.Remove(item.filename); err != nil {
-				fs.LogPrintf(fs.LogLevelError, b, "remove: %v", err)
-				return
+			if item.deleteFileAfterTransfer {
+				if err = os.Remove(item.filename); err != nil {
+					fs.LogPrintf(fs.LogLevelError, b, "remove: %v", err)
+					return
+				}
 			}
 		}
 		fs.Logf(b, "upload done (%d), deposited %s, %d item(s)",
