@@ -284,6 +284,9 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		return nil, err
 	}
 	tee := io.TeeReader(in, hasher)
+	// TODO(martin): distinguish between local files and anything else; local
+	// files do not need to be spooled into a temporary file
+	fs.Debugf(f, "reader is a : %T", in)
 	if filename, err = extra.TempFileFromReader(tee); err != nil {
 		return nil, err
 	}
