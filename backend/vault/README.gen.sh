@@ -84,7 +84,7 @@ would like to include this backend into the main Rclone project). We are basing
 our releases on the latest version of the Rclone upstream project.
 
 These releases are tested extensively, yet still prototypical and we are happy
-about feedback: [vault@archive.org](mailto:vault@archive.org).
+about feedback: [vault@archive.org](mailto:vault@archive.org). There are also some [known limitations](#known-limitations).
 
 With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
