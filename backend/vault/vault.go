@@ -275,27 +275,37 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		return nil, ErrInvalidPath
 	}
 	var (
-		filename string
-		err      error
+		filename                string
+		err                     error
+		deleteFileAfterTransfer bool = false
 	)
-	fs.Debugf(f, "fetching remote file temporarily")
 	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
 	if err != nil {
 		return nil, err
 	}
 	tee := io.TeeReader(in, hasher)
-	// TODO(martin): distinguish between local files and anything else; local
-	// files do not need to be spooled into a temporary file
-	fs.Debugf(f, "reader is a : %T", in)
-	if filename, err = extra.TempFileFromReader(tee); err != nil {
-		return nil, err
+	// If the source is a local file, we can skip the temporary file. We need
+	// the temporary files for the other upload variants, as we want to
+	// register a deposit first and for that we need to have all files and
+	// directories available.
+	switch {
+	case src.Fs().Name() == "local":
+		filename = path.Join(src.Fs().Root(), src.String())
+		fs.Debugf(f, "adding local file to batch: %v", filename)
+	default:
+		fs.Debugf(f, "fetching remote file temporarily")
+		if filename, err = extra.TempFileFromReader(tee); err != nil {
+			return nil, err
+		}
+		deleteFileAfterTransfer = true
+		fs.Debugf(f, "fetched %v to temporary location: %v", src.Remote(), filename)
 	}
-	fs.Debugf(f, "fetched %v to %v", src.Remote(), filename)
 	f.batcher.Add(&batchItem{
-		root:     f.root,
-		filename: filename,
-		src:      src,
-		options:  options,
+		root:                    f.root,
+		filename:                filename,
+		src:                     src,
+		options:                 options,
+		deleteFileAfterTransfer: deleteFileAfterTransfer,
 	})
 	sums := hasher.Sums()
 	fs.Debugf(f, "added file to batch (%s, %v)", filename, sums)
