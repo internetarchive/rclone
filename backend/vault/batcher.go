@@ -2,12 +2,12 @@ package vault
 
 import (
 	"context"
+	"errors"
 
 	"crypto/md5"
 	"fmt"
 	"io"
 	"math"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -22,7 +22,15 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-const defaultUploadChunkSize = 1 << 20 // 1M
+const (
+	defaultUploadChunkSize = 1 << 20 // 1M
+	flowIdentifierPrefix   = "rclone-vault-flow"
+)
+
+var (
+	ErrCannotCopyToRoot = errors.New("copying files to root is not supported in vault")
+	ErrInvalidChunkSize = errors.New("invalid chunck size (must be positive)")
+)
 
 // batcher is used to group upload files (deposit).
 type batcher struct {
@@ -46,25 +54,16 @@ type batchItem struct {
 	deleteFileAfterTransfer bool            // only set this to true, if you are using temporary files
 }
 
-// randomFlowIdentifier returns a unique flow identifier.
-func randomFlowIdentifier() string {
-	var (
-		prefix  = "rclone-vault-flow"
-		randInt = 100_000_000 + rand.Intn(899_999_999) // fixed length
-	)
-	return fmt.Sprintf("%s-%d", prefix, randInt)
-}
-
 // ToFile turns a batch item into a File for a deposit request. This method
-// sets the flow identifier.
+// sets the flow identifier. Returns nil, when a batch item cannot be
+// converted.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	if item == nil || item.src == nil {
 		return nil
 	}
 	flowIdentifier, err := item.deriveFlowIdentifier()
 	if err != nil {
-		fs.Debugf(item, "falling back to synthetic flow id (deposit will not be resumable [err: %v])", err)
-		flowIdentifier = randomFlowIdentifier()
+		return nil
 	}
 	return &api.File{
 		Name:                 path.Base(item.src.Remote()),
@@ -77,7 +76,8 @@ func (item *batchItem) ToFile(ctx context.Context) *api.File {
 }
 
 // contentType detects the content type. Returns the empty string, if no
-// specific content type could be found.
+// specific content type could be found. TODO(martin): This reads 512b from the
+// file. May be a bottleneck when working with larger number of files.
 func (item *batchItem) contentType() string {
 	f, err := os.Open(item.filename)
 	if err != nil {
@@ -113,7 +113,7 @@ func (item *batchItem) deriveFlowIdentifier() (string, error) {
 	}
 	// Filename and root may be enough. For the moment we include a partial MD5
 	// sum of the file. We also want the filename length to be constant.
-	return fmt.Sprintf("rclone-vault-flow-%x", h.Sum(nil)), nil
+	return fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil)), nil
 }
 
 // String will most likely show up in debug messages.
@@ -126,6 +126,7 @@ func (b *batcher) String() string {
 // run uploads concurrently.
 func (b *batcher) Add(item *batchItem) {
 	b.mu.Lock()
+	defer b.mu.Unlock()
 	if b.seen == nil {
 		b.seen = make(map[string]struct{})
 	}
@@ -135,7 +136,6 @@ func (b *batcher) Add(item *batchItem) {
 	} else {
 		fs.Debugf(b, "ignoring already batched file: %v", item.filename)
 	}
-	b.mu.Unlock()
 }
 
 // Chunker allows to read file in chunks of fixed sizes.
@@ -150,7 +150,7 @@ type Chunker struct {
 // the associated file.
 func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 	if chunkSize < 1 {
-		return nil, fmt.Errorf("chunk size must be positive")
+		return nil, ErrInvalidChunkSize
 	}
 	f, err := os.Open(filename)
 	if err != nil {
@@ -226,8 +226,10 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		// Prepare deposit request.
 		fs.Logf(b, "preparing %d file(s) for deposit", len(b.items))
 		for _, item := range b.items {
-			totalSize += item.src.Size()
-			files = append(files, item.ToFile(ctx))
+			if f := item.ToFile(ctx); f != nil {
+				totalSize += item.src.Size()
+				files = append(files, f)
+			}
 		}
 		// TODO: We want to clean any file from the deposit request, that
 		// already exists on the remote until WT-1605 is resolved
@@ -251,7 +253,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			case b.parent.NodeType == "FOLDER":
 				rdr.ParentNodeId = b.parent.Id
 			default:
-				err = fmt.Errorf("copying files to the root folder is not supported in vault, please create a directory/collection first")
+				err = ErrCannotCopyToRoot
 				return
 			}
 			// Register deposit.
