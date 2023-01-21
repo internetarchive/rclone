@@ -164,8 +164,9 @@ func (f *Fs) String() string { return f.name }
 // Precision returns the support precision.
 func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 
-// Hashes returns the supported hashes.  TODO(martin): remove all hashes, since
-// hashing 1-2T of files; previously, we used MD5, SHA1, SHA256.
+// Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
+// SHA256 - but for large deposits, this would slow down uploads considerably.
+// So for now, we do not want to support any hash.
 func (f *Fs) Hashes() hash.Set { return hash.Set(hash.None) }
 
 // Features returns optional features.
