@@ -281,29 +281,18 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		err                     error
 		deleteFileAfterTransfer bool = false
 	)
-	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
-	if err != nil {
-		return nil, err
-	}
-	tee := io.TeeReader(in, hasher)
-	// If the source is a local file, we can skip the temporary file. We need
-	// the temporary files for the other upload variants, as we want to
-	// register a deposit first and for that we need to have all files and
-	// directories available.
+	// While we are not supporting hashes currently, we still need to copy
+	// remote file to local temporary files in order to get a complete picture
+	// of the deposit. TODO(martin): we may get by to register a deposit w/o
+	// downloading all files before the start. We would need to get a listing,
+	// register the deposit and then start streaming data to vault.
 	switch {
 	case src.Fs().Name() == "local":
 		filename = path.Join(src.Fs().Root(), src.String())
-		//
-		// NOTE: we removed this during a debugging session, in conjunction
-		// with hashing; re-add, if necessary
-		//
-		// if _, err := io.Copy(io.Discard, tee); err != nil {
-		// 	return nil, err
-		// }
 		fs.Debugf(f, "adding local file to batch: %v", filename)
 	default:
 		fs.Debugf(f, "fetching remote file temporarily")
-		if filename, err = extra.TempFileFromReader(tee); err != nil {
+		if filename, err = extra.TempFileFromReader(in); err != nil {
 			return nil, err
 		}
 		deleteFileAfterTransfer = true
@@ -316,15 +305,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		options:                 options,
 		deleteFileAfterTransfer: deleteFileAfterTransfer,
 	})
-	sums := hasher.Sums()
-	fs.Debugf(f, "added file to batch (%s, %v)", filename, sums)
+	fs.Debugf(f, "added file to batch (%s)", filename)
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
 		treeNode: &api.TreeNode{
-			// Md5Sum:     sums[hash.MD5],
-			// Sha1Sum:    sums[hash.SHA1],
-			// Sha256Sum:  sums[hash.SHA256],
 			NodeType:   "FILE",
 			ObjectSize: src.Size(),
 		},
