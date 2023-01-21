@@ -100,24 +100,15 @@ func (item *batchItem) contentType() string {
 
 // deriveFlowIdentifier from a file, faster than a whole file fingerprint.
 func (item *batchItem) deriveFlowIdentifier() (string, error) {
-	var (
-		h   = md5.New()
-		err error
-		// f, err = os.Open(item.filename)
-	)
-	// if err != nil {
-	// 	return "", err
-	// }
-	// defer f.Close()
-	// Note: debugging session optimization
-	//
-	// if _, err := io.Copy(h, io.LimitReader(f, 1<<24)); err != nil {
-	// 	return "", err
-	// }
+	var h = md5.New()
+	// Previously, we read up to 16M of the file and included that into the
+	// hash, but for large number of files, this becomes a bottleneck. We want
+	// this identifier to be stable and derived from the file, but we can use
+	// the path as well (and be much faster).
 	if _, err := io.WriteString(h, item.root); err != nil {
 		return "", err
 	}
-	if _, err = io.WriteString(h, item.src.Remote()); err != nil {
+	if _, err := io.WriteString(h, item.src.Remote()); err != nil {
 		return "", err
 	}
 	// Filename and root may be enough. For the moment we include a partial MD5
