@@ -118,11 +118,12 @@ func (item *batchItem) deriveFlowIdentifier() (string, error) {
 
 // String will most likely show up in debug messages.
 func (b *batcher) String() string {
-	return "vault batcher"
+	return fmt.Sprintf("vault batcher [%v]", len(b.items))
 }
 
 // Add a single item to the batch. If the item has been added before (same
-// filename) it will be ignored.
+// filename) it will be ignored. This is threadsafe, as rclone will be default
+// run uploads concurrently.
 func (b *batcher) Add(item *batchItem) {
 	b.mu.Lock()
 	if b.seen == nil {
@@ -190,9 +191,7 @@ func (c *Chunker) Close() error {
 }
 
 // Shutdown creates a new deposit request for all batch items and uploads them.
-// This is the one of the last things rclone run before exiting. There is no
-// way to relay an error to return from here, so we deliberately exit the
-// process from here with an exit code of 1, if anything fails.
+// This is the one of the last things rclone run before exiting.
 func (b *batcher) Shutdown(ctx context.Context) (err error) {
 	fs.Debugf(b, "shutdown started")
 	b.shutOnce.Do(func() {
