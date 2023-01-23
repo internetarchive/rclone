@@ -16,7 +16,7 @@ type Chunker struct {
 
 // NewChunker sets up a new chunker. Caller will need to close this to close
 // the associated file. TODO: we can get rid of a filename here and use an
-// io.ReaderAt.
+// io.ReaderAt and some approach similar to io.Scanner.
 func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 	if chunkSize < 1 {
 		return nil, ErrInvalidChunkSize
