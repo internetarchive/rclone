@@ -229,8 +229,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				j       int64
 				resp    *http.Response
 			)
-			chunker, err = NewChunker(item.filename, b.chunkSize)
-			if err != nil {
+			if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
 				return
 			}
 			for j = 1; j <= chunker.NumChunks(); j++ {
@@ -295,8 +294,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 					MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
 					Body:                 r,
 				}
-				resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil)
-				if err != nil {
+				if resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil); err != nil {
 					fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
 					return
 				}
