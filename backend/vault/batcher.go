@@ -7,7 +7,6 @@ import (
 	"crypto/md5"
 	"fmt"
 	"io"
-	"math"
 	"net/http"
 	"net/url"
 	"os"
@@ -147,59 +146,7 @@ func (b *batcher) Files(ctx context.Context) (files []*api.File, totalSize int64
 			files = append(files, f)
 		}
 	}
-	return
-}
-
-// Chunker allows to read file in chunks of fixed sizes.
-type Chunker struct {
-	chunkSize int64
-	fileSize  int64
-	numChunks int64
-	f         *os.File
-}
-
-// NewChunker sets up a new chunker. Caller will need to close this to close
-// the associated file.
-func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
-	if chunkSize < 1 {
-		return nil, ErrInvalidChunkSize
-	}
-	f, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	fi, err := f.Stat()
-	if err != nil {
-		return nil, err
-	}
-	numChunks := int64(math.Ceil(float64(fi.Size()) / float64(chunkSize)))
-	return &Chunker{
-		f:         f,
-		chunkSize: chunkSize,
-		fileSize:  fi.Size(),
-		numChunks: numChunks,
-	}, nil
-}
-
-// FileSize returns the filesize.
-func (c *Chunker) FileSize() int64 {
-	return c.fileSize
-}
-
-// NumChunks returns the number of chunks this file is splitted to.
-func (c *Chunker) NumChunks() int64 {
-	return c.numChunks
-}
-
-// ChunkReader returns the reader over a section of the file. Counting starts at zero.
-func (c *Chunker) ChunkReader(i int64) io.Reader {
-	offset := i * c.chunkSize
-	return io.NewSectionReader(c.f, offset, c.chunkSize)
-}
-
-// Close closes the wrapped file.
-func (c *Chunker) Close() error {
-	return c.f.Close()
+	return files, totalSize
 }
 
 // Shutdown creates a new deposit request for all batch items and uploads them.
