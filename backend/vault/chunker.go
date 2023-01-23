@@ -22,10 +22,9 @@ func NewChunker(filename string, chunkSize int64) (*Chunker, error) {
 		return nil, ErrInvalidChunkSize
 	}
 	var (
-		f         *os.File
-		fi        os.FileInfo
-		err       error
-		numChunks int64
+		f   *os.File
+		fi  os.FileInfo
+		err error
 	)
 	if f, err = os.Open(filename); err != nil {
 		return nil, err
