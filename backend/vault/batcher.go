@@ -137,9 +137,9 @@ func (b *batcher) Add(item *batchItem) {
 	}
 }
 
-// Files returns batch items as a list of vault API file objects and the total
+// files returns batch items as a list of vault API file objects and the total
 // size of the objects.
-func (b *batcher) Files(ctx context.Context) (files []*api.File, totalSize int64) {
+func (b *batcher) files(ctx context.Context) (files []*api.File, totalSize int64) {
 	for _, item := range b.items {
 		if f := item.ToFile(ctx); f != nil {
 			totalSize += item.src.Size()
@@ -184,7 +184,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		b.parent = t
 		// Prepare deposit request.
 		fs.Logf(b, "preparing %d file(s) for deposit", len(b.items))
-		files, totalSize = b.Files(ctx)
+		files, totalSize = b.files(ctx)
 		// TODO: We want to clean any file from the deposit request, that
 		// already exists on the remote until WT-1605 is resolved
 		switch {
