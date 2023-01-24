@@ -26,10 +26,7 @@ const (
 	flowIdentifierPrefix   = "rclone-vault-flow"
 )
 
-var (
-	ErrCannotCopyToRoot = errors.New("copying files to root is not supported in vault")
-	ErrInvalidChunkSize = errors.New("invalid chunck size (must be positive)")
-)
+var ErrCannotCopyToRoot = errors.New("copying files to root is not supported in vault")
 
 // batcher is used to group upload files (deposit).
 type batcher struct {
