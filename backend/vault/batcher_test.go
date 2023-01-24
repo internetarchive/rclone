@@ -102,6 +102,37 @@ func TestBatchItemContentType(t *testing.T) {
 	}
 }
 
+func TestBatchItemDeriveFlowIdentifier(t *testing.T) {
+	var cases = []struct {
+		about string
+		item  *batchItem
+		want  string
+		err   error
+	}{
+		{"nil item", nil, "", nil},
+		{"empty item", &batchItem{}, "", nil},
+		{"basic item", &batchItem{
+			root: "/",
+			src:  &Object{},
+		}, "rclone-vault-flow-6666cd76f96956469e7be39d750cc7d9", nil},
+		{"basic item", &batchItem{
+			root: "/",
+			src: &Object{
+				remote: "abc",
+			},
+		}, "rclone-vault-flow-482a7143ac747eff5e5a5992a6016d65,", nil},
+	}
+	for _, c := range cases {
+		got, err := c.item.deriveFlowIdentifier()
+		if c.err != err {
+			t.Fatalf("got %v, want %v", err, c.err)
+		}
+		if got != c.want {
+			t.Fatalf("got %v, want %v", got, c.want)
+		}
+	}
+}
+
 // mustWriteFile writes a temporary file and panics, if that fails. Returns the
 // path to the temporary file.
 func mustWriteFileTemp(data []byte) (filename string) {
