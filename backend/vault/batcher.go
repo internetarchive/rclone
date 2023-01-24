@@ -97,8 +97,12 @@ func (item *batchItem) contentType() string {
 	}
 }
 
-// deriveFlowIdentifier from a file, faster than a whole file fingerprint.
+// deriveFlowIdentifier derives a unique per file identifier from metadata (not
+// content, for performance).
 func (item *batchItem) deriveFlowIdentifier() (string, error) {
+	if item == nil || item.src == nil {
+		return "", nil
+	}
 	var h = md5.New()
 	// Previously, we read up to 16M of the file and included that into the
 	// hash, but for large number of files, this becomes a bottleneck. We want
