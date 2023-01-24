@@ -25,7 +25,7 @@ func TestBatchItemToFile(t *testing.T) {
 					treeNode: &api.TreeNode{},
 				},
 			}, &api.File{
-				FlowIdentifier:       "rclone-vault-flow-626058514",
+				FlowIdentifier:       "rclone-vault-flow-6666cd76f96956469e7be39d750cc7d9",
 				Name:                 ".",
 				PreDepositModifiedAt: time.Unix(0, 0).Format("2006-01-02T03:04:05.000Z"),
 			},
@@ -40,7 +40,7 @@ func TestBatchItemToFile(t *testing.T) {
 					},
 				},
 			}, &api.File{
-				FlowIdentifier:       "rclone-vault-flow-608655354",
+				FlowIdentifier:       "rclone-vault-flow-6666cd76f96956469e7be39d750cc7d9",
 				Name:                 ".",
 				PreDepositModifiedAt: time.Unix(0, 0).Format("2006-01-02T03:04:05.000Z"),
 			},
