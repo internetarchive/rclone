@@ -153,6 +153,51 @@ func (b *batcher) files(ctx context.Context) (files []*api.File, totalSize int64
 	return files, totalSize
 }
 
+// completeRegisterDepositRequest updates parent information of the
+// registration request. Modifies request in place.
+func (b *batcher) completeRegisterDepositRequest(rdr *api.RegisterDepositRequest) error {
+	switch {
+	case b.parent.NodeType == "COLLECTION":
+		c, err := b.fs.api.TreeNodeToCollection(b.parent)
+		if err != nil {
+			err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
+			return err
+		}
+		rdr.CollectionId = c.Identifier()
+	case b.parent.NodeType == "FOLDER":
+		rdr.ParentNodeId = b.parent.Id
+	default:
+		return ErrCannotCopyToRoot
+	}
+	return nil
+}
+
+// ensureParentExists tries to create parent folder, if it does not exist.
+func (b *batcher) ensureParentExists(ctx context.Context) error {
+	var (
+		t   *api.TreeNode
+		err error
+	)
+	if b.parent != nil {
+		return nil
+	}
+	t, err = b.fs.api.ResolvePath(b.fs.root)
+	if err != nil {
+		if err == fs.ErrorObjectNotFound {
+			if err = b.fs.mkdir(ctx, b.fs.root); err != nil {
+				return err
+			}
+			if t, err = b.fs.api.ResolvePath(b.fs.root); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+	b.parent = t
+	return nil
+}
+
 // Shutdown creates a new deposit request for all batch items and uploads them.
 // This is the one of the last things rclone run before exiting.
 func (b *batcher) Shutdown(ctx context.Context) (err error) {
@@ -168,24 +213,12 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			totalSize   int64 = 0
 			files       []*api.File
 			progressBar *progressbar.ProgressBar
-			t           *api.TreeNode
 			depositId   int64
 		)
 		// Make sure the parent exists.
-		t, err = b.fs.api.ResolvePath(b.fs.root)
-		if err != nil {
-			if err == fs.ErrorObjectNotFound {
-				if err = b.fs.mkdir(ctx, b.fs.root); err != nil {
-					return
-				}
-				if t, err = b.fs.api.ResolvePath(b.fs.root); err != nil {
-					return
-				}
-			} else {
-				return
-			}
+		if err = b.ensureParentExists(ctx); err != nil {
+			return
 		}
-		b.parent = t
 		// Prepare deposit request.
 		fs.Logf(b, "preparing %d file(s) for deposit", len(b.items))
 		files, totalSize = b.files(ctx)
@@ -200,20 +233,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				TotalSize: totalSize,
 				Files:     files,
 			}
-			switch {
-			case b.parent.NodeType == "COLLECTION":
-				c, err := b.fs.api.TreeNodeToCollection(b.parent)
-				if err != nil {
-					err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
-					return
-				}
-				rdr.CollectionId = c.Identifier()
-			case b.parent.NodeType == "FOLDER":
-				rdr.ParentNodeId = b.parent.Id
-			default:
-				err = ErrCannotCopyToRoot
-				return
-			}
+			// Complete parent information.
+			b.completeRegisterDepositRequest(rdr)
 			// Register deposit.
 			depositId, err = b.fs.api.RegisterDeposit(ctx, rdr)
 			if err != nil {
