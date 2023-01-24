@@ -49,11 +49,19 @@ func init() {
 				Name:    "suppress_progress_bar",
 				Help:    "Suppress deposit progress bar",
 				Default: false,
+				Hide:    fs.OptionHideConfigurator,
 			},
 			{
 				Name:    "resume_deposit_id",
 				Help:    "Resume a deposit",
 				Default: 0,
+				Hide:    fs.OptionHideConfigurator,
+			},
+			{
+				Name:     "chunk_size",
+				Help:     "Upload chunk size in bytes",
+				Default:  defaultUploadChunkSize,
+				Advanced: true,
 			},
 		},
 		CommandHelp: []fs.CommandHelp{
@@ -102,7 +110,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	}
 	f.batcher = &batcher{
 		fs:                  f,
-		chunkSize:           defaultUploadChunkSize,
+		chunkSize:           opt.ChunkSize,
 		showDepositProgress: !opt.SuppressProgressBar,
 		resumeDepositId:     opt.ResumeDepositId,
 	}
@@ -130,6 +138,7 @@ type Options struct {
 	Endpoint            string `config:"endpoint"`
 	SuppressProgressBar bool   `config:"suppress_progress_bar"`
 	ResumeDepositId     int64  `config:"resume_deposit_id"`
+	ChunkSize           int64  `config:"chunk_size"`
 }
 
 // EndpointNormalized handles trailing slashes.
