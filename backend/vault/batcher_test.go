@@ -2,6 +2,7 @@ package vault
 
 import (
 	"context"
+	"os"
 	"reflect"
 	"testing"
 	"time"
@@ -73,4 +74,44 @@ func TestBatchItemToFile(t *testing.T) {
 			t.Errorf("got %#v, want %#v", result, c.result)
 		}
 	}
+}
+
+func TestBatchItemContentType(t *testing.T) {
+	var cases = []struct {
+		about string
+		item  *batchItem
+		want  string // content-type
+	}{
+		{"nil result", nil, ""},
+		{"empty item", &batchItem{}, ""},
+		{"gzip", &batchItem{
+			filename: mustWriteFileTemp([]byte{0x1f, 0x8b, 0x08}),
+		}, "application/x-gzip"},
+		{"zip", &batchItem{
+			filename: mustWriteFileTemp([]byte{0x50, 0x4b, 0x03, 0x04}),
+		}, "application/zip"},
+		{"png", &batchItem{
+			filename: mustWriteFileTemp([]byte{0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a}),
+		}, "image/png"},
+	}
+	for _, c := range cases {
+		got := c.item.contentType()
+		if got != c.want {
+			t.Fatalf("got %v, want %v", got, c.want)
+		}
+	}
+}
+
+// mustWriteFile writes a temporary file and panics, if that fails. Returns the
+// path to the temporary file.
+func mustWriteFileTemp(data []byte) (filename string) {
+	f, err := os.CreateTemp(os.TempDir(), "rclone-vault-test-*")
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	if err := os.WriteFile(f.Name(), data, 0644); err != nil {
+		panic(err)
+	}
+	return f.Name()
 }
