@@ -14,9 +14,11 @@ import (
 // TODO: use testcontainers to setup vault from scratch
 func TestIntegration(t *testing.T) {
 	// TODO: Setup fresh vault, e.g. with testcontainers.
-	remoteName := "VaultTest:"
+	var remoteName string
 	if v := os.Getenv("VAULT_TEST_REMOTE_NAME"); v != "" {
 		remoteName = v
+	} else {
+		t.Skip("VAULT_TEST_REMOTE_NAME env not set, skipping")
 	}
 	// TODO(martin): collection (top level dirs) cannot be deleted, but that
 	// leads to failing tests; fix this.

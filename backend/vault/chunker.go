@@ -61,6 +61,14 @@ func (c *Chunker) ChunkReader(i int64) io.Reader {
 	return io.NewSectionReader(c.f, offset, c.chunkSize)
 }
 
+// ChunkSize returns the size of a chunk.
+func (c *Chunker) ChunkSize(i int64) int64 {
+	if i >= 0 && i < (c.numChunks-1) {
+		return c.chunkSize
+	}
+	return c.fileSize - (i * c.chunkSize)
+}
+
 // Close closes the wrapped file.
 func (c *Chunker) Close() error {
 	return c.f.Close()
