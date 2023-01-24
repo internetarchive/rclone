@@ -50,8 +50,8 @@ type batchItem struct {
 	deleteFileAfterTransfer bool            // only set this to true, if you are using temporary files
 }
 
-// ToFile turns a batch item into a File for a deposit request. This method
-// sets the flow identifier. Returns nil, when a batch item cannot be
+// ToFile turns a batchItem value into a api.File for a deposit request. This
+// method sets the flow identifier. Returns nil, when a batch item cannot be
 // converted.
 func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	if item == nil || item.src == nil {
@@ -144,22 +144,6 @@ func (b *batcher) files(ctx context.Context) (files []*api.File, totalSize int64
 		}
 	}
 	return files, totalSize
-}
-
-func (b *batcher) uploadItems() error {
-	// for i, item := range b.items {
-	// 	var (
-	// 		chunker *Chunker
-	// 		j       int64
-	// 		resp    *http.Response
-	// 		err     error
-	// 	)
-	// 	if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
-	// 		return
-	// 	}
-	// }
-	// TODO: continue
-	return nil
 }
 
 // Shutdown creates a new deposit request for all batch items and uploads them.
