@@ -2,8 +2,10 @@ package vault
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -120,7 +122,7 @@ func TestBatchItemDeriveFlowIdentifier(t *testing.T) {
 			src: &Object{
 				remote: "abc",
 			},
-		}, "rclone-vault-flow-482a7143ac747eff5e5a5992a6016d65,", nil},
+		}, "rclone-vault-flow-482a7143ac747eff5e5a5992a6016d65", nil},
 	}
 	for _, c := range cases {
 		got, err := c.item.deriveFlowIdentifier()
@@ -130,6 +132,26 @@ func TestBatchItemDeriveFlowIdentifier(t *testing.T) {
 		if got != c.want {
 			t.Fatalf("got %v, want %v", got, c.want)
 		}
+	}
+}
+
+func TestBatcherAdd(t *testing.T) {
+	b := &batcher{}
+	var wg sync.WaitGroup
+	N := 128
+	wg.Add(N)
+	for i := 0; i < N; i++ {
+		go func(i int) {
+			defer wg.Done()
+			item := &batchItem{
+				filename: fmt.Sprintf("%d.file", i),
+			}
+			b.Add(item)
+		}(i)
+	}
+	wg.Wait()
+	if len(b.items) != N {
+		t.Fatalf("got %v, want %v", len(b.items), N)
 	}
 }
 
