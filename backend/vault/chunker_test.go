@@ -11,7 +11,7 @@ func TestChunker(t *testing.T) {
 
 	var cases = []struct {
 		data           string
-		numChunks      int64
+		chunkSize      int64
 		err            error
 		expectedChunks []string
 	}{
@@ -32,7 +32,7 @@ func TestChunker(t *testing.T) {
 		if err = os.WriteFile(f.Name(), []byte(c.data), 0644); err != nil {
 			t.Fatal(err)
 		}
-		ch, err := NewChunker(f.Name(), c.numChunks)
+		ch, err := NewChunker(f.Name(), c.chunkSize)
 		if err != nil && err == c.err {
 			continue
 		}
@@ -47,6 +47,40 @@ func TestChunker(t *testing.T) {
 			}
 			if buf.String() != ec {
 				t.Fatalf("got %v, want %v", buf.String(), ec)
+			}
+		}
+	}
+}
+
+func TestChunkerChunkSize(t *testing.T) {
+	var cases = []struct {
+		data       string
+		chunkSize  int64
+		err        error
+		chunkSizes []int64
+	}{
+		{"abcde", 2, nil, []int64{2, 2, 1}},
+		{"abcdef", 2, nil, []int64{2, 2, 2}},
+		{"abcdef", 4, nil, []int64{4, 2}},
+	}
+	for _, c := range cases {
+		f, err := os.CreateTemp(t.TempDir(), "vault-test-chunker*")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer f.Close()
+		if err = os.WriteFile(f.Name(), []byte(c.data), 0644); err != nil {
+			t.Fatal(err)
+		}
+		ch, err := NewChunker(f.Name(), c.chunkSize)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var j int64
+		for j = 0; j < ch.NumChunks(); j++ {
+			got := ch.ChunkSize(j)
+			if c.chunkSizes[j] != got {
+				t.Fatalf("unexpected chunk size: got %v, want %v", got, c.chunkSizes[j])
 			}
 		}
 	}

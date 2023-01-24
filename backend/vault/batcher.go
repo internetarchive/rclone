@@ -146,6 +146,22 @@ func (b *batcher) files(ctx context.Context) (files []*api.File, totalSize int64
 	return files, totalSize
 }
 
+func (b *batcher) uploadItems() error {
+	// for i, item := range b.items {
+	// 	var (
+	// 		chunker *Chunker
+	// 		j       int64
+	// 		resp    *http.Response
+	// 		err     error
+	// 	)
+	// 	if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
+	// 		return
+	// 	}
+	// }
+	// TODO: continue
+	return nil
+}
+
 // Shutdown creates a new deposit request for all batch items and uploads them.
 // This is the one of the last things rclone run before exiting.
 func (b *batcher) Shutdown(ctx context.Context) (err error) {
