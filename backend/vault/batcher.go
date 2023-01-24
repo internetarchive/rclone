@@ -245,11 +245,9 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
 				return
 			}
+			// We start at j = 1, since flowChunkNumber seems to start at 1.
 			for j = 1; j <= chunker.NumChunks(); j++ {
-				currentChunkSize := b.chunkSize
-				if j == chunker.NumChunks() {
-					currentChunkSize = chunker.FileSize() - ((j - 1) * b.chunkSize)
-				}
+				currentChunkSize := chunker.ChunkSize(j - 1)
 				fs.Debugf(b, "[%d/%d] %d %d %s",
 					j,
 					chunker.NumChunks(),
