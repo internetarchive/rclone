@@ -247,6 +247,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			}
 			// We start at j = 1, since flowChunkNumber seems to start at 1.
 			for j = 1; j <= chunker.NumChunks(); j++ {
+				// Wrap upload into a function, so we can parallelize.
+				// TODO(martin): refactor this
 				currentChunkSize := chunker.ChunkSize(j - 1)
 				fs.Debugf(b, "[%d/%d] %d %d %s",
 					j,
