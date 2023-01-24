@@ -75,6 +75,9 @@ func (item *batchItem) ToFile(ctx context.Context) *api.File {
 // specific content type could be found. TODO(martin): This reads 512b from the
 // file. May be a bottleneck when working with larger number of files.
 func (item *batchItem) contentType() string {
+	if item == nil {
+		return ""
+	}
 	f, err := os.Open(item.filename)
 	if err != nil {
 		return ""
