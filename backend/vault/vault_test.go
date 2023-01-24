@@ -9,8 +9,9 @@ import (
 
 // TestIntegration runs integration tests against the remote. Run:
 //
-//   $ VAULT_TEST_REMOTE_NAME=v: go test -v ./backend/vault/...
+//	$ VAULT_TEST_REMOTE_NAME=v: go test -v ./backend/vault/...
 //
+// TODO: use testcontainers to setup vault from scratch
 func TestIntegration(t *testing.T) {
 	// TODO: Setup fresh vault, e.g. with testcontainers.
 	remoteName := "VaultTest:"
