@@ -1,10 +1,13 @@
 package vault
 
 import (
+	"errors"
 	"io"
 	"math"
 	"os"
 )
+
+var ErrInvalidChunkSize = errors.New("invalid chunck size (must be positive)")
 
 // Chunker allows to read file in chunks of fixed sizes.
 type Chunker struct {
@@ -51,7 +54,8 @@ func (c *Chunker) NumChunks() int64 {
 	return c.numChunks
 }
 
-// ChunkReader returns the reader over a section of the file. Counting starts at zero.
+// ChunkReader returns the reader over a section of the file. Counting starts
+// at zero. If a chunk number is requested that is outside the file size.
 func (c *Chunker) ChunkReader(i int64) io.Reader {
 	offset := i * c.chunkSize
 	return io.NewSectionReader(c.f, offset, c.chunkSize)
