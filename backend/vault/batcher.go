@@ -39,6 +39,7 @@ type batcher struct {
 	showDepositProgress bool                // show progress bar
 	chunkSize           int64               // upload unit size in bytes
 	maxParallelChunks   int                 // maximum number of parallel chunks to upload
+	maxParallelUploads  int                 // maximum number of parallel file uploads
 	resumeDepositId     int64               // if non-zero, try to resume deposit
 	shutOnce            sync.Once           // only shutdown once
 	mu                  sync.Mutex          // protect items
@@ -87,6 +88,8 @@ func (item *batchItem) ToFile(ctx context.Context) *api.File {
 // contentType detects the content type. Returns the empty string, if no
 // specific content type could be found. TODO(martin): This reads 512b from the
 // file. May be a bottleneck when working with larger number of files.
+//
+// TODO: make this optional via flag
 func (item *batchItem) contentType() string {
 	if item == nil {
 		return ""
@@ -227,7 +230,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			return
 		}
 		// Prepare deposit request.
-		fs.Logf(b, "preparing %d file(s) for deposit (maxParallelChunks=%d)", len(b.items), b.maxParallelChunks)
+		fs.Logf(b, "preparing %d file(s) for deposit (maxParallelUploads=%d, maxParallelChunks=%d)",
+			len(b.items), b.maxParallelUploads, b.maxParallelChunks)
 		b.files, b.totalSize = b.itemsToFiles(ctx)
 		if len(b.files) != len(b.items) {
 			err = fmt.Errorf("not all items (%v) converted to files (%v)", len(b.items), len(b.files))
@@ -257,10 +261,15 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		if b.showDepositProgress {
 			b.progressBar = progressbar.DefaultBytes(b.totalSize, "<5>NOTICE: depositing")
 		}
+		// Actually upload items.
+		g, ctx := errgroup.WithContextN(ctx, b.maxParallelUploads, 0)
 		for i, item := range b.items {
-			if err = b.UploadItem(ctx, item, b.files[i]); err != nil {
-				return
-			}
+			g.Go(func() error {
+				return b.UploadItem(ctx, item, b.files[i])
+			})
+		}
+		if err = g.Wait(); err != nil {
+			return
 		}
 		fs.Logf(b, "upload done (%d), deposited %s, %d item(s)",
 			b.depositIdentifier, operations.SizeString(b.totalSize, true), len(b.items))
