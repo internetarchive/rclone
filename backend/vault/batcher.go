@@ -227,7 +227,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			return
 		}
 		// Prepare deposit request.
-		fs.Logf(b, "preparing %d file(s) for deposit", len(b.items))
+		fs.Logf(b, "preparing %d file(s) for deposit (maxParallelChunks=%d)", len(b.items), b.maxParallelChunks)
 		b.files, b.totalSize = b.itemsToFiles(ctx)
 		if len(b.files) != len(b.items) {
 			err = fmt.Errorf("not all items (%v) converted to files (%v)", len(b.items), len(b.files))
@@ -358,7 +358,7 @@ func (b *batcher) UploadItem(ctx context.Context, item *batchItem, f *api.File) 
 				fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
 				return err
 			}
-			fs.LogPrintf(fs.LogLevelInfo, b, "chunk done: %d/%d", j, chunker.NumChunks())
+			fs.Debugf(b, "chunk done: %d/%d", j, chunker.NumChunks())
 			return nil
 		})
 	}
