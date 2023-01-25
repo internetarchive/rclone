@@ -230,8 +230,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			return
 		}
 		// Prepare deposit request.
-		fs.Logf(b, "preparing %d file(s) for deposit (maxParallelUploads=%d, maxParallelChunks=%d)",
-			len(b.items), b.maxParallelUploads, b.maxParallelChunks)
+		fs.Logf(b, "preparing %d file(s) for deposit (chunkSize=%d, maxParallelUploads=%d, maxParallelChunks=%d)",
+			len(b.items), b.chunkSize, b.maxParallelUploads, b.maxParallelChunks)
 		b.files, b.totalSize = b.itemsToFiles(ctx)
 		if len(b.files) != len(b.items) {
 			err = fmt.Errorf("not all items (%v) converted to files (%v)", len(b.items), len(b.files))
