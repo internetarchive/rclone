@@ -33,12 +33,12 @@ type batcher struct {
 	fs                  *Fs                 // fs.root will be the parent collection or folder
 	parent              *api.TreeNode       // resolved and possibly new parent treenode
 	showDepositProgress bool                // show progress bar
-	chunkSize           int64               // upload unit size
+	chunkSize           int64               // upload unit size in bytes
 	resumeDepositId     int64               // if non-zero, try to resume deposit
 	shutOnce            sync.Once           // only shutdown once
 	mu                  sync.Mutex          // protect items
 	items               []*batchItem        // file metadata and content for deposit items
-	seen                map[string]struct{} // avoid duplicates in batch
+	seen                map[string]struct{} // avoid duplicates in batch items
 }
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
@@ -47,7 +47,7 @@ type batchItem struct {
 	filename                string          // some file with contents, may be temporary
 	src                     fs.ObjectInfo   // object info
 	options                 []fs.OpenOption // open options
-	deleteFileAfterTransfer bool            // only set this to true, if you are using temporary files
+	deleteFileAfterTransfer bool            // if true, delete the file given in filename; only set this to true, if you are using temporary files
 }
 
 // ToFile turns a batchItem value into a api.File for a deposit request. This
@@ -142,7 +142,7 @@ func (b *batcher) Add(item *batchItem) {
 }
 
 // files returns batch items as a list of vault API file objects and the total
-// size of the objects.
+// size of the objects. If an item cannot be converted, if will be ignored.
 func (b *batcher) files(ctx context.Context) (files []*api.File, totalSize int64) {
 	for _, item := range b.items {
 		if f := item.ToFile(ctx); f != nil {
@@ -222,6 +222,10 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		// Prepare deposit request.
 		fs.Logf(b, "preparing %d file(s) for deposit", len(b.items))
 		files, totalSize = b.files(ctx)
+		if len(files) != len(b.items) {
+			err = fmt.Errorf("not all items (%v) converted to files (%v)", len(b.items), len(files))
+			return
+		}
 		// TODO: We want to clean any file from the deposit request, that
 		// already exists on the remote until WT-1605 is resolved
 		switch {
@@ -344,4 +348,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		return
 	})
 	return
+}
+
+func (b *batcher) UploadItems() {
+	// parallelize items, then for each item, chunks
 }
