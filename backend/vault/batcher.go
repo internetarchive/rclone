@@ -14,6 +14,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/neilotoole/errgroup"
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/operations"
@@ -37,6 +38,7 @@ type batcher struct {
 	parent              *api.TreeNode       // resolved and possibly new parent treenode
 	showDepositProgress bool                // show progress bar
 	chunkSize           int64               // upload unit size in bytes
+	maxParallelChunks   int                 // maximum number of parallel chunks to upload
 	resumeDepositId     int64               // if non-zero, try to resume deposit
 	shutOnce            sync.Once           // only shutdown once
 	mu                  sync.Mutex          // protect items
@@ -259,97 +261,6 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			if err = b.UploadItem(ctx, item, b.files[i]); err != nil {
 				return
 			}
-			// // TODO: streamline the chunking part a bit
-			// // TODO: we could parallelize chunk uploads
-			// var (
-			// 	chunker *Chunker
-			// 	j       int64
-			// 	resp    *http.Response
-			// )
-			// if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
-			// 	return
-			// }
-			// // We start at j = 1, since flowChunkNumber seems to start at 1.
-			// for j = 1; j <= chunker.NumChunks(); j++ {
-			// 	// Wrap upload into a function, so we can parallelize.
-			// 	// TODO(martin): refactor this
-			// 	currentChunkSize := chunker.ChunkSize(j - 1)
-			// 	fs.Debugf(b, "[%d/%d] %d %d %s",
-			// 		j,
-			// 		chunker.NumChunks(),
-			// 		currentChunkSize,
-			// 		chunker.FileSize(),
-			// 		item.filename,
-			// 	)
-			// 	params := url.Values{
-			// 		"depositId":            []string{strconv.Itoa(int(b.depositIdentifier))},
-			// 		"flowChunkNumber":      []string{strconv.Itoa(int(j))},
-			// 		"flowChunkSize":        []string{strconv.Itoa(int(b.chunkSize))},
-			// 		"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
-			// 		"flowFilename":         []string{b.files[i].Name},
-			// 		"flowIdentifier":       []string{b.files[i].FlowIdentifier},
-			// 		"flowRelativePath":     []string{b.files[i].RelativePath},
-			// 		"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
-			// 		"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
-			// 		"upload_token":         []string{"my_token"}, // TODO(martin): just copy'n'pasting ...
-			// 	}
-			// 	fs.Debugf(b, "params: %v", params)
-			// 	opts := rest.Opts{
-			// 		Method:     "GET",
-			// 		Path:       "/flow_chunk",
-			// 		Parameters: params,
-			// 	}
-			// 	resp, err = b.fs.api.Call(ctx, &opts)
-			// 	if err != nil {
-			// 		fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
-			// 		return
-			// 	}
-			// 	defer resp.Body.Close()
-			// 	if resp.StatusCode >= 300 {
-			// 		fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
-			// 		err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
-			// 		return
-			// 	} else {
-			// 		fs.Debugf(b, "GET returned: %v", resp.StatusCode)
-			// 	}
-			// 	var (
-			// 		r    io.Reader
-			// 		chr  = chunker.ChunkReader(j - 1)
-			// 		size = currentChunkSize // size will get mutated during request
-			// 	)
-			// 	if b.showDepositProgress {
-			// 		r = io.TeeReader(chr, b.progressBar)
-			// 	} else {
-			// 		r = chr
-			// 	}
-			// 	opts = rest.Opts{
-			// 		Method:               "POST",
-			// 		Path:                 "/flow_chunk",
-			// 		MultipartParams:      params,
-			// 		ContentLength:        &size,
-			// 		MultipartContentName: "file",
-			// 		MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
-			// 		Body:                 r,
-			// 	}
-			// 	if resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil); err != nil {
-			// 		fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
-			// 		return
-			// 	}
-			// 	if err = resp.Body.Close(); err != nil {
-			// 		fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
-			// 		return
-			// 	}
-			// }
-			// if err = chunker.Close(); err != nil {
-			// 	fs.LogPrintf(fs.LogLevelError, b, "close: %v", err)
-			// 	return
-			// }
-			// if item.deleteFileAfterTransfer {
-			// 	if err = os.Remove(item.filename); err != nil {
-			// 		fs.LogPrintf(fs.LogLevelError, b, "remove: %v", err)
-			// 		return
-			// 	}
-			// }
 		}
 		fs.Logf(b, "upload done (%d), deposited %s, %d item(s)",
 			b.depositIdentifier, operations.SizeString(b.totalSize, true), len(b.items))
@@ -372,76 +283,87 @@ func (b *batcher) UploadItem(ctx context.Context, item *batchItem, f *api.File) 
 		resp    *http.Response
 		err     error
 	)
+	// https://pkg.go.dev/github.com/neilotoole/errgroup#WithContextN limits
+	// the number of goroutines started within the errgroup.
+	g, ctx := errgroup.WithContextN(ctx, b.maxParallelChunks, 0)
 	if chunker, err = NewChunker(item.filename, b.chunkSize); err != nil {
 		return err
 	}
 	for j = 1; j <= chunker.NumChunks(); j++ {
-		currentChunkSize := chunker.ChunkSize(j - 1)
-		fs.Debugf(b, "[%d/%d] %d %d %s",
-			j,
-			chunker.NumChunks(),
-			currentChunkSize,
-			chunker.FileSize(),
-			item.filename,
-		)
-		params := url.Values{
-			"depositId":            []string{strconv.Itoa(int(b.depositIdentifier))},
-			"flowChunkNumber":      []string{strconv.Itoa(int(j))},
-			"flowChunkSize":        []string{strconv.Itoa(int(b.chunkSize))},
-			"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
-			"flowFilename":         []string{f.Name},
-			"flowIdentifier":       []string{f.FlowIdentifier},
-			"flowRelativePath":     []string{f.RelativePath},
-			"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
-			"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
-			"upload_token":         []string{"my_token"}, // TODO(martin): just copy'n'pasting ...
-		}
-		fs.Debugf(b, "params: %v", params)
-		opts := rest.Opts{
-			Method:     "GET",
-			Path:       "/flow_chunk",
-			Parameters: params,
-		}
-		resp, err = b.fs.api.Call(ctx, &opts)
-		if err != nil {
-			fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
-			return err
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode >= 300 {
-			fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
-			err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
-			return err
-		} else {
-			fs.Debugf(b, "GET returned: %v", resp.StatusCode)
-		}
-		var (
-			r    io.Reader
-			chr  = chunker.ChunkReader(j - 1)
-			size = currentChunkSize // size will get mutated during request
-		)
-		if b.showDepositProgress {
-			r = io.TeeReader(chr, b.progressBar)
-		} else {
-			r = chr
-		}
-		opts = rest.Opts{
-			Method:               "POST",
-			Path:                 "/flow_chunk",
-			MultipartParams:      params,
-			ContentLength:        &size,
-			MultipartContentName: "file",
-			MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
-			Body:                 r,
-		}
-		if resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil); err != nil {
-			fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
-			return err
-		}
-		if err = resp.Body.Close(); err != nil {
-			fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
-			return err
-		}
+		j := j
+		g.Go(func() error {
+			currentChunkSize := chunker.ChunkSize(j - 1)
+			fs.Debugf(b, "[%d/%d] %d %d %s",
+				j,
+				chunker.NumChunks(),
+				currentChunkSize,
+				chunker.FileSize(),
+				item.filename,
+			)
+			params := url.Values{
+				"depositId":            []string{strconv.Itoa(int(b.depositIdentifier))},
+				"flowChunkNumber":      []string{strconv.Itoa(int(j))},
+				"flowChunkSize":        []string{strconv.Itoa(int(b.chunkSize))},
+				"flowCurrentChunkSize": []string{strconv.Itoa(int(currentChunkSize))},
+				"flowFilename":         []string{f.Name},
+				"flowIdentifier":       []string{f.FlowIdentifier},
+				"flowRelativePath":     []string{f.RelativePath},
+				"flowTotalChunks":      []string{strconv.Itoa(int(chunker.NumChunks()))},
+				"flowTotalSize":        []string{strconv.Itoa(int(chunker.FileSize()))},
+				"upload_token":         []string{"my_token"}, // TODO(martin): just copy'n'pasting ...
+			}
+			fs.Debugf(b, "params: %v", params)
+			opts := rest.Opts{
+				Method:     "GET",
+				Path:       "/flow_chunk",
+				Parameters: params,
+			}
+			resp, err = b.fs.api.Call(ctx, &opts)
+			if err != nil {
+				fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
+				return err
+			}
+			defer resp.Body.Close()
+			if resp.StatusCode >= 300 {
+				fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
+				err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
+				return err
+			} else {
+				fs.Debugf(b, "GET returned: %v", resp.StatusCode)
+			}
+			var (
+				r    io.Reader
+				chr  = chunker.ChunkReader(j - 1)
+				size = currentChunkSize // size will get mutated during request
+			)
+			if b.showDepositProgress {
+				r = io.TeeReader(chr, b.progressBar)
+			} else {
+				r = chr
+			}
+			opts = rest.Opts{
+				Method:               "POST",
+				Path:                 "/flow_chunk",
+				MultipartParams:      params,
+				ContentLength:        &size,
+				MultipartContentName: "file",
+				MultipartFileName:    path.Base(item.src.Remote()), // TODO: is it?
+				Body:                 r,
+			}
+			if resp, err = b.fs.api.CallJSON(ctx, &opts, nil, nil); err != nil {
+				fs.LogPrintf(fs.LogLevelError, b, "call (POST): %v", err)
+				return err
+			}
+			if err = resp.Body.Close(); err != nil {
+				fs.LogPrintf(fs.LogLevelError, b, "body: %v", err)
+				return err
+			}
+			fs.LogPrintf(fs.LogLevelInfo, b, "chunk done: %d/%d", j, chunker.NumChunks())
+			return nil
+		})
+	}
+	if err = g.Wait(); err != nil {
+		return err
 	}
 	if err = chunker.Close(); err != nil {
 		fs.LogPrintf(fs.LogLevelError, b, "chunker close: %v", err)
