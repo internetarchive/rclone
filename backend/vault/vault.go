@@ -63,6 +63,12 @@ func init() {
 				Default:  defaultUploadChunkSize,
 				Advanced: true,
 			},
+			{
+				Name:     "max_parallel_chunks",
+				Help:     "Maximum number of parallel chunk uploads",
+				Default:  12, // TODO: find a good default
+				Advanced: true,
+			},
 		},
 		CommandHelp: []fs.CommandHelp{
 			fs.CommandHelp{
@@ -111,6 +117,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	f.batcher = &batcher{
 		fs:                  f,
 		chunkSize:           opt.ChunkSize,
+		maxParallelChunks:   opt.MaxParallelChunks,
 		showDepositProgress: !opt.SuppressProgressBar,
 		resumeDepositId:     opt.ResumeDepositId,
 	}
@@ -139,6 +146,7 @@ type Options struct {
 	SuppressProgressBar bool   `config:"suppress_progress_bar"`
 	ResumeDepositId     int64  `config:"resume_deposit_id"`
 	ChunkSize           int64  `config:"chunk_size"`
+	MaxParallelChunks   int    `config:"max_parallel_chunks"`
 }
 
 // EndpointNormalized handles trailing slashes.
