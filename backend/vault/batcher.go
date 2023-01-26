@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"errors"
+	"time"
 
 	"crypto/md5"
 	"fmt"
@@ -223,6 +224,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		if len(b.items) == 0 {
 			return
 		}
+		start := time.Now()
 		// We do not want to be cancelled in Shutdown; or if we do, we want
 		// to set our own timeout for deposit uploads.
 		var ctx = context.Background()
@@ -260,7 +262,7 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 			fs.Debugf(b, "created deposit %v", b.depositIdentifier)
 		}
 		if b.showDepositProgress {
-			b.progressBar = progressbar.DefaultBytes(b.totalSize, "<5>NOTICE: depositing")
+			b.progressBar = progressbar.DefaultBytes(b.totalSize, "[>] uploading to vault")
 		}
 		// Actually upload items.
 		g, ctx := errgroup.WithContextN(ctx, b.maxParallelUploads, 0)
@@ -272,8 +274,8 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 		if err = g.Wait(); err != nil {
 			return
 		}
-		fs.Logf(b, "upload done (%d), deposited %s, %d item(s)",
-			b.depositIdentifier, operations.SizeString(b.totalSize, true), len(b.items))
+		fs.Logf(b, "upload done after %s for deposit %d, successfully deposited %s, %d files(s)",
+			time.Since(start), b.depositIdentifier, operations.SizeString(b.totalSize, true), len(b.items))
 		return
 	})
 	return
