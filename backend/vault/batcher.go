@@ -45,7 +45,7 @@ type batcher struct {
 
 	// The following fields are set up during processing, e.g. after the
 	// deposit has been registered. The list of files is duplicating some
-	// information in items; TODO: streamline.
+	// information in items; TODO: only use items or files, but not both.
 	depositIdentifier int64                    // deposit ID, set while uploading
 	files             []*api.File              // items, but represented as API items
 	totalSize         int64                    // total upload size in bytes
@@ -54,11 +54,12 @@ type batcher struct {
 
 // batchItem for Put and Update requests, basically capturing those methods' arguments.
 type batchItem struct {
-	root                    string          // the fs root
-	filename                string          // some file with contents, may be temporary
-	src                     fs.ObjectInfo   // object info
-	options                 []fs.OpenOption // open options
-	deleteFileAfterTransfer bool            // if true, delete the file given in filename; only set this to true, if you are using temporary files
+	root                     string          // the fs root
+	filename                 string          // some file with contents, may be temporary
+	src                      fs.ObjectInfo   // object info
+	options                  []fs.OpenOption // open options
+	deleteFileAfterTransfer  bool            // if true, delete the file given in filename; only set this to true, if you are using temporary files
+	skipContentTypeDetection bool            // whether we should skip content-type detection
 }
 
 // ToFile turns a batchItem value into a api.File for a deposit request. This
@@ -72,14 +73,17 @@ func (item *batchItem) ToFile(ctx context.Context) *api.File {
 	if err != nil {
 		return nil
 	}
-	return &api.File{
+	fi := &api.File{
 		Name:                 path.Base(item.src.Remote()),
 		FlowIdentifier:       flowIdentifier,
 		RelativePath:         item.src.Remote(),
 		Size:                 item.src.Size(),
 		PreDepositModifiedAt: item.src.ModTime(ctx).Format("2006-01-02T03:04:05.000Z"),
-		Type:                 item.contentType(),
 	}
+	if !item.skipContentTypeDetection {
+		fi.Type = item.contentType()
+	}
+	return fi
 }
 
 // contentType detects the content type. Returns the empty string, if no
