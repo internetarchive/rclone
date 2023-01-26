@@ -67,6 +67,12 @@ func init() {
 				Hide:    fs.OptionHideConfigurator,
 			},
 			{
+				Name:    "skip_content_type_detection",
+				Help:    "Skip content-type detection on the client side",
+				Default: false,
+				Hide:    fs.OptionHideConfigurator,
+			},
+			{
 				Name:    "resume_deposit_id",
 				Help:    "Resume a deposit",
 				Default: 0,
@@ -162,14 +168,15 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 
 // Options for Vault.
 type Options struct {
-	Username            string `config:"username"`
-	Password            string `config:"password"`
-	Endpoint            string `config:"endpoint"`
-	SuppressProgressBar bool   `config:"suppress_progress_bar"`
-	ResumeDepositId     int64  `config:"resume_deposit_id"`
-	ChunkSize           int64  `config:"chunk_size"`
-	MaxParallelChunks   int    `config:"max_parallel_chunks"`
-	MaxParallelUploads  int    `config:"max_parallel_uploads"`
+	Username                 string `config:"username"`
+	Password                 string `config:"password"`
+	Endpoint                 string `config:"endpoint"`
+	SuppressProgressBar      bool   `config:"suppress_progress_bar"`
+	ResumeDepositId          int64  `config:"resume_deposit_id"`
+	ChunkSize                int64  `config:"chunk_size"`
+	MaxParallelChunks        int    `config:"max_parallel_chunks"`
+	MaxParallelUploads       int    `config:"max_parallel_uploads"`
+	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
 }
 
 // EndpointNormalized handles trailing slashes.
@@ -339,11 +346,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		fs.Debugf(f, "fetched %v to temporary location: %v", src.Remote(), filename)
 	}
 	f.batcher.Add(&batchItem{
-		root:                    f.root,
-		filename:                filename,
-		src:                     src,
-		options:                 options,
-		deleteFileAfterTransfer: deleteFileAfterTransfer,
+		root:                     f.root,
+		filename:                 filename,
+		src:                      src,
+		options:                  options,
+		deleteFileAfterTransfer:  deleteFileAfterTransfer,
+		skipContentTypeDetection: f.opt.SkipContentTypeDetection,
 	})
 	fs.Debugf(f, "added file to batch (%s)", filename)
 	return &Object{
