@@ -7,12 +7,16 @@ import (
 	"os"
 )
 
+// ErrInvalidChunkSize signals an invalid chunk size.
 var ErrInvalidChunkSize = errors.New("invalid chunck size (must be positive)")
 
-// Chunker allows to read file in chunks of fixed sizes.
+// Chunker allows to read file in chunks of fixed sizes. The idea comes from
+// https://github.com/flowjs/flow.js, which uses chunks for resilient file
+// uploads. This implementation merely deals with reading fixed length parts of
+// a file.
 type Chunker struct {
 	chunkSize int64 // in bytes
-	fileSize  int64
+	fileSize  int64 // in bytes
 	numChunks int64
 	f         *os.File
 }
@@ -55,13 +59,13 @@ func (c *Chunker) NumChunks() int64 {
 }
 
 // ChunkReader returns the reader over a section of the file. Counting starts
-// at zero. If a chunk number is requested that is outside the file size.
+// at zero.
 func (c *Chunker) ChunkReader(i int64) io.Reader {
 	offset := i * c.chunkSize
 	return io.NewSectionReader(c.f, offset, c.chunkSize)
 }
 
-// ChunkSize returns the size of a chunk.
+// ChunkSize returns the size of a chunk. Counting starts at zero.
 func (c *Chunker) ChunkSize(i int64) int64 {
 	if i >= 0 && i < (c.numChunks-1) {
 		return c.chunkSize
