@@ -19,6 +19,21 @@ import (
 	"github.com/rclone/rclone/fs/hash"
 )
 
+const (
+	// Note: the biggest increase in upload throughput so far came from
+	// increasing the chunk size to 16M.
+	//
+	//  1M/1/1:  5M/s
+	// 16M/1/1: 15M/s
+	// 16M/2/2: 20M/s
+	//
+	// Target two-core QA machine was occassionally maxed out, not sure if
+	// that's imposing a limit.
+	defaultUploadChunkSize    = 1 << 20 // 1M
+	defaultMaxParallelChunks  = 2
+	defaultMaxParallelUploads = 2
+)
+
 var (
 	ErrInvalidPath     = errors.New("invalid path")
 	ErrVersionMismatch = errors.New("api version mismatch")
@@ -59,20 +74,20 @@ func init() {
 			},
 			{
 				Name:     "chunk_size",
-				Help:     "Upload chunk size in bytes",
+				Help:     "Upload chunk size in bytes (limited)",
 				Default:  defaultUploadChunkSize,
 				Advanced: true,
 			},
 			{
 				Name:     "max_parallel_chunks",
 				Help:     "Maximum number of parallel chunk uploads",
-				Default:  4, // TODO: find a good default
+				Default:  defaultMaxParallelChunks, // TODO: find a good default
 				Advanced: true,
 			},
 			{
 				Name:     "max_parallel_uploads",
 				Help:     "Maximum number of parallel file uploads",
-				Default:  8, // TODO: find a good default
+				Default:  defaultMaxParallelUploads, // TODO: find a good default
 				Advanced: true,
 			},
 		},
