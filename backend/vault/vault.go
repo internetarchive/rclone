@@ -29,7 +29,7 @@ const (
 	//
 	// Target two-core QA machine was occassionally maxed out, not sure if
 	// that's imposing a limit.
-	defaultUploadChunkSize    = 1 << 20 // 1M
+	defaultUploadChunkSize    = 1 << 24 // 16M
 	defaultMaxParallelChunks  = 2
 	defaultMaxParallelUploads = 2
 )
