@@ -22,10 +22,7 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-const (
-	defaultUploadChunkSize = 1 << 20 // 1M
-	flowIdentifierPrefix   = "rclone-vault-flow"
-)
+const flowIdentifierPrefix = "rclone-vault-flow"
 
 var (
 	ErrCannotCopyToRoot         = errors.New("copying files to root is not supported in vault")
