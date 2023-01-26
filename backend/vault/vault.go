@@ -353,7 +353,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		deleteFileAfterTransfer:  deleteFileAfterTransfer,
 		skipContentTypeDetection: f.opt.SkipContentTypeDetection,
 	})
-	fs.Debugf(f, "added file to batch (%s)", filename)
+	fs.Debugf(f, "added file to batch (filename=%s, skipContentTypeDetection=%v)", filename, f.opt.SkipContentTypeDetection)
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
