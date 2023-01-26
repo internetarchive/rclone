@@ -8,20 +8,20 @@ import (
 )
 
 func TestChunker(t *testing.T) {
-
 	var cases = []struct {
+		about          string
 		data           string
 		chunkSize      int64
 		err            error
 		expectedChunks []string
 	}{
-		{"", 0, ErrInvalidChunkSize, []string{}},
-		{"", 1, nil, []string{}},
-		{"", 2, nil, []string{}},
-		{"a", 2, nil, []string{"a"}},
-		{"abc", 2, nil, []string{"ab", "c"}},
-		{"abcd", 2, nil, []string{"ab", "cd"}},
-		{"abcd", 1, nil, []string{"a", "b", "c", "d"}},
+		{"invalid chunk size", "", 0, ErrInvalidChunkSize, []string{}},
+		{"empty data", "", 1, nil, []string{}},
+		{"empty data, larger chunk size", "", 2, nil, []string{}},
+		{"smallest data", "a", 2, nil, []string{"a"}},
+		{"data bigger than chunk, uneven", "abc", 2, nil, []string{"ab", "c"}},
+		{"data bigger that chunk, even", "abcd", 2, nil, []string{"ab", "cd"}},
+		{"smallest chunk size", "abcd", 1, nil, []string{"a", "b", "c", "d"}},
 	}
 	for _, c := range cases {
 		f, err := os.CreateTemp(t.TempDir(), "vault-test-chunker*")
@@ -54,14 +54,15 @@ func TestChunker(t *testing.T) {
 
 func TestChunkerChunkSize(t *testing.T) {
 	var cases = []struct {
+		about      string
 		data       string
 		chunkSize  int64
 		err        error
 		chunkSizes []int64
 	}{
-		{"abcde", 2, nil, []int64{2, 2, 1}},
-		{"abcdef", 2, nil, []int64{2, 2, 2}},
-		{"abcdef", 4, nil, []int64{4, 2}},
+		{"uneven", "abcde", 2, nil, []int64{2, 2, 1}},
+		{"even", "abcdef", 2, nil, []int64{2, 2, 2}},
+		{"uneven, short", "abcdef", 4, nil, []int64{4, 2}},
 	}
 	for _, c := range cases {
 		f, err := os.CreateTemp(t.TempDir(), "vault-test-chunker*")
