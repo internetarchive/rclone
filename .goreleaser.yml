@@ -1,13 +1,14 @@
 # Make sure to check the documentation at https://goreleaser.com
 #
-# To tag the current vault branch for upload, use something like:
+# To tag the current vault branch for upload, we use the following convention:
 #
-# $ git tag v1.57.0-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
+# $ git tag $(git tag -l | grep -E '^v[0-9\.]+$' | tail -1)-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
 #
-# Where v1.57.0 is the latest tag of the master branch that this branch is rebased off.
+# Example tag would be: v1.59.1-vault-20230131181542-1da70fdd1
+#
+# Where v1.59.1 is the latest tag of the master branch that this branch is rebased on.
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
 builds:
   - env:
@@ -26,19 +27,11 @@ archives:
       darwin: Darwin
       linux: Linux
       windows: Windows
-      # 386: i386
       amd64: x86_64
-# checksum:
-  # name_template: 'checksums.txt'
 snapshot:
   name_template: "{{ incpatch .Version }}-vault"
 changelog:
   skip: true
-  # sort: asc
-  # filters:
-  #   exclude:
-  #     - '^docs:'
-  #     - '^test:'
 release:
   github:
     owner: internetarchive
