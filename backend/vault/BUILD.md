@@ -1,8 +1,9 @@
 # Build instructions
 
-Tag, Build, Release with [goreleaser](https://goreleaser.com/). Get a GitHub Personal Access Token
-from [settings/tokens](https://github.com/settings/tokens) (need repo write
-access).
+Tag, Build, Release with [goreleaser](https://goreleaser.com/)
+([config](https://github.com/internetarchive/rclone/blob/ia-wt-1168/.goreleaser.yml)).
+Get a GitHub Personal Access Token from
+[settings/tokens](https://github.com/settings/tokens) (need repo write access).
 
 ```shell
 $ git tag $(git tag -l | grep -E '^v[0-9\.]+$' | tail -1)-vault-$(date +"%Y%m%d%H%M%S")-$(git rev-parse --short HEAD)
