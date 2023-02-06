@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/rclone/rclone/backend/vault/cache"
-	"github.com/rclone/rclone/backend/vault/extra"
+	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/lib/rest"
 )
@@ -202,7 +202,7 @@ func (t *TreeNode) Content(options ...fs.OpenOption) (io.ReadCloser, error) {
 		}
 		return resp.Body, nil
 	case nil:
-		r := &extra.DummyReader{N: t.Size(), C: 0x7c}
+		r := &iotemp.DummyReader{N: t.Size(), C: 0x7c}
 		return io.NopCloser(r), nil
 	default:
 		return nil, fmt.Errorf("invalid content url type: %T", v)

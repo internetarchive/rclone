@@ -1,0 +1,18 @@
+# syntax = docker/dockerfile:experimental
+#
+# https://stackoverflow.com/q/58018300/89391
+#
+# Base image for vault
+# --------------------
+#
+#   $ docker build --no-cache -t vault-base:latest \
+#       -f Dockerfile.base /path/to/vault/repo
+#
+# git -C ~/code/git.archive.org/dps/vault-site/ rev-parse --short HEAD
+#
+FROM python:3.8.16-slim-bullseye
+RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git
+WORKDIR /app
+COPY . .
+RUN --mount=type=cache,target=/root/.cache make clean && make setup
+
