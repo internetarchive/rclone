@@ -1,0 +1,43 @@
+# Dockerfile to setup vault db.
+#
+# This needs vault-base.
+#
+#   $ clone the repo: vault-site
+#   $ cd vault-site
+#   $ sudo docker build --no-cache --network "host" -t vault -f .../rclone/backend/vault/dev/Dockerfile.db .
+#
+# Try it out:
+#
+#   $ docker run --network="host" -it --rm vault /bin/bash
+#   (container) $ make run
+#
+# Go to http://127.0.0.1:8000/ and login in with admin:admin
+#
+FROM vault-base:latest
+
+# From here on, we need a clean DB setup, could use FROM vault-base
+RUN make migrate # touches DB
+RUN ./venv/bin/python manage.py createsuperuser
+RUN DJANGO_SUPERUSER_PASSWORD=admin DJANGO_SUPERUSER_USERNAME=admin DJANGO_SUPERUSER_EMAIL=admin@example.com ./venv/bin/python manage.py createsuperuser --noinput
+
+COPY 0001_treenode.json /tmp/0001_treenode.json
+COPY 0002_testuser.json /tmp/0002_testuser.json
+RUN ./venv/bin/python manage.py loaddata /tmp/0001_treenode.json
+RUN ./venv/bin/python manage.py loaddata /tmp/0002_testuser.json
+
+# real    0m11.443s
+# user    0m0.009s
+# sys     0m0.009s
+
+
+# TODO:
+#
+# can we create users, orgs, etc. via API
+#
+# -> try a fixture
+#
+# [x] create admin user
+# [ ] plan
+# [ ] org
+# [ ] associate user with org
+

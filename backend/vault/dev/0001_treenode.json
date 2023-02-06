@@ -1,0 +1,31 @@
+[
+  {
+    "model": "vault.treenode",
+    "pk": 1,
+    "fields": {
+      "node_type": "ORGANIZATION",
+      "parent": null,
+      "path": "1",
+      "name": "libtest",
+      "md5_sum": null,
+      "sha1_sum": null,
+      "sha256_sum": null,
+      "size": 0,
+      "file_count": 0,
+      "file_type": null,
+      "pbox_path": null,
+      "created_at": "2023-02-05T15:44:19.032Z",
+      "uploaded_at": null,
+      "pre_deposit_modified_at": null,
+      "modified_at": "2023-02-05T15:44:19.032Z",
+      "deleted_at": null,
+      "uploaded_by": null,
+      "comment": null,
+      "deleted": false,
+      "flow_identifier": null,
+      "original_relative_path": null,
+      "upload_state": "REGISTERED",
+      "deposit": null
+    }
+  }
+]

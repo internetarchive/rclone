@@ -1,0 +1,11 @@
+# Base image for vault.
+#
+#   $ docker build --no-cache --network "host" -t vault-base \
+#       -f Dockerfile.base /path/to/vault/checkout
+#
+FROM python:3.8.16-buster
+
+WORKDIR /app
+COPY $vault .
+RUN make clean && make setup
+

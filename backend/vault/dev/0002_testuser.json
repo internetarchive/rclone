@@ -1,0 +1,126 @@
+[
+  {
+    "model": "vault.geolocation",
+    "pk": 1,
+    "fields": {
+      "name": "US-WEST-1"
+    }
+  },
+  {
+    "model": "vault.plan",
+    "pk": 1,
+    "fields": {
+      "name": "basic",
+      "price_per_terabyte": "1000.00",
+      "default_replication": 2,
+      "default_fixity_frequency": "TWICE_YEARLY",
+      "default_fixity_period_days": 183,
+      "default_geolocations": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "vault.organization",
+    "pk": 1,
+    "fields": {
+      "name": "libtest",
+      "plan": 1,
+      "quota_bytes": 1099511627776,
+      "tree_node": 1,
+      "org_group": null,
+      "fixity_period_start_day_of_year": 183
+    }
+  },
+  {
+    "model": "vault.user",
+    "fields": {
+      "password": "pbkdf2_sha256$320000$kqUdREq5wWSoxKXTPSAYng$I3Pg8mn2xykMsOS9Nvg3mwNmI87xafIe/K6Y+ERMAA4=",
+      "last_login": "2023-02-05T15:43:38Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2023-02-05T15:39:27Z",
+      "email": "admin@example.com",
+      "organization": 1,
+      "role": "USER",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 1,
+    "fields": {
+      "action_time": "2023-02-05T15:44:05.468Z",
+      "user": [
+        "admin"
+      ],
+      "content_type": [
+        "vault",
+        "geolocation"
+      ],
+      "object_id": "1",
+      "object_repr": "US-WEST-1",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 2,
+    "fields": {
+      "action_time": "2023-02-05T15:44:07.857Z",
+      "user": [
+        "admin"
+      ],
+      "content_type": [
+        "vault",
+        "plan"
+      ],
+      "object_id": "1",
+      "object_repr": "basic",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 3,
+    "fields": {
+      "action_time": "2023-02-05T15:44:19.051Z",
+      "user": [
+        "admin"
+      ],
+      "content_type": [
+        "vault",
+        "organization"
+      ],
+      "object_id": "1",
+      "object_repr": "libtest",
+      "action_flag": 1,
+      "change_message": "[{\"added\": {}}]"
+    }
+  },
+  {
+    "model": "admin.logentry",
+    "pk": 4,
+    "fields": {
+      "action_time": "2023-02-05T15:44:28.899Z",
+      "user": [
+        "admin"
+      ],
+      "content_type": [
+        "vault",
+        "user"
+      ],
+      "object_id": "1",
+      "object_repr": "admin",
+      "action_flag": 2,
+      "change_message": "[{\"changed\": {\"fields\": [\"Organization\"]}}]"
+    }
+  }
+]
