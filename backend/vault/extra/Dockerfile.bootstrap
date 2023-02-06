@@ -1,0 +1,38 @@
+# Dockerfile to setup vault db at start time
+#
+# This needs vault-base.
+#
+#   $ clone the repo: vault-site
+#   $ sudo docker build --no-cache -t vault -f .../rclone/backend/vault/dev/Dockerfile.db .
+#
+FROM vault-base:latest
+
+# wait script
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN chmod +x /wait
+
+# copy fixtures
+# COPY 0001_treenode.json /tmp/0001_treenode.json
+# COPY 0002_testuser.json /tmp/0002_testuser.json
+
+# copy bootstrap script
+WORKDIR /app
+COPY bootstrap.sh .
+RUN chmod +x bootstrap.sh
+
+# components, settings
+ENV REDIS_HOST=redis
+ENV VAULT_POSTGRES_HOST=postgres
+ENV TEMPORAL_FRONTEND_URI=temporal:7233
+ENV CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
+ENV S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
+ENV PRIMARY_STORAGE_MANAGER=USCAS301
+ENV S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
+ENV S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
+ENV S3_STORAGE_MANAGER_USCAS301_S3_SECRET_KEY=secretkey
+ENV CHUNK_MANAGER_TYPE=LOCALFS
+ENV ASYNC_MODE=TEMPORAL
+
+CMD /wait && ./bootstrap.sh
+
+

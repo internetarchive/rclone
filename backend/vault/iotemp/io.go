@@ -1,4 +1,3 @@
-// Package iotemp implements helpers around io and temporary files.
 package iotemp
 
 import (
