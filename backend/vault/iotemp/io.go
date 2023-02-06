@@ -1,4 +1,4 @@
-package extra
+package iotemp
 
 import (
 	"fmt"

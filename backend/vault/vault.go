@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
-	"github.com/rclone/rclone/backend/vault/extra"
+	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -334,12 +334,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	// downloading all files before the start. We would need to get a listing,
 	// register the deposit and then start streaming data to vault.
 	switch {
-	case src.Fs().Name() == "local":
+	case src != nil && src.Fs() != nil && src.Fs().Name() == "local":
 		filename = path.Join(src.Fs().Root(), src.String())
 		fs.Debugf(f, "adding local file to batch: %v", filename)
 	default:
 		fs.Debugf(f, "fetching remote file temporarily")
-		if filename, err = extra.TempFileFromReader(in); err != nil {
+		if filename, err = iotemp.TempFileFromReader(in); err != nil {
 			return nil, err
 		}
 		deleteFileAfterTransfer = true

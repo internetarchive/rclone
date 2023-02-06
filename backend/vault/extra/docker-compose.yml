@@ -1,0 +1,108 @@
+version: "3.5"
+
+services:
+  web:
+    image: vault-bootstrap
+    ports:
+      - "8000:8000"
+    expose:
+      - "8000"
+    depends_on:
+      - postgres
+      - temporal
+    environment:
+      VAULT_POSTGRES_HOST: postgres
+      WAIT_HOSTS: postgres:5432, temporal:7233 # https://github.com/ufoscout/docker-compose-wait
+  minio:
+    image: minio/minio:RELEASE.2022-06-03T01-40-53Z
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${S3_CHUNK_MANAGER_S3_ACCESS_KEY:-accesskey}
+      - MINIO_ROOT_PASSWORD=${S3_CHUNK_MANAGER_S3_SECRET_KEY:-secretkey}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    expose:
+      - "9000"
+      - "9001"
+    # volumes:
+    #   - minio_volume:/data
+  rabbitmq:
+    image: rabbitmq:3.8-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=${RABBITMQ_DEFAULT_USER:-vault}
+      - RABBITMQ_DEFAULT_PASS=${RABBITMQ_DEFAULT_PASS:-vault}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    expose:
+      - "5672"
+      - "15672"
+    # volumes:
+    #   - rabbitmq_volume:/var/lib/rabbitmq
+  postgres:
+    image: postgres:10
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-vault}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-vault}
+    ports:
+      - "5432:5432"
+    expose:
+      - "5432"
+    # volumes:
+    #   - postgres_volume:/var/lib/postgresql/data
+  redis:
+    image: redis:7.0.2
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+    # volumes:
+    #   - redis_volume:/data
+
+  # temporal bits borrowed from: https://github.com/temporalio/docker-compose
+  # To determine the latest versions of the temporal containers,
+  # see: https://github.com/temporalio/docker-compose/blob/main/.env
+  temporal:
+    container_name: temporal
+    depends_on:
+      - postgres
+    environment:
+      - DB=postgresql
+      - DB_PORT=5432
+      - POSTGRES_USER=${POSTGRES_USER:-vault}
+      - POSTGRES_PWD=${POSTGRES_PASSWORD:-vault}
+      - POSTGRES_SEEDS=postgres
+      # - DYNAMIC_CONFIG_FILE_PATH=config/dynamicconfig/development-sql.yaml
+    image: temporalio/auto-setup:${TEMPORAL_VERSION:-1.18.5}
+    ports:
+      - "7233:7233"
+    # volumes:
+    #   - ./temporal:/etc/temporal/config/dynamicconfig
+  temporal-admin-tools:
+    container_name: temporal-admin-tools
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_CLI_ADDRESS=temporal:7233
+    image: temporalio/admin-tools:${TEMPORAL_VERSION:-1.18.5}
+    stdin_open: true
+    tty: true
+  temporal-ui:
+    container_name: temporal-ui
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+      - TEMPORAL_CORS_ORIGINS=http://localhost:3000
+    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.8.3}
+    ports:
+      - "8080:8080"
+    expose:
+      - "8080"
+
+# volumes:
+#   rclone_vault_minio_volume: {}
+#   rclone_vault_rabbitmq_volume: {}
+#   rclone_vault_postgres_volume: {}
+#   rclone_vault_redis_volume: {}
