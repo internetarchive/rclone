@@ -1,19 +1,10 @@
-# Dockerfile to setup vault db at start time
-#
-# This needs vault-base.
-#
-#   $ clone the repo: vault-site
-#   $ sudo docker build --no-cache -t vault -f .../rclone/backend/vault/dev/Dockerfile.db .
-#
+# Dockerfile to bootstrap vault at start time. Requires vault-base.
 FROM vault-base:latest
 
 # wait script
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
+RUN echo "189a4a2b04b072a1fd5e7c346877ba50d565a2c0 /wait" | sha1sum --check
 RUN chmod +x /wait
-
-# copy fixtures
-# COPY 0001_treenode.json /tmp/0001_treenode.json
-# COPY 0002_testuser.json /tmp/0002_testuser.json
 
 # copy bootstrap script
 WORKDIR /app
@@ -34,5 +25,4 @@ ENV CHUNK_MANAGER_TYPE=LOCALFS
 ENV ASYNC_MODE=TEMPORAL
 
 CMD /wait && ./bootstrap.sh
-
 
