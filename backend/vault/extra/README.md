@@ -12,7 +12,7 @@ $ make clean # ~ docker rmi vault-base vault-bootstrap
 1. Checkout vault. You can use an already existing checkout, if available.
 
 ```
-$ git clone git@git.lab.org:vault-site /tmp/vault-site
+$ git clone --depth 1 git@git.lab.org:vault-site /tmp/vault-site
 ```
 
 2. Build a vault base and vault bootstrap images, pass your vault checkout
