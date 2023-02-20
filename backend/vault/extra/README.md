@@ -1,18 +1,18 @@
 # Rclone Vault Test Environment
 
-Assuming current working directory is `backend/vault/dev`, i.e. where this README lives.
+Assuming current working directory is `backend/vault/extra`, i.e. where this
+`README.md` lives.
 
 If there are any leftover images, remove them first:
 
 ```
-$ docker rmi vault-base
-$ docker rmi vault-bootstrap
+$ make clean # ~ docker rmi vault-base vault-bootstrap
 ```
 
 1. Checkout vault (somewhere else) and build a base image.
 
 ```
-$ docker build --no-cache -t vault-base -f Dockerfile.base /path/to/git.archive.org/dps/vault-site
+$ docker build -t vault-base -f Dockerfile.base /path/to/git.archive.org/dps/vault-site
 ```
 
 2. Build a vault bootstrap container.
