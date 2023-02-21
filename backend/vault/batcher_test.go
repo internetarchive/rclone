@@ -162,7 +162,7 @@ func mustWriteFileTemp(data []byte) (filename string) {
 	if err != nil {
 		panic(err)
 	}
-	defer f.Close()
+	defer f.Close() // nolint:errcheck
 	if err := os.WriteFile(f.Name(), data, 0644); err != nil {
 		panic(err)
 	}
