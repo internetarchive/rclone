@@ -191,7 +191,7 @@ type Fs struct {
 	name     string
 	root     string
 	opt      Options
-	api      *api.Api     // Vault API wrapper
+	api      *api.API     // Vault API wrapper
 	features *fs.Features // optional features
 	batcher  *batcher     // batching for deposits
 }
@@ -448,7 +448,7 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 		}
 		return u.String(), nil
 	default:
-		return "", fmt.Errorf("link not available for treenode %v", t.Id)
+		return "", fmt.Errorf("link not available for treenode %v", t.ID)
 	}
 }
 
@@ -525,7 +525,7 @@ func (f *Fs) DirMove(ctx context.Context, src fs.Fs, srcRemote, dstRemote string
 	if err != nil {
 		return err
 	}
-	if srcDirParentNode.Id == dstDirParentNode.Id {
+	if srcDirParentNode.ID == dstDirParentNode.ID {
 		fs.Debugf(f, "move is a rename")
 		t, err := f.api.ResolvePath(src.Root())
 		if err != nil {

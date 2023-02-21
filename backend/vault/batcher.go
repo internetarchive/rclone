@@ -100,19 +100,19 @@ func (item *batchItem) contentType() string {
 	if err != nil {
 		return ""
 	}
-	defer f.Close()
+	defer f.Close() // nolint:errcheck
 	buf := make([]byte, 512)
 	if _, err := f.Read(buf); err != nil {
 		return ""
 	}
-	if v := http.DetectContentType(buf); v == "application/octet-stream" {
+	v := http.DetectContentType(buf)
+	if v == "application/octet-stream" {
 		// DetectContentType always returns a valid MIME type: if it cannot
 		// determine a more specific one, it returns
 		// "application/octet-stream".
 		return ""
-	} else {
-		return v
 	}
+	return v
 }
 
 // deriveFlowIdentifier derives a unique per file identifier from metadata (not
@@ -181,9 +181,9 @@ func (b *batcher) completeRegisterDepositRequest(rdr *api.RegisterDepositRequest
 			err = fmt.Errorf("failed to resolve treenode to collection: %w", err)
 			return err
 		}
-		rdr.CollectionId = c.Identifier()
+		rdr.CollectionID = c.Identifier()
 	case b.parent.NodeType == "FOLDER":
-		rdr.ParentNodeId = b.parent.Id
+		rdr.ParentNodeID = b.parent.ID
 	default:
 		return ErrCannotCopyToRoot
 	}
@@ -252,7 +252,9 @@ func (b *batcher) Shutdown(ctx context.Context) (err error) {
 				Files:     b.files,
 			}
 			// Complete parent information.
-			b.completeRegisterDepositRequest(rdr)
+			if err = b.completeRegisterDepositRequest(rdr); err != nil {
+				return
+			}
 			// Register deposit.
 			b.depositIdentifier, err = b.fs.api.RegisterDeposit(ctx, rdr)
 			if err != nil {
@@ -335,14 +337,13 @@ func (b *batcher) UploadItem(ctx context.Context, item *batchItem, f *api.File) 
 				fs.LogPrintf(fs.LogLevelError, b, "call (GET): %v", err)
 				return err
 			}
-			defer resp.Body.Close()
+			defer resp.Body.Close() // nolint:errcheck
 			if resp.StatusCode >= 300 {
 				fs.LogPrintf(fs.LogLevelError, b, "expected HTTP < 300, got: %v", resp.StatusCode)
 				err = fmt.Errorf("expected HTTP < 300, got %v", resp.StatusCode)
 				return err
-			} else {
-				fs.Debugf(b, "GET returned: %v", resp.StatusCode)
 			}
+			fs.Debugf(b, "GET returned: %v", resp.StatusCode)
 			var (
 				r    io.Reader
 				chr  = chunker.ChunkReader(j - 1)
