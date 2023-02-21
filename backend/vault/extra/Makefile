@@ -1,13 +1,12 @@
-# Makefile for vault test images
+# Makefile for vault test image
 #
-#   $ VAULT=/path/to/vault make images
+#   $ VAULT=/path/to/vault make image
 #   $ docker images -f 'reference=vault*'
-#   $ make clean-images
+#   $ make clean
 #
 # $ docker images -f 'reference=vault*'
 # REPOSITORY        TAG       IMAGE ID       CREATED          SIZE
-# vault-bootstrap   latest    d719a2910092   17 seconds ago   1.76GB
-# vault-base        latest    435fe0b728a3   36 seconds ago   1.76GB
+# vault             latest    d719a2910092   17 seconds ago   1.76GB
 #
 # Location of vault checkout, will be used as build context.
 VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site/
