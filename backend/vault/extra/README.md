@@ -5,7 +5,7 @@ Assuming current working directory is `backend/vault/extra`, i.e. where this
 
 1. If there are any leftover images, remove them first:
 
-        $ make clean # ~ docker rmi vault-base vault-bootstrap
+        $ make clean # ~ docker rmi vault
 
 2. Checkout vault. You can use an already existing checkout, if available.
 
@@ -14,7 +14,7 @@ Assuming current working directory is `backend/vault/extra`, i.e. where this
 3. Build a vault base and vault bootstrap images, pass your vault checkout
    directory via `VAULT` environment variable.
 
-        $ VAULT=/tmp/vault-site make images
+        $ VAULT=/tmp/vault-site make image
 
 4. Start vault and all components with docker-compose.
 
