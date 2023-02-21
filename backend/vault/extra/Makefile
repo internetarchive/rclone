@@ -5,8 +5,8 @@
 #   $ make clean
 #
 # $ docker images -f 'reference=vault*'
-# REPOSITORY        TAG       IMAGE ID       CREATED          SIZE
-# vault             latest    d719a2910092   17 seconds ago   1.76GB
+# REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
+# vault        latest    850998bd7ea0   22 minutes ago   1.66GB
 #
 # Location of vault checkout, will be used as build context.
 VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site/
