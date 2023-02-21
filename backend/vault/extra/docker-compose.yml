@@ -2,7 +2,7 @@ version: "3.5"
 
 services:
   web:
-    image: vault-bootstrap
+    image: vault
     ports:
       - "8000:8000"
     expose:
