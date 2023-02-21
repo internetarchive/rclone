@@ -28,7 +28,7 @@ func TestChunker(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer f.Close()
+		defer f.Close() // nolint:errcheck
 		if err = os.WriteFile(f.Name(), []byte(c.data), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -69,7 +69,7 @@ func TestChunkerChunkSize(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer f.Close()
+		defer f.Close() // nolint:errcheck
 		if err = os.WriteFile(f.Name(), []byte(c.data), 0644); err != nil {
 			t.Fatal(err)
 		}
