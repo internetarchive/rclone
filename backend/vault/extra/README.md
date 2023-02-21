@@ -11,8 +11,8 @@ Assuming current working directory is `backend/vault/extra`, i.e. where this
 
         $ git clone --depth 1 git@git.lab.org:vault-site /tmp/vault-site
 
-3. Build a vault base and vault bootstrap images, pass your vault checkout
-   directory via `VAULT` environment variable.
+3. Build a vault image, pass your vault checkout directory via `VAULT`
+   environment variable.
 
         $ VAULT=/tmp/vault-site make image
 
