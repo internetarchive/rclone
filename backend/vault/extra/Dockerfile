@@ -15,7 +15,7 @@ RUN chmod +x /wait
 
 # copy bootstrap script, TODO(martin): make a copy
 ADD https://raw.githubusercontent.com/internetarchive/rclone/ia-wt-1168/backend/vault/extra/bootstrap.sh bootstrap.sh
-RUN echo "f5c74f6547ef9578fad12d9cb67d57c689eedb2c" | sha1sum --check
+RUN echo "cce37ddadc30f5635b7cb5361127cef31a880ca9  ./bootstrap.sh" | sha1sum --check
 RUN chmod +x ./bootstrap.sh
 
 # components, settings
