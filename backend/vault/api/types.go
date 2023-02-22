@@ -54,8 +54,8 @@ type Collection struct {
 		URL  string `json:"url"`
 	} `json:"target_geolocations"`
 	TargetReplication int64  `json:"target_replication"`
-	TreeNode          string `json:"tree_node"`
-	URL               string `json:"url"` // http://127.0.0.1:8000/api/collections/1/
+	TreeNode          string `json:"tree_node"` // http://localhost:8000/api/treenodes/15/
+	URL               string `json:"url"`       // http://127.0.0.1:8000/api/collections/1/
 }
 
 // TreeNode is node in the filesystem tree.
@@ -317,6 +317,27 @@ func (c *Collection) Identifier() int64 {
 	default:
 		re := regexp.MustCompile(fmt.Sprintf(`^http.*/api/collections/([0-9]{1,})/?$`))
 		matches := re.FindStringSubmatch(c.URL)
+		if len(matches) != 2 {
+			return 0
+		}
+		v, err := strconv.Atoi(matches[1])
+		if err != nil {
+			return 0
+		}
+		return int64(v)
+	}
+}
+
+// TreeNodeIdentifier returns the treenode id of this collection.
+func (c *Collection) TreeNodeIdentifier() int64 {
+	switch {
+	case c.TreeNode == "":
+		return 0
+	case !strings.HasPrefix(c.TreeNode, "http"):
+		return 0
+	default:
+		re := regexp.MustCompile(fmt.Sprintf(`^http.*/api/treenodes/([0-9]{1,})/?$`))
+		matches := re.FindStringSubmatch(c.TreeNode)
 		if len(matches) != 2 {
 			return 0
 		}
