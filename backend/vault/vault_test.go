@@ -94,6 +94,7 @@ func TestCreateFolder(t *testing.T) {
 	if len(ts) != 1 {
 		t.Fatalf("expected single result, got %v", len(ts))
 	}
+	// create folder
 	folder := fmt.Sprintf("test-folder-%024d", rand.Int63())
 	err = api.CreateFolder(ctx, ts[0], folder)
 	if err != nil {
@@ -101,3 +102,12 @@ func TestCreateFolder(t *testing.T) {
 	}
 	t.Logf("created collection and folder")
 }
+
+// TODO:
+//
+// [ ] register deposit
+// [ ] upload file
+// [ ] rename file
+// [ ] move file
+// [ ] move folder
+// [ ] delete folder
