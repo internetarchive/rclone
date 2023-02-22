@@ -298,6 +298,8 @@ func (api *API) CreateCollection(ctx context.Context, name string) error {
 	if err != nil {
 		return err
 	}
+	b, _ := io.ReadAll(resp.Body)
+	fs.Debugf(api, "collection created: %v", string(b))
 	return resp.Body.Close()
 }
 
