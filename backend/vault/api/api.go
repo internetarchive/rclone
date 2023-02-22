@@ -40,6 +40,16 @@ var (
 	ErrAmbiguousQuery = errors.New("ambiguous query")
 )
 
+// Error for failed api requests.
+type Error struct {
+	err error
+}
+
+// Error returns a string.
+func (e *Error) Error() string {
+	return fmt.Sprintf("api error: %v", e.err)
+}
+
 // API wraps the Vault API. Django REST Framework has some support for swagger
 // definitions, which we may switch over at some point (it was not enabled).
 // Most operations will require an authenticated client.
@@ -460,11 +470,11 @@ func (api *API) RegisterDeposit(ctx context.Context, rdr *RegisterDepositRequest
 			// leads to various integrity errors. However, once the files are
 			// assembled and in place, the command will work fine again.
 			fs.Debugf(api, "got an HTTP 500 while registering a deposit (may be clashing filenames)")
-			return 0, fmt.Errorf("cannot create deposit (probably name clashes); try to use --ignore-existing flag when uploading")
+			return 0, &Error{fmt.Errorf("cannot create deposit (probably name clashes); try to use --ignore-existing flag when uploading")}
 		}
 		// TODO: we need warning deposit here to check whether files already
 		// exist; do some kind of "--force" by default
-		return 0, fmt.Errorf("api failed: %v", err)
+		return 0, &Error{err}
 	}
 	defer resp.Body.Close() // nolint:errcheck
 	fs.Logf(api, "deposit registered: %v", depositResp.ID)
