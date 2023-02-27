@@ -13,6 +13,7 @@ import (
 
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
+	"github.com/rclone/rclone/backend/vault/oapi"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -128,7 +129,10 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if err != nil {
 		return nil, err
 	}
-	api := api.New(opt.EndpointNormalized(), opt.Username, opt.Password)
+	api, err := oapi.New(opt.EndpointNormalized(), opt.Username, opt.Password)
+	if err != nil {
+		return nil, err
+	}
 	if err := api.Login(); err != nil {
 		return nil, err
 	}
@@ -191,7 +195,7 @@ type Fs struct {
 	name     string
 	root     string
 	opt      Options
-	api      *api.API     // Vault API wrapper
+	api      *oapi.CompatAPI
 	features *fs.Features // optional features
 	batcher  *batcher     // batching for deposits
 }
