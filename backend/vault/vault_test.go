@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/rclone/rclone/backend/vault/api"
+	"github.com/rclone/rclone/backend/vault/oapi"
 	"github.com/rclone/rclone/fstest/fstests"
 )
 
@@ -36,16 +37,19 @@ func TestIntegration(t *testing.T) {
 	})
 }
 
-func MustLogin(t *testing.T) *api.API {
-	api := api.New("http://localhost:8000/api", "admin", "admin")
-	err := api.Login()
+func MustLogin(t *testing.T) *oapi.CompatAPI {
+	api, err := oapi.New("http://localhost:8000/api", "admin", "admin")
+	if err != nil {
+		t.Fatalf("login failed: %v", err)
+	}
+	err = api.Login()
 	if err != nil {
 		t.Fatalf("login failed: %v", err)
 	}
 	return api
 }
 
-func MustCollection(t *testing.T, api *api.API, name string) *api.Collection {
+func MustCollection(t *testing.T, api *oapi.CompatAPI, name string) *api.Collection {
 	ctx := context.Background()
 	err := api.CreateCollection(ctx, name)
 	if err != nil {
@@ -73,7 +77,7 @@ func TestCreateCollection(t *testing.T) {
 	_ = MustCollection(t, api, name)
 }
 
-func MustTreeNodeForCollection(t *testing.T, api *api.API, c *api.Collection) *api.TreeNode {
+func MustTreeNodeForCollection(t *testing.T, api *oapi.CompatAPI, c *api.Collection) *api.TreeNode {
 	vs := url.Values{}
 	vs.Set("id", fmt.Sprintf("%d", c.TreeNodeIdentifier()))
 	t.Logf("finding treenode: %v", c.TreeNodeIdentifier())
