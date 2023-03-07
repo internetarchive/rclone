@@ -18,7 +18,6 @@ import (
 
 	"github.com/antchfx/htmlquery"
 	"github.com/rclone/rclone/backend/vault/api"
-	"github.com/rclone/rclone/fs/fshttp"
 	"github.com/rclone/rclone/lib/rest"
 )
 
@@ -49,15 +48,13 @@ func (e *Error) Error() string {
 }
 
 // CompatAPI is a compatibility layer and provides the exact same API to vault
-// as the manually written one, but will use the openapi-generated code after
-// some transition period.
+// as the manually written one, but will only use the openapi-generated code
+// after some transition period.
 //
-// Uglyness of three separate clients, a basic HTTP client that is wrapped by
-// the OpenAPI client and that does authentication. Plus a legacy client that
+// Uglyness of two separate clients, a basic HTTP client that is wrapped by
+// the OpenAPI client and that does authentication. Plus a legacy API that
 // uses a different authentication mechanism and that we keep around for the
-// transition period. Plus the whole legacyAPI, so we can have a fallback.
-//
-// The legacyClient should only be used as a last resort.
+// transition period as fallback.
 //
 // TODO(martin): move all methods to use openapi client only
 type CompatAPI struct {
@@ -70,14 +67,12 @@ type CompatAPI struct {
 	loginPath        string
 	c                *http.Client         // vanilly HTTP client, will be wrapped by OpenAPI client
 	client           *ClientWithResponses // OpenAPI client
-	legacyClient     *rest.Client         // rclone rest client
 	csrfTokenPattern *regexp.Regexp
 	// legacyAPI, so we can replace and test one function at a time
 	legacyAPI *api.API
 }
 
 func New(endpoint, username, password string) (*CompatAPI, error) {
-	ctx := context.Background()
 	// TODO: need at least an HTTP client with cookie setup
 	stripped := strings.TrimRight(strings.Replace(endpoint, "/api", "", 1), "/")
 	capi := &CompatAPI{
@@ -88,7 +83,6 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 		loginPath:        "/accounts/login/",
 		c:                &http.Client{Timeout: 10 * time.Second},
 		csrfTokenPattern: regexp.MustCompile(`csrfToken:[ ]*"([^"]*)"`),
-		legacyClient:     rest.NewClient(fshttp.NewClient(ctx)).SetRoot(endpoint),
 		legacyAPI:        api.New(endpoint, username, password),
 	}
 	// NewClient wants the URL w/o the "/api" suffix by default.
@@ -228,26 +222,25 @@ func (capi *CompatAPI) Login() error {
 		msg := fmt.Sprintf("expected 2 cookies, got %v", len(jar.Cookies(u)))
 		return fmt.Errorf(msg)
 	}
-	capi.legacyClient.SetCookie(jar.Cookies(u)...)
 	return nil
 }
 
 // Logout drops the session.
 func (capi *CompatAPI) Logout() error {
+	capi.legacyAPI.Logout()
 	jar, err := cookiejar.New(nil)
 	if err != nil {
 		return err
 	}
 	capi.c.Jar = jar
-	capi.legacyClient.SetHeader("Cookie", "")
 	return nil
 }
 
 func (capi *CompatAPI) Call(ctx context.Context, opts *rest.Opts) (*http.Response, error) {
-	return capi.legacyClient.Call(ctx, opts)
+	return capi.legacyAPI.Call(ctx, opts)
 }
 func (capi *CompatAPI) CallJSON(ctx context.Context, opts *rest.Opts, req, resp interface{}) (*http.Response, error) {
-	return capi.legacyClient.CallJSON(ctx, opts, req, resp)
+	return capi.legacyAPI.CallJSON(ctx, opts, req, resp)
 }
 
 // SplitPath turns an absolute path string into a PathInfo value.
