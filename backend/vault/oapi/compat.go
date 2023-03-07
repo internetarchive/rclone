@@ -12,6 +12,7 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -48,15 +49,17 @@ func (e *Error) Error() string {
 }
 
 // CompatAPI is a compatibility layer and provides the exact same API to vault
-// as the manually written one, but uses the openapi-gen generated code in the
-// background.
+// as the manually written one, but will use the openapi-generated code after
+// some transition period.
 //
 // Uglyness of three separate clients, a basic HTTP client that is wrapped by
 // the OpenAPI client and that does authentication. Plus a legacy client that
 // uses a different authentication mechanism and that we keep around for the
-// transition period.
+// transition period. Plus the whole legacyAPI, so we can have a fallback.
 //
 // The legacyClient should only be used as a last resort.
+//
+// TODO(martin): move all methods to use openapi client only
 type CompatAPI struct {
 	Endpoint string
 	Username string
@@ -296,7 +299,7 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) ([]*api.TreeNode, error) {
 	return capi.legacyAPI.FindTreeNodes(vs)
 }
 
-// User returns the current user.
+// User returns the current user. This is an example of using the new API internally.
 func (capi *CompatAPI) User() (*api.User, error) {
 	ctx := context.Background()
 	params := &UsersListParams{
@@ -331,8 +334,30 @@ func (capi *CompatAPI) User() (*api.User, error) {
 	}, nil
 }
 func (capi *CompatAPI) Organization() (*api.Organization, error) {
-	return capi.legacyAPI.Organization()
-
+	ctx := context.Background()
+	user, err := capi.User()
+	if err != nil {
+		return nil, err
+	}
+	sid := user.OrganizationIdentifier()
+	id, err := strconv.Atoi(sid)
+	if err != nil {
+		return nil, err
+	}
+	orr, err := capi.client.OrganizationsRetrieveWithResponse(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	if orr.StatusCode() != 200 {
+		return nil, fmt.Errorf("error retrieving organization: %v", orr.StatusCode())
+	}
+	return &api.Organization{
+		Name:       orr.JSON200.Name,
+		Plan:       orr.JSON200.Plan,
+		QuotaBytes: *orr.JSON200.QuotaBytes,
+		TreeNode:   *orr.JSON200.TreeNode,
+		URL:        *orr.JSON200.Url,
+	}, nil
 }
 func (capi *CompatAPI) Plan() (*api.Plan, error) {
 	return capi.legacyAPI.Plan()
