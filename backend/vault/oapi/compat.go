@@ -333,6 +333,8 @@ func (capi *CompatAPI) User() (*api.User, error) {
 		Username:     usr.Username,
 	}, nil
 }
+
+// Organization returns the organization of the current user.
 func (capi *CompatAPI) Organization() (*api.Organization, error) {
 	ctx := context.Background()
 	user, err := capi.User()
@@ -344,21 +346,44 @@ func (capi *CompatAPI) Organization() (*api.Organization, error) {
 	if err != nil {
 		return nil, err
 	}
-	orr, err := capi.client.OrganizationsRetrieveWithResponse(ctx, id)
+	r, err := capi.client.OrganizationsRetrieveWithResponse(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	if orr.StatusCode() != 200 {
-		return nil, fmt.Errorf("error retrieving organization: %v", orr.StatusCode())
+	if r.StatusCode() != 200 {
+		return nil, fmt.Errorf("error retrieving organization: %v", r.StatusCode())
 	}
 	return &api.Organization{
-		Name:       orr.JSON200.Name,
-		Plan:       orr.JSON200.Plan,
-		QuotaBytes: *orr.JSON200.QuotaBytes,
-		TreeNode:   *orr.JSON200.TreeNode,
-		URL:        *orr.JSON200.Url,
+		Name:       r.JSON200.Name,
+		Plan:       r.JSON200.Plan,
+		QuotaBytes: *r.JSON200.QuotaBytes,
+		TreeNode:   *r.JSON200.TreeNode,
+		URL:        *r.JSON200.Url,
 	}, nil
 }
+
+// Plan returns the plan of the current user.
 func (capi *CompatAPI) Plan() (*api.Plan, error) {
-	return capi.legacyAPI.Plan()
+	ctx := context.Background()
+	org, err := capi.Organization()
+	if err != nil {
+		return nil, err
+	}
+	pid := org.PlanIdentifier()
+	id, err := strconv.Atoi(pid)
+	if err != nil {
+		return nil, err
+	}
+	r, err := capi.client.PlansRetrieveWithResponse(ctx, id)
+	if r.StatusCode() != 200 {
+		return nil, fmt.Errorf("error retrieving plan: %v", r.StatusCode())
+	}
+	return &api.Plan{
+		DefaultFixityFrequency: string(*r.JSON200.DefaultFixityFrequency),
+		DefaultGeolocations:    r.JSON200.DefaultGeolocations,
+		DefaultReplication:     int64(*r.JSON200.DefaultReplication),
+		Name:                   r.JSON200.Name,
+		PricePerTerabyte:       r.JSON200.PricePerTerabyte,
+		URL:                    *r.JSON200.Url,
+	}, nil
 }
