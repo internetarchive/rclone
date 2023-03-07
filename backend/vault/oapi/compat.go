@@ -289,6 +289,12 @@ func (capi *CompatAPI) TreeNodeToCollection(t *api.TreeNode) (*api.Collection, e
 func (capi *CompatAPI) GetCollectionStats() (*api.CollectionStats, error) {
 	return capi.legacyAPI.GetCollectionStats()
 }
+func (capi *CompatAPI) FindCollections(vs url.Values) ([]*api.Collection, error) {
+	return capi.legacyAPI.FindCollections(vs)
+}
+func (capi *CompatAPI) FindTreeNodes(vs url.Values) ([]*api.TreeNode, error) {
+	return capi.legacyAPI.FindTreeNodes(vs)
+}
 
 // User returns the current user.
 func (capi *CompatAPI) User() (*api.User, error) {
