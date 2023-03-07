@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
 	"path"
 	"strconv"
@@ -198,6 +199,7 @@ type Fs struct {
 	api      *oapi.CompatAPI
 	features *fs.Features // optional features
 	batcher  *batcher     // batching for deposits
+	inflight bool         // true, if an upload is in progress
 }
 
 // Fs Info
@@ -323,6 +325,22 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 // copies the source to a temporary file and registers the file with the
 // batcher, which will upload all files at rclone shutdown time.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
+	if true {
+		if !f.inflight {
+			// do an "ls"
+			f.inflight = true
+			srcFs := src.Fs()
+			log.Printf("srcFs: %T", srcFs)
+			fsFs := srcFs.(fs.Fs)
+			log.Printf("fsFs: %T", fsFs)
+			log.Printf("src storable=%v, root=%v", src.Storable(), src.Fs().Root())
+			entries, err := fsFs.List(context.Background(), src.Fs().Root())
+			if err != nil {
+				return nil, err
+			}
+			log.Println(len(entries))
+		}
+	}
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
 	if !IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
@@ -812,3 +830,6 @@ var (
 	_ fs.IDer         = (*Object)(nil)
 	_ fs.Directory    = (*Dir)(nil)
 )
+
+// Experimental functions
+// ----------------------
