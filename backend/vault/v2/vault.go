@@ -1,4 +1,5 @@
-// Package v2 implements changes proposed in MR362.
+// Package v2 implements changes proposed in MR362, namely v2 deposit API
+// without treenode allocation.
 package v2
 
 import (
@@ -10,6 +11,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
@@ -188,6 +190,11 @@ type Fs struct {
 	opt      Options
 	api      *oapi.CompatAPI
 	features *fs.Features // optional features
+	// On a first put, we are registering a deposit and retrieving a deposit
+	// id. Any subsequent upload will be associated with that deposit id. On
+	// shutdown, we send a finalize signal.
+	mu                sync.Mutex
+	inflightDepositID string // inflight deposit id, empty if none inflight
 }
 
 // Fs Info
