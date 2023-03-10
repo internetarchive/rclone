@@ -322,6 +322,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if !IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
+	f.mu.Lock()
+	if f.inflightDepositID == "" {
+		// This is the first request, so we obtain a deposit id.
+
+	}
 	// TODO
 	// check if we started a deposit already, if not start one
 	//

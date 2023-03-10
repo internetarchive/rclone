@@ -16,6 +16,7 @@ that allows to test the new functionality.
 ## TODO
 
 * [ ] rework the client API to start uploads immediately, using the original
+* [ ] use openapi spec: http://localhost:8000/api/deposits/v2/openapi.json
 
 ## Notes
 
