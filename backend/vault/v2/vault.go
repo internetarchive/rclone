@@ -99,6 +99,12 @@ func init() {
 				Default:  defaultMaxParallelUploads, // TODO: find a good default
 				Advanced: true,
 			},
+			{
+				Name:     "use_v2",
+				Help:     "use v2 deposit api",
+				Default:  false,
+				Advanced: true,
+			},
 		},
 		CommandHelp: []fs.CommandHelp{
 			fs.CommandHelp{
@@ -141,11 +147,20 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
 		return nil, ErrVersionMismatch
 	}
+	// Only setup v2 client, when requested, current endpoint: /api/deposits/v2/
+	var depositsV2Client ClientWithResponses
+	if opt.UseV2 {
+		depositsV2Client, err = NewClientWithResponses(opt.EndpointNormalizedDepositsV2())
+		if err != nil {
+			return nil, err
+		}
+	}
 	f := &Fs{
-		name: name,
-		root: root,
-		opt:  opt,
-		api:  api,
+		name:             name,
+		root:             root,
+		opt:              opt,
+		api:              api,
+		depositsV2Client: depositsV2Client, // will be nil, when not requested
 	}
 	f.features = (&fs.Features{
 		CanHaveEmptyDirectories: true,
@@ -168,13 +183,14 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 type Options struct {
 	Username                 string `config:"username"`
 	Password                 string `config:"password"`
-	Endpoint                 string `config:"endpoint"`
+	Endpoint                 string `config:"endpoint"` // e.g. http://localhost:8000/api
 	SuppressProgressBar      bool   `config:"suppress_progress_bar"`
 	ResumeDepositId          int64  `config:"resume_deposit_id"`
 	ChunkSize                int64  `config:"chunk_size"`
 	MaxParallelChunks        int    `config:"max_parallel_chunks"`
 	MaxParallelUploads       int    `config:"max_parallel_uploads"`
 	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
+	UseV2                    bool   `config:"use_v2"` // whether to use v2 deposits api
 }
 
 // EndpointNormalized handles trailing slashes.
@@ -182,14 +198,19 @@ func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
 
+func (opt Options) EndpointNormalizedDepositsV2() string {
+	return url.JoinPath(opt.EndpointNormalized(), "deposits/v2")
+}
+
 // Fs is the main Vault filesystem. Most operations are accessed through the
 // api.
 type Fs struct {
-	name     string
-	root     string
-	opt      Options
-	api      *oapi.CompatAPI
-	features *fs.Features // optional features
+	name             string
+	root             string
+	opt              Options                 // vault options
+	api              *oapi.CompatAPI         // compat api, wrapper around oapi, exposing legacy methods
+	depositsV2Client *v2.ClientWithResponses // v2 deposits API
+	features         *fs.Features            // optional features
 	// On a first put, we are registering a deposit and retrieving a deposit
 	// id. Any subsequent upload will be associated with that deposit id. On
 	// shutdown, we send a finalize signal.
