@@ -1,4 +1,5 @@
-package vault
+// Package v2 implements changes proposed in MR362.
+package v2
 
 import (
 	"context"
@@ -12,7 +13,6 @@ import (
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
-	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
@@ -145,14 +145,6 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		opt:  opt,
 		api:  api,
 	}
-	f.batcher = &batcher{
-		fs:                  f,
-		chunkSize:           opt.ChunkSize,
-		maxParallelChunks:   opt.MaxParallelChunks,
-		maxParallelUploads:  opt.MaxParallelUploads,
-		showDepositProgress: !opt.SuppressProgressBar,
-		resumeDepositId:     opt.ResumeDepositId,
-	}
 	f.features = (&fs.Features{
 		CanHaveEmptyDirectories: true,
 		ReadMimeType:            true,
@@ -189,15 +181,13 @@ func (opt Options) EndpointNormalized() string {
 }
 
 // Fs is the main Vault filesystem. Most operations are accessed through the
-// api. A batch helper is required to model the deposit-style upload of a set
-// of files.
+// api.
 type Fs struct {
 	name     string
 	root     string
 	opt      Options
 	api      *oapi.CompatAPI
 	features *fs.Features // optional features
-	batcher  *batcher     // batching for deposits
 }
 
 // Fs Info
@@ -319,45 +309,29 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
-// Put uploads a new object. This does not upload content immediately, but
-// copies the source to a temporary file and registers the file with the
-// batcher, which will upload all files at rclone shutdown time.
+// Put uploads a new object.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
 	if !IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
+	// TODO
+	// check if we started a deposit already, if not start one
+	//
+	//     /deposits/v2/register
+	//
+	// start sending chunks
+	//
+	//     /deposits/v2/chunk
+	//
+	// finalize
+	//
+	//     /deposits/v2/finalize
+	//
 	var (
-		filename                string
-		err                     error
-		deleteFileAfterTransfer bool = false
+		filename string
+		err      error
 	)
-	// While we are not supporting hashes currently, we still need to copy
-	// remote file to local temporary files in order to get a complete picture
-	// of the deposit. TODO(martin): we may get by to register a deposit w/o
-	// downloading all files before the start. We would need to get a listing,
-	// register the deposit and then start streaming data to vault.
-	switch {
-	case src != nil && src.Fs() != nil && src.Fs().Name() == "local":
-		filename = path.Join(src.Fs().Root(), src.String())
-		fs.Debugf(f, "adding local file to batch: %v", filename)
-	default:
-		fs.Debugf(f, "fetching remote file temporarily")
-		if filename, err = iotemp.TempFileFromReader(in); err != nil {
-			return nil, err
-		}
-		deleteFileAfterTransfer = true
-		fs.Debugf(f, "fetched %v to temporary location: %v", src.Remote(), filename)
-	}
-	f.batcher.Add(&batchItem{
-		root:                     f.root,
-		filename:                 filename,
-		src:                      src,
-		options:                  options,
-		deleteFileAfterTransfer:  deleteFileAfterTransfer,
-		skipContentTypeDetection: f.opt.SkipContentTypeDetection,
-	})
-	fs.Debugf(f, "added file to batch (filename=%s, skipContentTypeDetection=%v)", filename, f.opt.SkipContentTypeDetection)
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
@@ -587,13 +561,10 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 	return f.api.Remove(ctx, t)
 }
 
-// Shutdown triggers the deposit upload.
+// Shutdown sends finalize signal.
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
-	if f.batcher != nil {
-		return f.batcher.Shutdown(ctx)
-	}
-	return nil
+	fs.Debugf(f, "TODO: send finalize")
 }
 
 // Command allows for custom commands. TODO(martin): We could have a cli dashboard or a deposit status command.
