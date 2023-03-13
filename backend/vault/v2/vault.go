@@ -43,7 +43,7 @@ var (
 	ErrVersionMismatch = errors.New("api version mismatch")
 )
 
-// NewFS sets up a new filesystem for vault.
+// NewFS sets up a new filesystem for vault, with deposits/v2 support.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
 	fs.Debugf(nil, "[exp] using experimental fs with deposits/v2")
 	var opt Options
@@ -61,24 +61,25 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
 		return nil, ErrVersionMismatch
 	}
-	// Only setup v2 client, when requested, current endpoint: /api/deposits/v2/
+	// Setup v2 client, when requested, current endpoint:
+	// /api/deposits/v2/
+	//
+	// May fail, if flag is used against endpoint w/o support for v2.
 	var depositsV2Client *ClientWithResponses
-	if opt.UseV2 {
-		endpoint, err := opt.EndpointNormalizedDepositsV2()
-		if err != nil {
-			return nil, err
-		}
-		depositsV2Client, err = NewClientWithResponses(endpoint)
-		if err != nil {
-			return nil, err
-		}
+	endpoint, err := opt.EndpointNormalizedDepositsV2()
+	if err != nil {
+		return nil, err
+	}
+	depositsV2Client, err = NewClientWithResponses(endpoint)
+	if err != nil {
+		return nil, err
 	}
 	f := &Fs{
 		name:             name,
 		root:             root,
 		opt:              opt,
 		api:              api,
-		depositsV2Client: depositsV2Client, // will be nil, when not requested
+		depositsV2Client: depositsV2Client,
 	}
 	f.features = (&fs.Features{
 		CanHaveEmptyDirectories: true,
@@ -108,7 +109,6 @@ type Options struct {
 	MaxParallelChunks        int    `config:"max_parallel_chunks"`
 	MaxParallelUploads       int    `config:"max_parallel_uploads"`
 	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
-	UseV2                    bool   `config:"use_v2"` // whether to use v2 deposits api
 }
 
 // EndpointNormalized handles trailing slashes.
