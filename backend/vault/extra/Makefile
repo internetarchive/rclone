@@ -9,7 +9,7 @@
 # vault        latest    850998bd7ea0   22 minutes ago   1.66GB
 #
 # Location of vault checkout, will be used as build context.
-VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site/
+VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site
 
 .PHONY: help
 help:
@@ -17,8 +17,12 @@ help:
 
 .PHONY: image
 image:
+	# temporarily copying bootstrap.sh into build context
+	cp ./bootstrap.sh $(VAULT)/dev
 	# to debug, you may want to add `--no-cache`
 	DOCKER_BUILDKIT=1 docker build --no-cache -t vault:latest -f Dockerfile $(VAULT)
+	# cleanup bootstrap
+	rm -f $(VAULT)/dev/bootstrap.sh
 
 .PHONY: clean
 clean:
