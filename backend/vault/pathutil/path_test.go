@@ -1,4 +1,4 @@
-package vault
+package pathutil
 
 import (
 	"strings"

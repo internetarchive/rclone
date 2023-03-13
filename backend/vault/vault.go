@@ -14,6 +14,8 @@ import (
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
+	"github.com/rclone/rclone/backend/vault/pathutil"
+	v2 "github.com/rclone/rclone/backend/vault/v2"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -97,6 +99,12 @@ func init() {
 				Default:  defaultMaxParallelUploads, // TODO: find a good default
 				Advanced: true,
 			},
+			{
+				Name:     "use_deposit_v2",
+				Help:     "use v2 deposit api (w/o treenode preallocation)",
+				Default:  false,
+				Advanced: true,
+			},
 		},
 		CommandHelp: []fs.CommandHelp{
 			fs.CommandHelp{
@@ -128,6 +136,11 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	err := configstruct.Set(m, &opt)
 	if err != nil {
 		return nil, err
+	}
+	// We switch to v2 deposit upload if requested, here. TODO: this
+	// alternative should vanish as soon as we moved to v2 deposits.
+	if opt.UseDepositV2 {
+		return v2.NewFs(ctx, name, root, m)
 	}
 	api, err := oapi.New(opt.EndpointNormalized(), opt.Username, opt.Password)
 	if err != nil {
@@ -181,6 +194,7 @@ type Options struct {
 	MaxParallelChunks        int    `config:"max_parallel_chunks"`
 	MaxParallelUploads       int    `config:"max_parallel_uploads"`
 	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
+	UseDepositV2             bool   `config:"use_deposit_v2"` // w/o treenode preallocation
 }
 
 // EndpointNormalized handles trailing slashes.
@@ -293,7 +307,7 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
-	if !IsValidPath(remote) {
+	if !pathutil.IsValidPath(remote) {
 		return nil, ErrInvalidPath
 	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
@@ -324,7 +338,7 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 // batcher, which will upload all files at rclone shutdown time.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
-	if !IsValidPath(src.Remote()) {
+	if !pathutil.IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
 	var (

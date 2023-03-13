@@ -16,6 +16,7 @@ import (
 
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/oapi"
+	"github.com/rclone/rclone/backend/vault/pathutil"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -42,96 +43,9 @@ var (
 	ErrVersionMismatch = errors.New("api version mismatch")
 )
 
-func init() {
-	fs.Register(&fs.RegInfo{
-		Name:        "vault",
-		Description: "Internet Archive Vault Digital Preservation System",
-		NewFs:       NewFs,
-		Options: []fs.Option{
-			{
-				Name:    "username",
-				Help:    "Vault username",
-				Default: "",
-			},
-			{
-				Name:    "password",
-				Help:    "Vault password",
-				Default: "",
-			},
-			{
-				Name:    "endpoint",
-				Help:    "Vault API endpoint URL",
-				Default: "http://127.0.0.1:8000/api",
-			},
-			{
-				Name:    "suppress_progress_bar",
-				Help:    "Suppress deposit progress bar",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:    "skip_content_type_detection",
-				Help:    "Skip content-type detection on the client side",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:    "resume_deposit_id",
-				Help:    "Resume a deposit",
-				Default: 0,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:     "chunk_size",
-				Help:     "Upload chunk size in bytes (limited)",
-				Default:  defaultUploadChunkSize,
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_chunks",
-				Help:     "Maximum number of parallel chunk uploads",
-				Default:  defaultMaxParallelChunks, // TODO: find a good default
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_uploads",
-				Help:     "Maximum number of parallel file uploads",
-				Default:  defaultMaxParallelUploads, // TODO: find a good default
-				Advanced: true,
-			},
-			{
-				Name:     "use_v2",
-				Help:     "use v2 deposit api",
-				Default:  false,
-				Advanced: true,
-			},
-		},
-		CommandHelp: []fs.CommandHelp{
-			fs.CommandHelp{
-				Name:  "status",
-				Short: "show deposit status",
-				Long: `Display status of deposit, pass deposit id (e.g. 742) as argument, e.g.:
-
-    $ rclone backend ds vault: 742
-
-Will return a JSON like this:
-
-    {
-      "assembled_files": 6,
-      "errored_files": 0,
-      "file_queue": 0,
-      "in_storage_files": 0,
-      "total_files": 6,
-      "uploaded_files": 0
-    }
-`,
-			},
-		},
-	})
-}
-
 // NewFS sets up a new filesystem for vault.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
+	fs.Debugf(nil, "[exp] using experimental fs with deposits/v2")
 	var opt Options
 	err := configstruct.Set(m, &opt)
 	if err != nil {
@@ -148,9 +62,13 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, ErrVersionMismatch
 	}
 	// Only setup v2 client, when requested, current endpoint: /api/deposits/v2/
-	var depositsV2Client ClientWithResponses
+	var depositsV2Client *ClientWithResponses
 	if opt.UseV2 {
-		depositsV2Client, err = NewClientWithResponses(opt.EndpointNormalizedDepositsV2())
+		endpoint, err := opt.EndpointNormalizedDepositsV2()
+		if err != nil {
+			return nil, err
+		}
+		depositsV2Client, err = NewClientWithResponses(endpoint)
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +116,7 @@ func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
 
-func (opt Options) EndpointNormalizedDepositsV2() string {
+func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
 	return url.JoinPath(opt.EndpointNormalized(), "deposits/v2")
 }
 
@@ -207,10 +125,10 @@ func (opt Options) EndpointNormalizedDepositsV2() string {
 type Fs struct {
 	name             string
 	root             string
-	opt              Options                 // vault options
-	api              *oapi.CompatAPI         // compat api, wrapper around oapi, exposing legacy methods
-	depositsV2Client *v2.ClientWithResponses // v2 deposits API
-	features         *fs.Features            // optional features
+	opt              Options              // vault options
+	api              *oapi.CompatAPI      // compat api, wrapper around oapi, exposing legacy methods
+	depositsV2Client *ClientWithResponses // v2 deposits API
+	features         *fs.Features         // optional features
 	// On a first put, we are registering a deposit and retrieving a deposit
 	// id. Any subsequent upload will be associated with that deposit id. On
 	// shutdown, we send a finalize signal.
@@ -311,7 +229,7 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 // otherwise ErrorObjectNotFound.
 func (f *Fs) NewObject(ctx context.Context, remote string) (fs.Object, error) {
 	fs.Debugf(f, "new object at %v (%v)", remote, f.absPath(remote))
-	if !IsValidPath(remote) {
+	if !pathutil.IsValidPath(remote) {
 		return nil, ErrInvalidPath
 	}
 	t, err := f.api.ResolvePath(f.absPath(remote))
@@ -340,7 +258,7 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 // Put uploads a new object.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
-	if !IsValidPath(src.Remote()) {
+	if !pathutil.IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
 	f.mu.Lock()
@@ -361,10 +279,10 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	//
 	//     /deposits/v2/finalize
 	//
-	var (
-		filename string
-		err      error
-	)
+	// var (
+	// 	filename string
+	// 	err      error
+	// )
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
@@ -598,6 +516,7 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 func (f *Fs) Shutdown(ctx context.Context) error {
 	fs.Debugf(f, "shutdown")
 	fs.Debugf(f, "TODO: send finalize")
+	return nil
 }
 
 // Command allows for custom commands. TODO(martin): We could have a cli dashboard or a deposit status command.
