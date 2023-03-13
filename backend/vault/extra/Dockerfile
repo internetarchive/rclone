@@ -13,7 +13,12 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait
 RUN echo "189a4a2b04b072a1fd5e7c346877ba50d565a2c0  /wait" | sha1sum --check
 RUN chmod +x /wait
 
-# copy bootstrap script, TODO(martin): make a copy
+# TODO(martin): streamline
+#
+# Problem was to keep fixture in sync between various versions; also docker
+# build does not allow symlinking, so we need to copy the bootstrap script
+# temporarily to the VAULT repo to include it in the image.
+#
 # ADD https://raw.githubusercontent.com/internetarchive/rclone/ia-wt-1168/backend/vault/extra/bootstrap.sh bootstrap.sh
 ADD dev/bootstrap.sh bootstrap.sh
 RUN echo "8c210a97916f43d603964d4cf35be9e1b729b798 ./bootstrap.sh" | sha1sum --check
