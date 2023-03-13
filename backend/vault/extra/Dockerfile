@@ -21,7 +21,7 @@ RUN chmod +x /wait
 #
 # ADD https://raw.githubusercontent.com/internetarchive/rclone/ia-wt-1168/backend/vault/extra/bootstrap.sh bootstrap.sh
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "8c210a97916f43d603964d4cf35be9e1b729b798 ./bootstrap.sh" | sha1sum --check
+RUN echo "f5c74f6547ef9578fad12d9cb67d57c689eedb2c ./bootstrap.sh" | sha1sum --check
 RUN chmod +x ./bootstrap.sh
 
 # components, settings
