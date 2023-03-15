@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -79,10 +80,11 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if err != nil {
 		return nil, err
 	}
-	depositsV2Client, err = NewClientWithResponses(endpoint)
+	depositsV2Client, err = NewClientWithResponses(endpoint) // TODO: request editors
 	if err != nil {
 		return nil, err
 	}
+	fs.Debugf(nil, "v2 client at %v", endpoint)
 	f := &Fs{
 		name:             name,
 		root:             root,
@@ -126,7 +128,8 @@ func (opt Options) EndpointNormalized() string {
 }
 
 func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
-	return url.JoinPath(opt.EndpointNormalized(), "deposits/v2")
+	// return url.JoinPath(opt.EndpointNormalized(), "deposits/v2")
+	return "http://localhost:8000/", nil
 }
 
 // Fs is the main Vault filesystem. Most operations are accessed through the
@@ -273,18 +276,25 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		return nil
 	}
 	t, err := f.api.ResolvePath(f.root)
-	if err != fs.ErrorObjectNotFound {
-		if err = f.mkdir(ctx, f.root); err != nil {
-			return err
-		}
-		if t, err = f.api.ResolvePath(f.root); err != nil {
+	if err != nil {
+		if err == fs.ErrorObjectNotFound {
+			fs.Debugf(f, "root not found: %v", f.root)
+			if err = f.mkdir(ctx, f.root); err != nil {
+				return err
+			}
+			if t, err = f.api.ResolvePath(f.root); err != nil {
+				return err
+			}
+		} else {
 			return err
 		}
 	}
+	fs.Debugf(f, "root resolved: %s %v %v %T", f.root, t, err, err)
 	var (
 		parent = t
 		body   = VaultDepositApiRegisterDepositJSONRequestBody{}
 	)
+	fs.Debugf(f, "request deposit: parent was %v", parent)
 	switch {
 	case parent.NodeType == "COLLECTION":
 		c, err := f.api.TreeNodeToCollection(parent)
@@ -299,13 +309,16 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 	default:
 		return ErrCannotCopyToRoot
 	}
+	fs.Debugf(f, "register, sending body: %+v", body)
 	resp, err := f.depositsV2Client.VaultDepositApiRegisterDepositWithResponse(ctx, body)
 	if err != nil {
 		return err
 	}
-	if resp.HTTPResponse.StatusCode != 200 {
-		return fmt.Errorf("deposits/v2 registratration returned: %v", resp.HTTPResponse.StatusCode)
+	if resp.StatusCode() != 200 {
+		return fmt.Errorf("deposits/v2 registration returned: %v", resp.HTTPResponse.StatusCode)
 	}
+	fs.Debugf(f, "resp.Body: %v", string(resp.Body)) // seems like a login page, request editors?
+	fs.Debugf(f, "resp.JSON200: %v", resp.JSON200)
 	f.inflightDepositID = resp.JSON200.DepositId
 	if f.inflightDepositID == 0 {
 		return ErrMissingDepositIdentifier
@@ -368,6 +381,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		if filename, err = iotemp.TempFileFromReader(in); err != nil {
 			return nil, err
 		}
+		fs.Debugf(f, "object does not support size, spooled to temp file: %v", filename)
 		fi, err := os.Stat(filename)
 		if err != nil {
 			return nil, err
@@ -377,7 +391,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		if err != nil {
 			return nil, err
 		}
-		in = f // breaks "accounting"
+		in = f // breaks "accounting", does it affect anything?
 		defer func() {
 			_ = f.Close()
 			_ = os.Remove(filename)
@@ -386,9 +400,10 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		objectSize = int(src.Size())
 	}
 	// Need to get total size, and total number of chunks.
-	flowTotalSize := objectSize
-	flowTotalChunks := int(math.Ceil(float64(flowTotalSize) / float64(f.opt.ChunkSize)))
-
+	var (
+		flowTotalSize   = objectSize
+		flowTotalChunks = int(math.Ceil(float64(flowTotalSize) / float64(f.opt.ChunkSize)))
+	)
 	for i := 1; i <= flowTotalChunks; i++ {
 		fs.Debugf(f, "uploading chunk %d/%d ...", i, flowTotalChunks)
 		var (
@@ -420,7 +435,18 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			File:                 fi,
 		}
 		fs.Debugf(f, "VaultDepositApiSendChunkMultipartBody: %v", chunkBody)
+		b, err := json.Marshal(chunkBody)
+		if err != nil {
+			return nil, err
+		}
+		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBodyWithResponse(
+			ctx, "multipart/form-data", bytes.NewReader(b))
+		if err != nil {
+			return nil, err
+		}
+		fs.Debugf(f, "send chunk, got: %v", resp.StatusCode())
 	}
+	fs.Debugf(f, "chunk upload complete")
 
 	// TODO
 	// start sending chunks
