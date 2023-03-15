@@ -3,18 +3,24 @@
 package v2
 
 import (
+	"bytes"
 	"context"
+	"crypto/md5"
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/url"
+	"os"
 	"path"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
+	openapi_types "github.com/deepmap/oapi-codegen/pkg/types"
 	"github.com/rclone/rclone/backend/vault/api"
+	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
 	"github.com/rclone/rclone/backend/vault/pathutil"
 	"github.com/rclone/rclone/fs"
@@ -36,11 +42,14 @@ const (
 	defaultUploadChunkSize    = 1 << 24 // 16M
 	defaultMaxParallelChunks  = 2
 	defaultMaxParallelUploads = 2
+	flowIdentifierPrefix      = "rclone-vault-flow"
 )
 
 var (
-	ErrInvalidPath     = errors.New("invalid path")
-	ErrVersionMismatch = errors.New("api version mismatch")
+	ErrCannotCopyToRoot         = errors.New("copying files to root is not supported in vault")
+	ErrInvalidPath              = errors.New("invalid path")
+	ErrVersionMismatch          = errors.New("api version mismatch")
+	ErrMissingDepositIdentifier = errors.New("missing deposit identifier")
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -123,17 +132,17 @@ func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
 // Fs is the main Vault filesystem. Most operations are accessed through the
 // api.
 type Fs struct {
-	name             string
-	root             string
-	opt              Options              // vault options
-	api              *oapi.CompatAPI      // compat api, wrapper around oapi, exposing legacy methods
-	depositsV2Client *ClientWithResponses // v2 deposits API
-	features         *fs.Features         // optional features
+	name     string
+	root     string
+	opt      Options         // vault options
+	api      *oapi.CompatAPI // compat api, wrapper around oapi, exposing legacy methods
+	features *fs.Features    // optional features
 	// On a first put, we are registering a deposit and retrieving a deposit
 	// id. Any subsequent upload will be associated with that deposit id. On
 	// shutdown, we send a finalize signal.
+	depositsV2Client  *ClientWithResponses // v2 deposits API
 	mu                sync.Mutex
-	inflightDepositID string // inflight deposit id, empty if none inflight
+	inflightDepositID int // inflight deposit id, empty if none inflight
 }
 
 // Fs Info
@@ -255,22 +264,165 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
+// requestDeposit starts a new deposit. If a deposit is already inflight, this
+// method does nothing.
+func (f *Fs) requestDeposit(ctx context.Context) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.inflightDepositID != 0 {
+		return nil
+	}
+	t, err := f.api.ResolvePath(f.root)
+	if err != fs.ErrorObjectNotFound {
+		if err = f.mkdir(ctx, f.root); err != nil {
+			return err
+		}
+		if t, err = f.api.ResolvePath(f.root); err != nil {
+			return err
+		}
+	}
+	var (
+		parent = t
+		body   = VaultDepositApiRegisterDepositJSONRequestBody{}
+	)
+	switch {
+	case parent.NodeType == "COLLECTION":
+		c, err := f.api.TreeNodeToCollection(parent)
+		if err != nil {
+			return fmt.Errorf("failed to resolve treenode to collection: %w", err)
+		}
+		cid := int(c.Identifier())
+		body.CollectionId = &cid
+	case parent.NodeType == "FOLDER":
+		pid := int(parent.ID)
+		body.ParentNodeId = &pid
+	default:
+		return ErrCannotCopyToRoot
+	}
+	resp, err := f.depositsV2Client.VaultDepositApiRegisterDepositWithResponse(ctx, body)
+	if err != nil {
+		return err
+	}
+	if resp.HTTPResponse.StatusCode != 200 {
+		return fmt.Errorf("deposits/v2 registratration returned: %v", resp.HTTPResponse.StatusCode)
+	}
+	f.inflightDepositID = resp.JSON200.DepositId
+	if f.inflightDepositID == 0 {
+		return ErrMissingDepositIdentifier
+	}
+	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
+	return nil
+}
+
 // Put uploads a new object.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
 	if !pathutil.IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
-	f.mu.Lock()
-	if f.inflightDepositID == "" {
-		// This is the first request, so we obtain a deposit id.
-
+	if err := f.requestDeposit(ctx); err != nil {
+		return nil, err
 	}
+	// At this point, we do have an inflight deposit id.
+	//
+	// In v1, batcher.UploadItem took care of a single entity upload.
+	//
+	// Request parameters.
+	//
+	// # `GET`: presented as `GET` params
+	// # `POST` presented as multipart/form data
+	// {
+	//     depositId: int,
+	//     flowIdentifier: str,
+	//     flowFilename: str,
+	//     flowRelativePath: str,
+	//     flowChunkNumber: int,
+	//     flowChunkSize: int,
+	//     flowCurrentChunkSize: int,
+	//     flowTotalSize: int,
+	//     flowTotalChunks: int,
+	//     flowMimetype: str,
+	//     # ISO8601 format
+	//     flowUserMtime: str,
+	//     # required for POST
+	//     file: typing.Optional[<byte stream>],
+	// }
+	//
+	// (1) Get a flow identifier
+	var h = md5.New()
+	if _, err := io.WriteString(h, f.root); err != nil {
+		return nil, err
+	}
+	if _, err := io.WriteString(h, src.Remote()); err != nil {
+		return nil, err
+	}
+	flowIdentifier := fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil))
+	// (2) Determine, whether we can get the size of the object.
+	var (
+		filename   string
+		objectSize int
+		err        error
+	)
+	switch {
+	case src.Size() == -1: // https://is.gd/O7uQoq
+		if filename, err = iotemp.TempFileFromReader(in); err != nil {
+			return nil, err
+		}
+		fi, err := os.Stat(filename)
+		if err != nil {
+			return nil, err
+		}
+		objectSize = int(fi.Size())
+		f, err := os.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+		in = f // breaks "accounting"
+		defer func() {
+			_ = f.Close()
+			_ = os.Remove(filename)
+		}()
+	default:
+		objectSize = int(src.Size())
+	}
+	// Need to get total size, and total number of chunks.
+	flowTotalSize := objectSize
+	flowTotalChunks := int(math.Ceil(float64(flowTotalSize) / float64(f.opt.ChunkSize)))
+
+	for i := 1; i <= flowTotalChunks; i++ {
+		fs.Debugf(f, "uploading chunk %d/%d ...", i, flowTotalChunks)
+		var (
+			buf    bytes.Buffer
+			lr     = io.LimitReader(in, f.opt.ChunkSize)
+			n, err = io.Copy(&buf, lr) // n <= opt.ChunkSize
+		)
+		if err != nil {
+			return nil, err
+		}
+		// File to upload
+		var (
+			fi       openapi_types.File
+			filename = fmt.Sprintf("%v-%010d.chunk", flowIdentifier, i)
+		)
+		fi.InitFromBytes(buf.Bytes(), filename)
+		chunkBody := &VaultDepositApiSendChunkMultipartBody{
+			DepositId:            f.inflightDepositID,
+			FlowChunkNumber:      i,
+			FlowChunkSize:        int(f.opt.ChunkSize),
+			FlowCurrentChunkSize: int(n),
+			FlowFilename:         path.Base(src.Remote()),
+			FlowIdentifier:       flowIdentifierPrefix,
+			FlowRelativePath:     src.Remote(),
+			FlowTotalChunks:      flowTotalChunks,
+			FlowTotalSize:        flowTotalSize,
+			FlowMimetype:         "application/octet-stream", // TODO: improve this
+			FlowUserMtime:        time.Now(),
+			File:                 fi,
+		}
+		fs.Debugf(f, "VaultDepositApiSendChunkMultipartBody: %v", chunkBody)
+	}
+
 	// TODO
-	// check if we started a deposit already, if not start one
-	//
-	//     /deposits/v2/register
-	//
 	// start sending chunks
 	//
 	//     /deposits/v2/chunk
