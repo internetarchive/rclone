@@ -18,6 +18,7 @@ import (
 
 	"github.com/antchfx/htmlquery"
 	"github.com/rclone/rclone/backend/vault/api"
+	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/lib/rest"
 )
 
@@ -88,7 +89,7 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 	// NewClient wants the URL w/o the "/api" suffix by default.
 	client, err := NewClientWithResponses(stripped,
 		WithHTTPClient(capi.c),
-		WithRequestEditorFn(capi.intercept))
+		WithRequestEditorFn(capi.Intercept))
 	if err != nil {
 		return nil, err
 	}
@@ -96,8 +97,15 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 	return capi, nil
 }
 
-// intercept adds required headers to each request, namely a csrf token and referer.
-func (capi *CompatAPI) intercept(ctx context.Context, req *http.Request) error {
+// Client returns the http client, which will have a session cookie after login.
+func (capi *CompatAPI) Client() *http.Client {
+	return capi.c
+}
+
+// Intercept adds required headers to each request, namely a csrf token and referer.
+func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
+	fs.Debugf(capi, "api CSRF intercept")
+	// TODO: need to add cookie jar from capi
 	anyLink, err := url.JoinPath(capi.Endpoint, "users") // any valid path will do
 	if err != nil {
 		return err
@@ -221,6 +229,9 @@ func (capi *CompatAPI) Login() error {
 	if len(jar.Cookies(u)) < 2 {
 		msg := fmt.Sprintf("expected 2 cookies, got %v", len(jar.Cookies(u)))
 		return fmt.Errorf(msg)
+	}
+	for i, c := range capi.c.Jar.Cookies(u) {
+		fs.Debugf(capi, "cookie #%d: %v", i, c)
 	}
 	return nil
 }
