@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 )
 
 // DummyReader reads a fixed number of dummy bytes, e.g. dots; placeholder.
@@ -55,4 +56,20 @@ func TempFileFromReader(r io.Reader) (string, error) {
 		return "", err
 	}
 	return tf.Name(), nil
+}
+
+type MultipartFieldWriter struct {
+	W   multipart.Writer
+	err error
+}
+
+func (w *MultipartFieldWriter) WriteField(fieldname, value string) {
+	if w.err != nil {
+		return
+	}
+	w.err = w.W.WriteField(fieldname, value)
+}
+
+func (w *MultipartFieldWriter) Err() error {
+	return w.err
 }
