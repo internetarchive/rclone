@@ -12,6 +12,7 @@ import (
 	"io/ioutil"
 	"math"
 	"mime/multipart"
+	"net/http/httputil"
 	"net/textproto"
 	"net/url"
 	"os"
@@ -483,7 +484,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		_ = w.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
 		_ = w.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
 		_ = w.WriteField("flowMimetype", "application/octet-stream")
-		_ = w.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now()))
+		_ = w.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now().Format(time.RFC3339)))
 		fw, err := w.CreateFormFile("file", tmpf.Name())
 		if err != nil {
 			return nil, err
@@ -492,10 +493,22 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			return nil, err
 		}
 		w.Close()
-		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBodyWithResponse(
+		fs.Debugf(f, "%s", string(buf.Bytes()))
+		fs.Debugf(f, "content-type: %v", w.FormDataContentType())
+		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(
 			ctx, w.FormDataContentType(), &buf)
 		if err != nil {
 			return nil, err
+		}
+		if resp.StatusCode >= 400 {
+			fs.Debugf(f, "got %v", resp.Status)
+			b, err := httputil.DumpResponse(resp, true)
+			if err != nil {
+				return nil, err
+			}
+			fs.Debugf(f, string(b))
+		} else {
+			fs.Debugf(f, "upload done")
 		}
 
 		// VXEND
@@ -525,7 +538,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		// if err != nil {
 		// 	return nil, err
 		// }
-		fs.Debugf(f, "send chunk, got: %v", resp.StatusCode())
+		fs.Debugf(f, "send chunk, got: %v", resp.StatusCode)
 	}
 	fs.Debugf(f, "chunk upload complete")
 
