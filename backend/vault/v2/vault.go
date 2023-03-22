@@ -11,6 +11,7 @@ import (
 	"io"
 	"math"
 	"mime/multipart"
+	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
@@ -176,7 +177,7 @@ func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 // Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
 // SHA256 - but for large deposits, this would slow down uploads considerably.
 // So for now, we do not want to support any hash.
-func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
+func (f *Fs) Hashes() hash.Set { return hash.Set(hash.None) }
 
 // Features returns optional features.
 func (f *Fs) Features() *fs.Features { return f.features }
@@ -402,16 +403,26 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	for i := 1; i <= flowTotalChunks; i++ {
 		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", src.Remote(), i, flowTotalChunks)
 		var (
-			buf  bytes.Buffer                          // buffer for file data
-			lr   = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
-			wbuf = bytes.Buffer{}                      // buffer for multipart message
-			w    = multipart.NewWriter(&wbuf)          // multipart writer
+			buf      bytes.Buffer                          // buffer for file data
+			lr       = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
+			wbuf     = bytes.Buffer{}                      // buffer for multipart message
+			w        = multipart.NewWriter(&wbuf)          // multipart writer
+			mimeType = "application/octet-stream"          // file mime type
 		)
 		n, err := io.Copy(&buf, lr) // n <= opt.ChunkSize
 		if err != nil {
 			return nil, err
 		}
-		// (5a) write multipart fields
+		// (5a) on first chunk, try to find mime type
+		if i == 1 {
+			b := buf.Bytes()
+			if len(b) > 512 {
+				mimeType = http.DetectContentType(b[:512])
+			} else {
+				mimeType = http.DetectContentType(b)
+			}
+		}
+		// (5b) write multipart fields
 		mfw := &iotemp.MultipartFieldWriter{W: w}
 		mfw.WriteField("depositId", fmt.Sprintf("%v", f.inflightDepositID))
 		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", i))
@@ -422,12 +433,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		mfw.WriteField("flowRelativePath", src.Remote())
 		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
 		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
-		mfw.WriteField("flowMimetype", "application/octet-stream") // TODO: be more specific
-		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now().Format(time.RFC3339)))
+		mfw.WriteField("flowMimetype", mimeType)
+		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", src.ModTime(ctx).Format(time.RFC3339)))
 		if mfw.Err() != nil {
 			return nil, mfw.Err()
 		}
-		// (5b) write multipart file
+		// (5c) write multipart file
 		formFileName := fmt.Sprintf("%s-%016d", flowIdentifier, i)
 		fw, err := w.CreateFormFile("file", formFileName) // can we use a random file name?
 		if err != nil {
@@ -436,11 +447,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		if _, err := io.Copy(fw, &buf); err != nil {
 			return nil, err
 		}
-		// (5c) finalize multipart writer
+		// (5d) finalize multipart writer
 		if err := w.Close(); err != nil {
 			return nil, err
 		}
-		// (5d) send chunk
+		// (5e) send chunk
 		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
 		if err != nil {
 			return nil, err
