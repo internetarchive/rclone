@@ -9,11 +9,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"mime/multipart"
 	"net/http/httputil"
-	"net/textproto"
 	"net/url"
 	"os"
 	"path"
@@ -22,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	openapi_types "github.com/deepmap/oapi-codegen/pkg/types"
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
@@ -273,8 +270,8 @@ func (f *Fs) PutStream(ctx context.Context, in io.Reader, src fs.ObjectInfo, opt
 	return f.Put(ctx, in, src, options...)
 }
 
-// requestDeposit starts a new deposit. If a deposit is already inflight, this
-// method does nothing.
+// requestDeposit attempts to start a new deposit. If a deposit is already
+// inflight, this function returns immediately, without any error.
 func (f *Fs) requestDeposit(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -315,22 +312,31 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 	default:
 		return ErrCannotCopyToRoot
 	}
-	fs.Debugf(f, "register, sending body: %+v", body)
 	resp, err := f.depositsV2Client.VaultDepositApiRegisterDepositWithResponse(ctx, body)
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode() != 200 {
-		return fmt.Errorf("deposits/v2 registration returned: %v", resp.HTTPResponse.StatusCode)
+		return fmt.Errorf("deposits/v2 registration failed with: %s", resp.HTTPResponse.Status)
 	}
-	fs.Debugf(f, "resp.Body: %v", string(resp.Body)) // seems like a login page, request editors?
-	fs.Debugf(f, "resp.JSON200: %v", resp.JSON200)
-	f.inflightDepositID = resp.JSON200.DepositId
-	if f.inflightDepositID == 0 {
+	if resp.JSON200.DepositId == 0 {
 		return ErrMissingDepositIdentifier
 	}
+	f.inflightDepositID = resp.JSON200.DepositId
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
 	return nil
+}
+
+// getFlowIdentifier returns a flow identifier for an object.
+func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (string, error) {
+	var h = md5.New()
+	if _, err := io.WriteString(h, f.root); err != nil {
+		return nil, err
+	}
+	if _, err := io.WriteString(h, src.Remote()); err != nil {
+		return nil, err
+	}
+	return fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil)), nil
 }
 
 // Put uploads a new object, using v2 deposits. A new deposit is registered,
@@ -341,45 +347,16 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if !pathutil.IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
-	// TODO: could also use "sync.Once" to make it more clear.
+	// (1) Start a deposit, if not already started.
 	if err := f.requestDeposit(ctx); err != nil {
 		return nil, err
 	}
-	// At this point, we do have an inflight deposit id.
-	//
-	// In v1, batcher.UploadItem took care of a single entity upload.
-	//
-	// Request parameters.
-	//
-	// # `GET`: presented as `GET` params
-	// # `POST` presented as multipart/form data
-	// {
-	//     depositId: int,
-	//     flowIdentifier: str,
-	//     flowFilename: str,
-	//     flowRelativePath: str,
-	//     flowChunkNumber: int,
-	//     flowChunkSize: int,
-	//     flowCurrentChunkSize: int,
-	//     flowTotalSize: int,
-	//     flowTotalChunks: int,
-	//     flowMimetype: str,
-	//     # ISO8601 format
-	//     flowUserMtime: str,
-	//     # required for POST
-	//     file: typing.Optional[<byte stream>],
-	// }
-	//
-	// (1) Get a flow identifier
-	var h = md5.New()
-	if _, err := io.WriteString(h, f.root); err != nil {
+	// (2) Get a flow identifier for file.
+	flowIdentifier, err := f.getFlowIdentifier(src)
+	if err != nil {
 		return nil, err
 	}
-	if _, err := io.WriteString(h, src.Remote()); err != nil {
-		return nil, err
-	}
-	flowIdentifier := fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil))
-	// (2) Determine, whether we can get the size of the object.
+	// (3) Determine, whether we can get the size of the object.
 	var (
 		filename   string
 		objectSize int
@@ -408,100 +385,64 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	default:
 		objectSize = int(src.Size())
 	}
-	// Need to get total size, and total number of chunks.
+	// (4) Need to get total size, and total number of chunks.
 	var (
 		flowTotalSize   = objectSize
 		flowTotalChunks = int(math.Ceil(float64(flowTotalSize) / float64(f.opt.ChunkSize)))
 	)
+	// (5) Upload file in chunks. TODO: this can be parallelized as well.
+	// We're loading a small (order 1M) chunk into memory, so we get the
+	// correct total size of the chunk.
 	for i := 1; i <= flowTotalChunks; i++ {
-		fs.Debugf(f, "uploading chunk %d/%d ...", i, flowTotalChunks)
+		fs.Debugf(f, "[>>>] uploading chunk %d/%d", i, flowTotalChunks)
 		var (
-			buf    bytes.Buffer
-			lr     = io.LimitReader(in, f.opt.ChunkSize)
-			n, err = io.Copy(&buf, lr) // n <= opt.ChunkSize
+			buf  bytes.Buffer                          // buffer for file data
+			lr   = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
+			wbuf = bytes.Buffer{}                      // buffer for multipart message
+			w    = multipart.NewWriter(&wbuf)          // multipart writer
 		)
+		n, err = io.Copy(&buf, lr) // n <= opt.ChunkSize
 		if err != nil {
 			return nil, err
 		}
-		// File to upload; TODO: multipart; formdata
-		var (
-			fi openapi_types.File
-			// filename = fmt.Sprintf("%v-%010d.chunk", flowIdentifier, i)
-		)
-		// TODO: fix upload
-		// fi.InitFromBytes(buf.Bytes(), filename)
-
-		// tmpf chunk still needed?
-		tmpf, err := ioutil.TempFile("", "rclone-chunk-*")
+		// (5a) write multipart fields
+		mfw := &iotemp.MultipartFieldWriter{W: w}
+		mfw.WriteField("depositId", fmt.Sprintf("%v", f.inflightDepositID))
+		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", i))
+		mfw.WriteField("flowChunkSize", fmt.Sprintf("%v", f.opt.ChunkSize))
+		mfw.WriteField("flowCurrentChunkSize", fmt.Sprintf("%v", n))
+		mfw.WriteField("flowFilename", path.Base(src.Remote()))
+		mfw.WriteField("flowIdentifier", flowIdentifier)
+		mfw.WriteField("flowRelativePath", src.Remote())
+		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
+		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
+		mfw.WriteField("flowMimetype", "application/octet-stream")
+		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now().Format(time.RFC3339)))
+		if mfw.Err() != nil {
+			return nil, mfw.Err()
+		}
+		// (5b) write multipart file
+		formFileName := fmt.Sprintf("%s-%016d", flowIdentifier, i)
+		fw, err := w.CreateFormFile("file", formFileName) // can we use a random file name?
 		if err != nil {
 			return nil, err
 		}
-		n, err = io.Copy(tmpf, &buf)
-		if err != nil {
+		if _, err := io.Copy(fw, &buf); err != nil {
 			return nil, err
 		}
-		defer func() {
-			_ = tmpf.Close()
-			_ = os.Remove(tmpf.Name())
-		}()
-		fh := &multipart.FileHeader{
-			Filename: tmpf.Name(),
-			Size:     n,
-			Header:   textproto.MIMEHeader{"Content-Type": {"application/octet-stream"}},
-		}
-		fi.InitFromMultipart(fh)
-		fs.Debugf(f, "api file: %#v", fi)
-		// end-of-experiment
-
-		// TODO: Try upload more manually?
-		// body := &bytes.Buffer{}
-		// writer := multipart.NewWriter(body)
-		// tmpf, err := ioutil.TempFile("", "rclone-chunk-*")
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// defer func() {
-		// 	_ = tmpf.Close()
-		// 	_ = os.Remove(tmpf.Name())
-		// }()
-		// part, _ := writer.CreateFormFile("file", tmpf.Name())
-		// _, err := io.Copy(part, tmpf)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// _ = writer.Close()
-
-		// VX
-		buf = bytes.Buffer{}
-		w := multipart.NewWriter(&buf)
-		_ = w.WriteField("depositId", fmt.Sprintf("%v", f.inflightDepositID))
-		_ = w.WriteField("flowChunkNumber", fmt.Sprintf("%v", i))
-		_ = w.WriteField("flowChunkSize", fmt.Sprintf("%v", f.opt.ChunkSize))
-		_ = w.WriteField("flowCurrentChunkSize", fmt.Sprintf("%v", n))
-		_ = w.WriteField("flowFilename", path.Base(src.Remote()))
-		_ = w.WriteField("flowIdentifier", flowIdentifier)
-		_ = w.WriteField("flowRelativePath", src.Remote())
-		_ = w.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
-		_ = w.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
-		_ = w.WriteField("flowMimetype", "application/octet-stream")
-		_ = w.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now().Format(time.RFC3339)))
-		fw, err := w.CreateFormFile("file", tmpf.Name())
-		if err != nil {
+		// (5c) finalize multipart writer
+		if err := w.Close(); err != nil {
 			return nil, err
 		}
-		if _, err := io.Copy(fw, tmpf); err != nil {
-			return nil, err
-		}
-		w.Close()
-		fs.Debugf(f, "%s", string(buf.Bytes()))
+		fs.Debugf(f, "%s", string(wbuf.Bytes()))
 		fs.Debugf(f, "content-type: %v", w.FormDataContentType())
-		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(
-			ctx, w.FormDataContentType(), &buf)
+		// (5d) send chunk
+		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
 		if err != nil {
 			return nil, err
 		}
 		if resp.StatusCode >= 400 {
-			fs.Debugf(f, "got %v", resp.Status)
+			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
 			b, err := httputil.DumpResponse(resp, true)
 			if err != nil {
 				return nil, err
@@ -510,51 +451,9 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		} else {
 			fs.Debugf(f, "upload done")
 		}
-
-		// VXEND
-
-		// chunkBody := &VaultDepositApiSendChunkMultipartBody{
-		// 	DepositId:            f.inflightDepositID,
-		// 	FlowChunkNumber:      i,
-		// 	FlowChunkSize:        int(f.opt.ChunkSize),
-		// 	FlowCurrentChunkSize: int(n),
-		// 	FlowFilename:         path.Base(src.Remote()),
-		// 	FlowIdentifier:       flowIdentifier,
-		// 	FlowRelativePath:     src.Remote(),
-		// 	FlowTotalChunks:      flowTotalChunks,
-		// 	FlowTotalSize:        flowTotalSize,
-		// 	FlowMimetype:         "application/octet-stream", // TODO: improve this
-		// 	FlowUserMtime:        time.Now(),
-		// 	File:                 fi,
-		// }
-		// fs.Debugf(f, "VaultDepositApiSendChunkMultipartBody: %v", chunkBody)
-		// b, err := json.Marshal(chunkBody)
-		// if err != nil {
-		// 	return nil, err
-		// }
-		// TODO: need to add request editors (here, or upon login)
-		// resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBodyWithResponse(
-		// 	ctx, "multipart/form-data", bytes.NewReader(b))
-		// if err != nil {
-		// 	return nil, err
-		// }
-		fs.Debugf(f, "send chunk, got: %v", resp.StatusCode)
+		fs.Debugf(f, "sent chunk, got: %v", resp.StatusCode)
 	}
-	fs.Debugf(f, "chunk upload complete")
-
-	// TODO
-	// start sending chunks
-	//
-	//     /deposits/v2/chunk
-	//
-	// finalize
-	//
-	//     /deposits/v2/finalize
-	//
-	// var (
-	// 	filename string
-	// 	err      error
-	// )
+	fs.Debugf(f, "all chunks upload complete")
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
