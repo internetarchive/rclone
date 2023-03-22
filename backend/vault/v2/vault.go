@@ -1,5 +1,5 @@
 // Package v2 implements changes proposed in MR362, namely v2 deposit API
-// without treenode allocation.
+// without treenode pre-allocation.
 package v2
 
 import (
@@ -176,7 +176,7 @@ func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 // Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
 // SHA256 - but for large deposits, this would slow down uploads considerably.
 // So for now, we do not want to support any hash.
-func (f *Fs) Hashes() hash.Set { return hash.Set(hash.None) }
+func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
 
 // Features returns optional features.
 func (f *Fs) Features() *fs.Features { return f.features }
@@ -771,11 +771,18 @@ func (o *Object) ModTime(ctx context.Context) time.Time {
 	if o == nil || o.treeNode == nil {
 		return epoch
 	}
-	const layout = "January 2, 2006 15:04:05 UTC"
-	if t, err := time.Parse(layout, o.treeNode.ModifiedAt); err == nil {
-		return t
+	layouts := []string{
+		"January 2, 2006 15:04:05 UTC",
+		"2006-01-02T15:04:05.99Z",
+		"2006-01-02T15:04:05.999999Z",
 	}
-	return epoch
+	for _, l := range layouts {
+		if t, err := time.Parse(l, o.treeNode.ModifiedAt); err == nil {
+			return t
+		}
+	}
+	fs.Debugf(o, "failed to parse modification time layout: %v, falling back to epoch", o.treeNode.ModifiedAt)
+	return epoch // TODO: that may cause unnecessary uploads, if T differs too much
 }
 func (o *Object) Size() int64 {
 	return o.treeNode.Size()
