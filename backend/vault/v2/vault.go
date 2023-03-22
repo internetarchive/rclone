@@ -51,6 +51,7 @@ var (
 	ErrInvalidPath              = errors.New("invalid path")
 	ErrVersionMismatch          = errors.New("api version mismatch")
 	ErrMissingDepositIdentifier = errors.New("missing deposit identifier")
+	ErrInvalidEndpoint          = errors.New("invalid endpoint")
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -131,8 +132,14 @@ func (opt Options) EndpointNormalized() string {
 
 // EndpointNormalizedDepositsV2 returns the deposits V2 endpoint. TODO(martin): move fixed value out.
 func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
-	// return url.JoinPath(opt.EndpointNormalized(), "deposits/v2")
-	return "http://localhost:8000/", nil
+	u := opt.EndpointNormalized()
+	if len(u) < len("http://a.to") {
+		return "", ErrInvalidEndpoint
+	}
+	if strings.HasSuffix(u, "/api") {
+		u = u[:len(u)-4]
+	}
+	return u, nil
 }
 
 // Fs is the main Vault filesystem. Most operations are accessed through the
@@ -328,13 +335,13 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 }
 
 // getFlowIdentifier returns a flow identifier for an object.
-func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (string, error) {
+func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (s string, err error) {
 	var h = md5.New()
-	if _, err := io.WriteString(h, f.root); err != nil {
-		return nil, err
+	if _, err = io.WriteString(h, f.root); err != nil {
+		return
 	}
-	if _, err := io.WriteString(h, src.Remote()); err != nil {
-		return nil, err
+	if _, err = io.WriteString(h, src.Remote()); err != nil {
+		return
 	}
 	return fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil)), nil
 }
@@ -360,7 +367,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	var (
 		filename   string
 		objectSize int
-		err        error
 	)
 	switch {
 	case src.Size() == -1: // https://is.gd/O7uQoq
@@ -394,14 +400,14 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	// We're loading a small (order 1M) chunk into memory, so we get the
 	// correct total size of the chunk.
 	for i := 1; i <= flowTotalChunks; i++ {
-		fs.Debugf(f, "[>>>] uploading chunk %d/%d", i, flowTotalChunks)
+		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", src.Remote(), i, flowTotalChunks)
 		var (
 			buf  bytes.Buffer                          // buffer for file data
 			lr   = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
 			wbuf = bytes.Buffer{}                      // buffer for multipart message
 			w    = multipart.NewWriter(&wbuf)          // multipart writer
 		)
-		n, err = io.Copy(&buf, lr) // n <= opt.ChunkSize
+		n, err := io.Copy(&buf, lr) // n <= opt.ChunkSize
 		if err != nil {
 			return nil, err
 		}
@@ -416,7 +422,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		mfw.WriteField("flowRelativePath", src.Remote())
 		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
 		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
-		mfw.WriteField("flowMimetype", "application/octet-stream")
+		mfw.WriteField("flowMimetype", "application/octet-stream") // TODO: be more specific
 		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", time.Now().Format(time.RFC3339)))
 		if mfw.Err() != nil {
 			return nil, mfw.Err()
@@ -434,8 +440,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		if err := w.Close(); err != nil {
 			return nil, err
 		}
-		fs.Debugf(f, "%s", string(wbuf.Bytes()))
-		fs.Debugf(f, "content-type: %v", w.FormDataContentType())
 		// (5d) send chunk
 		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
 		if err != nil {
@@ -448,10 +452,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 				return nil, err
 			}
 			fs.Debugf(f, string(b))
-		} else {
-			fs.Debugf(f, "upload done")
 		}
-		fs.Debugf(f, "sent chunk, got: %v", resp.StatusCode)
 	}
 	fs.Debugf(f, "all chunks upload complete")
 	return &Object{
@@ -685,8 +686,9 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 
 // Shutdown sends finalize signal.
 func (f *Fs) Shutdown(ctx context.Context) error {
-	fs.Debugf(f, "shutdown")
-	fs.Debugf(f, "TODO: send finalize")
+	fs.Debugf(f, "finalizing deposit")
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if f.inflightDepositID == 0 {
 		// nothing to be done
 		return nil
@@ -701,6 +703,8 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	if resp.StatusCode() != 200 {
 		return fmt.Errorf("finalize got: %v", resp.StatusCode())
 	}
+	fs.Debugf(f, "finalize done")
+	f.inflightDepositID = 0
 	return nil
 }
 

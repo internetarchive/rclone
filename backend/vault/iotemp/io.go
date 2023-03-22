@@ -59,7 +59,7 @@ func TempFileFromReader(r io.Reader) (string, error) {
 }
 
 type MultipartFieldWriter struct {
-	W   multipart.Writer
+	W   *multipart.Writer
 	err error
 }
 
