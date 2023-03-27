@@ -58,6 +58,7 @@ func TempFileFromReader(r io.Reader) (string, error) {
 	return tf.Name(), nil
 }
 
+// MultipartFieldWriter retains any error that may have occured.
 type MultipartFieldWriter struct {
 	W   *multipart.Writer
 	err error
