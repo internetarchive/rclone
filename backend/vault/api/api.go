@@ -464,7 +464,9 @@ func (api *API) RegisterDeposit(ctx context.Context, rdr *RegisterDepositRequest
 	var depositResp RegisterDepositResponse
 	resp, err := api.client.CallJSON(ctx, &opts, rdr, &depositResp)
 	if err != nil {
-		if resp.StatusCode == 500 {
+		// Refs. WT-1841, "It will return resp if at all possible, even if err
+		// is set", but it may be nil, still.
+		if resp != nil && resp.StatusCode == 500 {
 			// This may happen, if after a successful, but not yet assembled
 			// deposit the same (e.g. sync) command is executed again. This
 			// leads to various integrity errors. However, once the files are
