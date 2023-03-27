@@ -64,6 +64,8 @@ type MultipartFieldWriter struct {
 	err error
 }
 
+// WriteField calls multipart.Writer WriteField if no error occured in the
+// past. If any previous write failed, this is a noop.
 func (w *MultipartFieldWriter) WriteField(fieldname, value string) {
 	if w.err != nil {
 		return
@@ -71,6 +73,7 @@ func (w *MultipartFieldWriter) WriteField(fieldname, value string) {
 	w.err = w.W.WriteField(fieldname, value)
 }
 
+// Err returns the first error that happened during a call to WriteField.
 func (w *MultipartFieldWriter) Err() error {
 	return w.err
 }

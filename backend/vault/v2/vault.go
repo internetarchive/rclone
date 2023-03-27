@@ -938,6 +938,3 @@ var (
 	_ fs.IDer         = (*Object)(nil)
 	_ fs.Directory    = (*Dir)(nil)
 )
-
-// Experimental functions
-// ----------------------
