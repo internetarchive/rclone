@@ -131,7 +131,7 @@ func (opt Options) EndpointNormalized() string {
 	return strings.TrimRight(opt.Endpoint, "/")
 }
 
-// EndpointNormalizedDepositsV2 returns the deposits V2 endpoint. TODO(martin): move fixed value out.
+// EndpointNormalizedDepositsV2 returns the deposits V2 endpoint.
 func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
 	u := opt.EndpointNormalized()
 	if len(u) < len("http://a.to") {
@@ -155,8 +155,8 @@ type Fs struct {
 	// id. Any subsequent upload will be associated with that deposit id. On
 	// shutdown, we send a finalize signal.
 	depositsV2Client  *ClientWithResponses // v2 deposits API
-	mu                sync.Mutex
-	inflightDepositID int // inflight deposit id, empty if none inflight
+	mu                sync.Mutex           // locks inflightDepositID
+	inflightDepositID int                  // inflight deposit id, empty if none inflight
 }
 
 // Fs Info
@@ -355,7 +355,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if !pathutil.IsValidPath(src.Remote()) {
 		return nil, ErrInvalidPath
 	}
-	// (1) Start a deposit, if not already started.
+	// (1) Start a deposit, if not already started. TODO: support resuming a deposit.
 	if err := f.requestDeposit(ctx); err != nil {
 		return nil, err
 	}
@@ -403,24 +403,22 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	for i := 1; i <= flowTotalChunks; i++ {
 		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", src.Remote(), i, flowTotalChunks)
 		var (
-			buf      bytes.Buffer                          // buffer for file data
+			buf      bytes.Buffer                          // buffer for file data (we need the actual size at upload time)
 			lr       = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
 			wbuf     = bytes.Buffer{}                      // buffer for multipart message
 			w        = multipart.NewWriter(&wbuf)          // multipart writer
 			mimeType = "application/octet-stream"          // file mime type
+			n        int64                                 // actual length of this chunk
+			err      error                                 // any error
+			fw       io.Writer                             // formfile writer
+			resp     *http.Response                        // deposit API response
 		)
-		n, err := io.Copy(&buf, lr) // n <= opt.ChunkSize
-		if err != nil {
+		if n, err = io.Copy(&buf, lr); err != nil { // n <= opt.ChunkSize
 			return nil, err
 		}
 		// (5a) on first chunk, try to find mime type
 		if i == 1 {
-			b := buf.Bytes()
-			if len(b) > 512 {
-				mimeType = http.DetectContentType(b[:512])
-			} else {
-				mimeType = http.DetectContentType(b)
-			}
+			mimeType = http.DetectContentType(buf.Bytes())
 		}
 		// (5b) write multipart fields
 		mfw := &iotemp.MultipartFieldWriter{W: w}
@@ -435,13 +433,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
 		mfw.WriteField("flowMimetype", mimeType)
 		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", src.ModTime(ctx).Format(time.RFC3339)))
-		if mfw.Err() != nil {
-			return nil, mfw.Err()
+		if err := mfw.Err(); err != nil {
+			return nil, err
 		}
 		// (5c) write multipart file
 		formFileName := fmt.Sprintf("%s-%016d", flowIdentifier, i)
-		fw, err := w.CreateFormFile("file", formFileName) // can we use a random file name?
-		if err != nil {
+		if fw, err = w.CreateFormFile("file", formFileName); err != nil { // can we use a random file name?
 			return nil, err
 		}
 		if _, err := io.Copy(fw, &buf); err != nil {
@@ -452,8 +449,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			return nil, err
 		}
 		// (5e) send chunk
-		resp, err := f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
-		if err != nil {
+		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
 			return nil, err
 		}
 		if resp.StatusCode >= 400 {
@@ -465,7 +461,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			fs.Debugf(f, string(b))
 		}
 	}
-	fs.Debugf(f, "all chunks upload complete")
+	fs.Debugf(f, "chunk upload complete")
 	return &Object{
 		fs:     f,
 		remote: src.Remote(),
