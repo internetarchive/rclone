@@ -15,7 +15,7 @@ import (
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
 	"github.com/rclone/rclone/backend/vault/pathutil"
-	v2 "github.com/rclone/rclone/backend/vault/v2"
+	v2 "github.com/rclone/rclone/backend/vault/v2" // deposits/v2
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
