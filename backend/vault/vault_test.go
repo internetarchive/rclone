@@ -14,6 +14,12 @@ import (
 	"github.com/rclone/rclone/fstest/fstests"
 )
 
+const (
+	testEndpoint = "http://localhost:8000/api"
+	testUsername = "admin"
+	testPassword = "admin"
+)
+
 // TestIntegration runs integration tests against the remote. This is a set of
 // test supplied by rclone, of which we still fail a lot.
 //
@@ -37,19 +43,26 @@ func TestIntegration(t *testing.T) {
 	})
 }
 
-func MustLogin(t *testing.T) *oapi.CompatAPI {
-	api, err := oapi.New("http://localhost:8000/api", "admin", "admin")
+// randomName returns a name that can be used for files, directories and
+// collections.
+func randomName(tag string) string {
+	return fmt.Sprintf("%s-%024d", tag, rand.Int63())
+}
+
+// mustLogin returns an authenticated client.
+func mustLogin(t *testing.T) *oapi.CompatAPI {
+	api, err := oapi.New(testEndpoint, testUsername, testPassword)
 	if err != nil {
 		t.Fatalf("login failed: %v", err)
 	}
-	err = api.Login()
-	if err != nil {
+	if err = api.Login(); err != nil {
 		t.Fatalf("login failed: %v", err)
 	}
 	return api
 }
 
-func MustCollection(t *testing.T, api *oapi.CompatAPI, name string) *api.Collection {
+// mustCollection creates and returns a collection with a given name.
+func mustCollection(t *testing.T, api *oapi.CompatAPI, name string) *api.Collection {
 	ctx := context.Background()
 	err := api.CreateCollection(ctx, name)
 	if err != nil {
@@ -68,16 +81,7 @@ func MustCollection(t *testing.T, api *oapi.CompatAPI, name string) *api.Collect
 	return result[0]
 }
 
-// TestCreateCollection tests collection creation.
-func TestCreateCollection(t *testing.T) {
-	var (
-		api  = MustLogin(t)
-		name = fmt.Sprintf("test-create-collection-%024d", rand.Int63())
-	)
-	_ = MustCollection(t, api, name)
-}
-
-func MustTreeNodeForCollection(t *testing.T, api *oapi.CompatAPI, c *api.Collection) *api.TreeNode {
+func mustTreeNodeForCollection(t *testing.T, api *oapi.CompatAPI, c *api.Collection) *api.TreeNode {
 	vs := url.Values{}
 	vs.Set("id", fmt.Sprintf("%d", c.TreeNodeIdentifier()))
 	t.Logf("finding treenode: %v", c.TreeNodeIdentifier())
@@ -91,25 +95,35 @@ func MustTreeNodeForCollection(t *testing.T, api *oapi.CompatAPI, c *api.Collect
 	return ts[0]
 }
 
+// TestCreateCollection tests collection creation.
+func TestCreateCollection(t *testing.T) {
+	var (
+		api  = mustLogin(t)
+		name = randomName("test-collection")
+	)
+	_ = mustCollection(t, api, name)
+	t.Logf("created collection: %v", name)
+}
+
 func TestCreateFolder(t *testing.T) {
 	var (
-		api        = MustLogin(t)
-		ctx        = context.Background()
-		name       = fmt.Sprintf("test-create-collection-%024d", rand.Int63())
-		collection = MustCollection(t, api, name)
-		treeNode   = MustTreeNodeForCollection(t, api, collection)
-		folder     = fmt.Sprintf("test-folder-%024d", rand.Int63())
+		ctx            = context.Background()
+		api            = mustLogin(t)
+		collectionName = randomName("test-collection")
+		collection     = mustCollection(t, api, collectionName)
+		treeNode       = mustTreeNodeForCollection(t, api, collection)
+		folderName     = randomName("test-folder")
 	)
-	err := api.CreateFolder(ctx, treeNode, folder)
+	err := api.CreateFolder(ctx, treeNode, folderName)
 	if err != nil {
 		t.Fatalf("failed to create folder: %v", err)
 	}
-	t.Logf("created collection and folder")
+	t.Logf("created collection and folder: %v/%v", collectionName, folderName)
 }
 
 func TestRegisterDeposit(t *testing.T) {
 	var (
-		vapi = MustLogin(t)
+		vapi = mustLogin(t)
 		ctx  = context.Background()
 	)
 	// errCases are cases that should yield an api.Error of sorts
@@ -125,6 +139,24 @@ func TestRegisterDeposit(t *testing.T) {
 			"incomplete, collection id only",
 			&api.RegisterDepositRequest{CollectionID: 123},
 		},
+		{
+			"invalid collection ids",
+			&api.RegisterDepositRequest{
+				CollectionID: 1234567,
+				Files:        nil,
+				ParentNodeID: 1,
+				TotalSize:    0,
+			},
+		},
+		{
+			"invalid collection ids",
+			&api.RegisterDepositRequest{
+				CollectionID: 1234567,
+				Files:        nil,
+				ParentNodeID: 1,
+				TotalSize:    0,
+			},
+		},
 	}
 	// Test various incomplete register deposit requests.
 	var apiError *api.Error
@@ -134,8 +166,22 @@ func TestRegisterDeposit(t *testing.T) {
 			t.Fatalf("register failed [%s]: got %v, want an api error", c.help, err)
 		}
 	}
-
+	// var okCases = []struct {
+	// 	help string
+	// 	rdr  *api.RegisterDepositRequest
+	// }{
+	// 	{
+	// 		"complete request",
+	// 		&api.RegisterDepositRequest{
+	// 			CollectionID: 1,
+	// 			Files:        nil,
+	// 			ParentNodeID: 1,
+	// 			TotalSize:    0,
+	// 		},
+	// 	},
+	// }
 }
+
 func TestDeposit(t *testing.T)      {}
 func TestFileRename(t *testing.T)   {}
 func TestFileMove(t *testing.T)     {}
