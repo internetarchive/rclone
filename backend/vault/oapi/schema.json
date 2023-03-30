@@ -9,8 +9,24 @@
         "/api/collections/": {
             "get": {
                 "operationId": "collections_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "in": "query",
                         "name": "fixity_frequency",
@@ -360,7 +376,7 @@
         "/api/collections/{id}/": {
             "get": {
                 "operationId": "collections_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -450,7 +466,7 @@
             },
             "patch": {
                 "operationId": "collections_partial_update",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -506,8 +522,24 @@
         "/api/deposits/": {
             "get": {
                 "operationId": "deposits_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "in": "query",
                         "name": "collection",
@@ -976,7 +1008,7 @@
         "/api/deposits/{id}/": {
             "get": {
                 "operationId": "deposits_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -1013,7 +1045,7 @@
         "/api/events/": {
             "get": {
                 "operationId": "events_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "query",
@@ -1478,7 +1510,7 @@
         "/api/events/{id}/": {
             "get": {
                 "operationId": "events_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -1515,8 +1547,24 @@
         "/api/geolocations/": {
             "get": {
                 "operationId": "geolocations_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "name": "limit",
                         "required": false,
@@ -1634,7 +1682,7 @@
         "/api/geolocations/{id}/": {
             "get": {
                 "operationId": "geolocations_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -1671,8 +1719,24 @@
         "/api/organizations/": {
             "get": {
                 "operationId": "organizations_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "name": "limit",
                         "required": false,
@@ -1865,7 +1929,7 @@
         "/api/organizations/{id}/": {
             "get": {
                 "operationId": "organizations_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -1902,8 +1966,24 @@
         "/api/plans/": {
             "get": {
                 "operationId": "plans_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "in": "query",
                         "name": "default_fixity_frequency",
@@ -2182,7 +2262,7 @@
         "/api/plans/{id}/": {
             "get": {
                 "operationId": "plans_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -2219,7 +2299,7 @@
         "/api/reports/": {
             "get": {
                 "operationId": "reports_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "query",
@@ -2766,7 +2846,7 @@
         "/api/reports/{id}/": {
             "get": {
                 "operationId": "reports_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -2803,8 +2883,24 @@
         "/api/treenodes/": {
             "get": {
                 "operationId": "treenodes_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "in": "query",
                         "name": "comment",
@@ -3642,7 +3738,7 @@
         "/api/treenodes/{id}/": {
             "get": {
                 "operationId": "treenodes_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -3732,7 +3828,7 @@
             },
             "patch": {
                 "operationId": "treenodes_partial_update",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -3816,8 +3912,24 @@
         "/api/users/": {
             "get": {
                 "operationId": "users_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
+                    {
+                        "in": "query",
+                        "name": "_flat",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "Create a flat array from plucked field values"
+                    },
+                    {
+                        "in": "query",
+                        "name": "_pluck",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "A subset of response item fields to include"
+                    },
                     {
                         "in": "query",
                         "name": "date_joined",
@@ -4334,7 +4446,7 @@
             },
             "post": {
                 "operationId": "users_create",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "tags": [
                     "vault"
                 ],
@@ -4380,7 +4492,7 @@
         "/api/users/{id}/": {
             "get": {
                 "operationId": "users_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -4470,7 +4582,7 @@
             },
             "patch": {
                 "operationId": "users_partial_update",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - __depth=N for specifying foreign key lookup depth",
+                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
                 "parameters": [
                     {
                         "in": "path",
@@ -5235,6 +5347,13 @@
             "PatchedUserRequest": {
                 "type": "object",
                 "properties": {
+                    "authorized_collections": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    },
                     "date_joined": {
                         "type": "string",
                         "format": "date-time"
@@ -5634,6 +5753,13 @@
             "User": {
                 "type": "object",
                 "properties": {
+                    "authorized_collections": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    },
                     "date_joined": {
                         "type": "string",
                         "format": "date-time"
@@ -5705,6 +5831,13 @@
             "UserRequest": {
                 "type": "object",
                 "properties": {
+                    "authorized_collections": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "format": "uri"
+                        }
+                    },
                     "date_joined": {
                         "type": "string",
                         "format": "date-time"
