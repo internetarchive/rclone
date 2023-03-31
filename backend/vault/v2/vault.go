@@ -1,5 +1,7 @@
 // Package v2 implements changes proposed in MR362, namely v2 deposit API
 // without treenode pre-allocation.
+//
+// This is a copy of vault v1 filesystem, but with `Put` replaced.
 package v2
 
 import (

@@ -22,6 +22,14 @@ import (
 	"github.com/rclone/rclone/lib/rest"
 )
 
+// TODO(martin): use oapi generated code, not legacyAPI
+//
+// * [ ] keep only types from the API (e.g. for signatures)
+// * [ ] remove all code from manual API except for the types
+// * [ ] start to rewrite client code in terms of the new API
+// * [ ] once client side code uses only new API constructs, delete manual API completely
+//
+
 const (
 	// VaultVersionHeader as served by vault site.
 	VaultVersionHeader = "X-Vault-API-Version"
@@ -284,8 +292,73 @@ func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) err
 func (capi *CompatAPI) Remove(ctx context.Context, t *api.TreeNode) error {
 	return capi.legacyAPI.Remove(ctx, t)
 }
-func (capi *CompatAPI) List(t *api.TreeNode) ([]*api.TreeNode, error) {
-	return capi.legacyAPI.List(t)
+func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error) {
+	// TODO: this was the previous implementation; below is the OAPI generated
+	// variant; to be used going forward
+	// result, err = capi.legacyAPI.List(t)
+	var (
+		ctx    = context.Background()
+		parent = int(t.ID)
+		limit  = 5000 // TODO: to match previous limit, may exceed some payload size
+		params = &TreenodesListParams{
+			Parent: &parent,
+			Limit:  &limit,
+		}
+		err error
+	)
+	if resp, err = capi.client.TreenodesListWithResponse(ctx, params); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != 200 {
+		return nil, err
+	}
+	// TODO: these are not specific to "List"
+	safeTimeFormat := func(t *time.Time, layout string) string {
+		if t == nil {
+			return ""
+		}
+		return t.Format(layout)
+	}
+	safeDeref := func(v *string) string {
+		if v == nil {
+			return ""
+		}
+		return *v
+	}
+	safeDerefInt := func(v *int) int {
+		if v == nil {
+			return 0
+		}
+		return *v
+	}
+	for _, t := range *resp.JSON200.Results {
+		// UploadedBy is a potentially nil object, and we want the ID, so need
+		// indirect once more.
+		uploadedByID := 0
+		if t.UploadedBy != nil {
+			uploadedByID = safeDerefInt(t.UploadedBy.Id)
+		}
+		result = append(result, &api.TreeNode{
+			Comment:              safeDeref(t.Comment),                                 // interface{} `json:"comment"`
+			ContentURL:           safeDeref(t.ContentUrl),                              // interface{} `json:"content_url"`
+			FileType:             safeDeref(t.FileType),                                // interface{} `json:"file_type"`
+			ID:                   int64(*t.Id),                                         // int64       `json:"id"`
+			Md5Sum:               safeDeref(t.Md5Sum),                                  // interface{} `json:"md5_sum"`
+			ModifiedAt:           safeTimeFormat(t.ModifiedAt, time.RFC3339),           // string      `json:"modified_at"`
+			Name:                 t.Name,                                               // string      `json:"name"`
+			NodeType:             string(*t.NodeType),                                  // string      `json:"node_type"`
+			Parent:               safeDeref(t.Parent),                                  // interface{} `json:"parent"`
+			Path:                 safeDeref(t.Path),                                    // string      `json:"path"`
+			PreDepositModifiedAt: safeTimeFormat(t.PreDepositModifiedAt, time.RFC3339), // string      `json:"pre_deposit_modified_at"`
+			Sha1Sum:              safeDeref(t.Sha1Sum),                                 // interface{} `json:"sha1_sum"`
+			Sha256Sum:            safeDeref(t.Sha256Sum),                               // interface{} `json:"sha256_sum"`
+			ObjectSize:           *t.Size,                                              // interface{} `json:"size"`
+			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),           // string      `json:"uploaded_at"`
+			UploadedBy:           uploadedByID,                                         // interface{} `json:"uploaded_by
+			URL:                  safeDeref(t.Url),                                     // string      `json:"url"`
+		})
+	}
+	return result, nil
 }
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
 	return capi.legacyAPI.RegisterDeposit(ctx, rdr)
@@ -306,6 +379,7 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) ([]*api.TreeNode, error) {
 // User returns the current user. This is an example of using the new API internally.
 func (capi *CompatAPI) User() (*api.User, error) {
 	ctx := context.Background()
+	// TODO: use retrieve
 	params := &UsersListParams{
 		Username: &capi.Username,
 	}

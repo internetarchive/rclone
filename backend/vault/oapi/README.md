@@ -6,6 +6,8 @@ Using [oapi-codegen](https://github.com/deepmap/oapi-codegen), via go generate:
 $ oapi-codegen -generate types,client,spec -package oapi -o vault.gen.go schema.json
 ```
 
+The `schema.json` is taken as-is from the vault-site repo.
+
 ## TODO
 
 * [x] auth, via custom RequestEditorFn, as we need a CSRF token for each
