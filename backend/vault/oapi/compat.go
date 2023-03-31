@@ -304,7 +304,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 			Parent: &parent,
 			Limit:  &limit,
 		}
-		err error
+		resp *TreenodesListResponse
 	)
 	if resp, err = capi.client.TreenodesListWithResponse(ctx, params); err != nil {
 		return nil, err
