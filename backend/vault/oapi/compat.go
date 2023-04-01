@@ -11,6 +11,7 @@ import (
 	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -296,6 +297,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 	// TODO: this was the previous implementation; below is the OAPI generated
 	// variant; to be used going forward
 	// result, err = capi.legacyAPI.List(t)
+	// TODO: legacyAPI had cache, which add noticable improvement
 	var (
 		ctx    = context.Background()
 		parent = int(t.ID)
@@ -312,52 +314,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 	if resp.StatusCode() != 200 {
 		return nil, err
 	}
-	// TODO: these are not specific to "List"
-	safeTimeFormat := func(t *time.Time, layout string) string {
-		if t == nil {
-			return ""
-		}
-		return t.Format(layout)
-	}
-	safeDeref := func(v *string) string {
-		if v == nil {
-			return ""
-		}
-		return *v
-	}
-	safeDerefInt := func(v *int) int {
-		if v == nil {
-			return 0
-		}
-		return *v
-	}
-	for _, t := range *resp.JSON200.Results {
-		// UploadedBy is a potentially nil object, and we want the ID, so need
-		// indirect once more.
-		uploadedByID := 0
-		if t.UploadedBy != nil {
-			uploadedByID = safeDerefInt(t.UploadedBy.Id)
-		}
-		result = append(result, &api.TreeNode{
-			Comment:              safeDeref(t.Comment),                                 // interface{} `json:"comment"`
-			ContentURL:           safeDeref(t.ContentUrl),                              // interface{} `json:"content_url"`
-			FileType:             safeDeref(t.FileType),                                // interface{} `json:"file_type"`
-			ID:                   int64(*t.Id),                                         // int64       `json:"id"`
-			Md5Sum:               safeDeref(t.Md5Sum),                                  // interface{} `json:"md5_sum"`
-			ModifiedAt:           safeTimeFormat(t.ModifiedAt, time.RFC3339),           // string      `json:"modified_at"`
-			Name:                 t.Name,                                               // string      `json:"name"`
-			NodeType:             string(*t.NodeType),                                  // string      `json:"node_type"`
-			Parent:               safeDeref(t.Parent),                                  // interface{} `json:"parent"`
-			Path:                 safeDeref(t.Path),                                    // string      `json:"path"`
-			PreDepositModifiedAt: safeTimeFormat(t.PreDepositModifiedAt, time.RFC3339), // string      `json:"pre_deposit_modified_at"`
-			Sha1Sum:              safeDeref(t.Sha1Sum),                                 // interface{} `json:"sha1_sum"`
-			Sha256Sum:            safeDeref(t.Sha256Sum),                               // interface{} `json:"sha256_sum"`
-			ObjectSize:           *t.Size,                                              // interface{} `json:"size"`
-			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),           // string      `json:"uploaded_at"`
-			UploadedBy:           uploadedByID,                                         // interface{} `json:"uploaded_by
-			URL:                  safeDeref(t.Url),                                     // string      `json:"url"`
-		})
-	}
+	result = toLegacyTreeNode(resp.JSON200.Results)
 	return result, nil
 }
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
@@ -372,8 +329,43 @@ func (capi *CompatAPI) GetCollectionStats() (*api.CollectionStats, error) {
 func (capi *CompatAPI) FindCollections(vs url.Values) ([]*api.Collection, error) {
 	return capi.legacyAPI.FindCollections(vs)
 }
-func (capi *CompatAPI) FindTreeNodes(vs url.Values) ([]*api.TreeNode, error) {
-	return capi.legacyAPI.FindTreeNodes(vs)
+func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err error) {
+	var (
+		ctx    = context.Background()
+		limit  = 5000 // TODO: to match previous limit, may exceed some payload size
+		params = &TreenodesListParams{
+			Limit: &limit,
+		}
+		resp *TreenodesListResponse
+	)
+	for k, v := range vs {
+		// We only ever used "parent" and "name" as parameter. If we use
+		// something else, we can err out.
+		switch k {
+		case "parent":
+			if len(v) > 0 {
+				i, err := strconv.Atoi(v[0])
+				if err != nil {
+					return nil, err
+				}
+				params.Parent = &i
+			}
+		case "name":
+			if len(v) > 0 {
+				params.Name = &v[0]
+			}
+		default:
+			return nil, fmt.Errorf("compat: missing %v legacy parameter", k)
+		}
+	}
+	if resp, err = capi.client.TreenodesListWithResponse(ctx, params); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != 200 {
+		return nil, err
+	}
+	result = toLegacyTreeNode(resp.JSON200.Results)
+	return result, nil
 }
 
 // User returns the current user. This is an example of using the new API internally.
@@ -464,4 +456,76 @@ func (capi *CompatAPI) Plan() (*api.Plan, error) {
 		PricePerTerabyte:       r.JSON200.PricePerTerabyte,
 		URL:                    *r.JSON200.Url,
 	}, nil
+}
+
+// safeTimeFormat return a formatted time or the empty string.
+func safeTimeFormat(t *time.Time, layout string) string {
+	if t == nil {
+		return ""
+	}
+	return t.Format(layout)
+}
+
+// safeDereference unwraps a pointer value. Either returns the dereferenced
+// value or nil.
+func safeDereference(ptr interface{}) interface{} {
+	if ptr == nil {
+		return nil
+	}
+	value := reflect.ValueOf(ptr)
+	if value.Kind() != reflect.Ptr {
+		return ptr
+	}
+	if value.IsNil() {
+		return nil
+	}
+	return value.Elem().Interface()
+}
+
+// toLegacyTreeNode is a transition helper, turns a oapi list of treenodes to
+// api.TreeNode values.
+func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
+	if vs == nil {
+		return
+	}
+	for _, t := range *vs {
+		// UploadedBy is a potentially nil object, and we want the ID, so need
+		// indirect once more.
+		var (
+			uploadedByID = 0
+			path         = ""
+			url          = ""
+		)
+		if t.UploadedBy != nil {
+			if v := safeDereference(t.UploadedBy.Id); v != nil {
+				uploadedByID = v.(int)
+			}
+		}
+		if v := safeDereference(t.Path); v != nil {
+			path = v.(string)
+		}
+		if v := safeDereference(t.Url); v != nil {
+			url = v.(string)
+		}
+		result = append(result, &api.TreeNode{
+			Comment:              safeDereference(t.Comment),
+			ContentURL:           safeDereference(t.ContentUrl),
+			FileType:             safeDereference(t.FileType),
+			ID:                   int64(*t.Id),
+			Md5Sum:               safeDereference(t.Md5Sum),
+			ModifiedAt:           safeTimeFormat(t.ModifiedAt, time.RFC3339),
+			Name:                 t.Name,
+			NodeType:             string(*t.NodeType),
+			Parent:               safeDereference(t.Parent),
+			Path:                 path,
+			PreDepositModifiedAt: safeTimeFormat(t.PreDepositModifiedAt, time.RFC3339),
+			Sha1Sum:              safeDereference(t.Sha1Sum),
+			Sha256Sum:            safeDereference(t.Sha256Sum),
+			ObjectSize:           *t.Size,
+			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),
+			UploadedBy:           uploadedByID,
+			URL:                  url,
+		})
+	}
+	return
 }
