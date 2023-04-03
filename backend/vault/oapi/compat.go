@@ -326,9 +326,40 @@ func (capi *CompatAPI) TreeNodeToCollection(t *api.TreeNode) (*api.Collection, e
 func (capi *CompatAPI) GetCollectionStats() (*api.CollectionStats, error) {
 	return capi.legacyAPI.GetCollectionStats()
 }
-func (capi *CompatAPI) FindCollections(vs url.Values) ([]*api.Collection, error) {
-	return capi.legacyAPI.FindCollections(vs)
+func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection, err error) {
+	// return capi.legacyAPI.FindCollections(vs)
+
+	// We only used "tree_node" parameter.
+	var (
+		ctx    = context.Background()
+		limit  = 5000
+		params = &CollectionsListParams{
+			Limit: &limit,
+		}
+		resp *CollectionsListResponse
+	)
+	for k, v := range vs {
+		switch k {
+		case "tree_node":
+			i, err := strconv.Atoi(v[0])
+			if err != nil {
+				return nil, err
+			}
+			params.TreeNode = &i
+		default:
+			return nil, fmt.Errorf("compat missing legacy parameters: %v", k)
+		}
+	}
+	if resp, err = capi.client.CollectionsListWithResponse(ctx, params); err != nil {
+		return nil, err
+	}
+	if resp.StatusCode() != 200 {
+		return nil, fmt.Errorf("api returned: %v", resp.StatusCode())
+	}
+	// TODO: toLegacy...
+	return result, nil
 }
+
 func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err error) {
 	var (
 		ctx    = context.Background()
@@ -355,14 +386,14 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err
 				params.Name = &v[0]
 			}
 		default:
-			return nil, fmt.Errorf("compat: missing %v legacy parameter", k)
+			return nil, fmt.Errorf("compat missing legacy parameter: %v", k)
 		}
 	}
 	if resp, err = capi.client.TreenodesListWithResponse(ctx, params); err != nil {
 		return nil, err
 	}
 	if resp.StatusCode() != 200 {
-		return nil, err
+		return nil, fmt.Errorf("api returned %v", resp.StatusCode())
 	}
 	result = toLegacyTreeNode(resp.JSON200.Results)
 	return result, nil
@@ -525,6 +556,48 @@ func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
 			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),
 			UploadedBy:           uploadedByID,
 			URL:                  url,
+		})
+	}
+	return
+}
+
+func toLegacyTargetGeolocation(vs *[]Geolocation) (result []struct {
+	Name string `json:"name"`
+	URL  string `json:"url"`
+}) {
+	if vs == nil {
+		return
+	}
+	for _, v := range *vs {
+		result = append(result, struct {
+			Name string `json:"name"`
+			URL  string `json:"url"`
+		}{v.Name, *v.Url})
+	}
+	return
+}
+
+// toLegacyCollection is a helper to convert oapi values to legacy values.
+func toLegacyCollection(vs *[]Collection) (result []*api.Collection) {
+	if vs == nil {
+		return
+	}
+	for _, v := range *vs {
+		var targetReplication int64
+		i, err := strconv.Atoi(string(*v.TargetReplication))
+		if err == nil {
+			targetReplication = int64(i)
+		} else {
+			// TODO: this may never happen
+		}
+		result = append(result, &api.Collection{
+			FixityFrequency:    string(*v.FixityFrequency),
+			Name:               v.Name,
+			Organization:       v.Organization,
+			TargetGeolocations: toLegacyTargetGeolocation(v.TargetGeolocations),
+			TargetReplication:  targetReplication,
+			TreeNode:           *v.TreeNode,
+			URL:                *v.Url,
 		})
 	}
 	return
