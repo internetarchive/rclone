@@ -289,9 +289,28 @@ func (capi *CompatAPI) Rename(ctx context.Context, t *api.TreeNode, name string)
 }
 func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) error {
 	return capi.legacyAPI.Move(ctx, t, newParent)
+	parent := newParent.URL
+	body := PatchedTreeNodeRequest{
+		Parent: &parent,
+	}
+	resp, err := capi.client.TreenodesPartialUpdate(ctx, int(t.ID), body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("move: got HTTP %v", resp.StatusCode)
+	}
+	return nil
 }
 func (capi *CompatAPI) Remove(ctx context.Context, t *api.TreeNode) error {
-	return capi.legacyAPI.Remove(ctx, t)
+	resp, err := capi.client.TreenodesDestroyWithResponse(ctx, int(t.ID))
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode() >= 400 {
+		return fmt.Errorf("remove: got HTTP %v", resp.StatusCode())
+	}
+	return nil
 }
 func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error) {
 	// TODO: this was the previous implementation; below is the OAPI generated
@@ -317,22 +336,24 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 	result = toLegacyTreeNode(resp.JSON200.Results)
 	return result, nil
 }
+
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
 	return capi.legacyAPI.RegisterDeposit(ctx, rdr)
 }
+
 func (capi *CompatAPI) TreeNodeToCollection(t *api.TreeNode) (*api.Collection, error) {
 	return capi.legacyAPI.TreeNodeToCollection(t)
 }
+
 func (capi *CompatAPI) GetCollectionStats() (*api.CollectionStats, error) {
 	return capi.legacyAPI.GetCollectionStats()
 }
-func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection, err error) {
-	// return capi.legacyAPI.FindCollections(vs)
 
-	// We only used "tree_node" parameter.
+// FindCollections returns a list of collections, typically given a treenode identifier.
+func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection, err error) {
 	var (
 		ctx    = context.Background()
-		limit  = 5000
+		limit  = 5000 // TODO: switch to proper pagination
 		params = &CollectionsListParams{
 			Limit: &limit,
 		}
@@ -357,7 +378,7 @@ func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection,
 		return nil, fmt.Errorf("api returned: %v", resp.StatusCode())
 	}
 	// TODO: toLegacy...
-	return result, nil
+	return toLegacyCollection(resp.JSON200.Results), nil
 }
 
 func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err error) {
