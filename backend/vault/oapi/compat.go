@@ -3,6 +3,7 @@ package oapi
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -91,7 +92,7 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 		Password:         password,
 		VersionSupported: VersionSupported,
 		loginPath:        "/accounts/login/",
-		c:                &http.Client{Timeout: 10 * time.Second},
+		c:                &http.Client{Timeout: 30 * time.Second},
 		csrfTokenPattern: regexp.MustCompile(`csrfToken:[ ]*"([^"]*)"`),
 		legacyAPI:        api.New(endpoint, username, password),
 	}
@@ -115,10 +116,17 @@ func (capi *CompatAPI) Client() *http.Client {
 func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 	fs.Debugf(capi, "api CSRF intercept")
 	// TODO: need to add cookie jar from capi
-	anyLink, err := url.JoinPath(capi.Endpoint, "users") // any valid path will do
+	kind := "users"
+	re := regexp.MustCompile(".*/api/([^/]*)/")
+	matches := re.FindStringSubmatch(req.URL.String())
+	if len(matches) == 2 {
+		kind = matches[1]
+	}
+	anyLink, err := url.JoinPath(capi.Endpoint, kind) // most likely, any valid path will do
 	if err != nil {
 		return err
 	}
+	fs.Debugf(capi, "using referer: %v", anyLink)
 	r, err := http.NewRequest("GET", anyLink, nil)
 	if err != nil {
 		return err
@@ -136,6 +144,7 @@ func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 	if matches := capi.csrfTokenPattern.FindStringSubmatch(string(b)); len(matches) == 2 {
 		req.Header.Set("X-CSRFTOKEN", matches[1])
 		req.Header.Set("Referer", anyLink)
+		fs.Debugf(capi, "set header: %v", req.Header)
 		return nil
 	}
 	return fmt.Errorf("could not set csrf token")
@@ -259,6 +268,7 @@ func (capi *CompatAPI) Logout() error {
 func (capi *CompatAPI) Call(ctx context.Context, opts *rest.Opts) (*http.Response, error) {
 	return capi.legacyAPI.Call(ctx, opts)
 }
+
 func (capi *CompatAPI) CallJSON(ctx context.Context, opts *rest.Opts, req, resp interface{}) (*http.Response, error) {
 	return capi.legacyAPI.CallJSON(ctx, opts, req, resp)
 }
@@ -272,46 +282,86 @@ func (capi *CompatAPI) SplitPath(p string) (*api.PathInfo, error) {
 func (capi *CompatAPI) ResolvePath(p string) (*api.TreeNode, error) {
 	return capi.legacyAPI.ResolvePath(p)
 }
+
 func (capi *CompatAPI) DepositStatus(id int64) (*api.DepositStatus, error) {
 	return capi.legacyAPI.DepositStatus(id)
 }
+
 func (capi *CompatAPI) CreateCollection(ctx context.Context, name string) error {
 	return capi.legacyAPI.CreateCollection(ctx, name)
 }
+
 func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, name string) error {
 	return capi.legacyAPI.CreateFolder(ctx, parent, name)
 }
+
 func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
 	return capi.legacyAPI.SetModTime(ctx, t)
 }
+
 func (capi *CompatAPI) Rename(ctx context.Context, t *api.TreeNode, name string) error {
+	fs.Debugf(capi, "rename")
 	return capi.legacyAPI.Rename(ctx, t, name)
 }
+
 func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) error {
-	return capi.legacyAPI.Move(ctx, t, newParent)
-	parent := newParent.URL
-	body := PatchedTreeNodeRequest{
-		Parent: &parent,
+	fs.Debugf(capi, "move")
+	// "Immutable field(s) can not be updated: {'pre_deposit_modified_at',
+	// 'uploaded_at', 'size', 'file_type', 'comment', 'md5_sum',
+	// 'sha1_sum', 'sha256_sum'}"
+
+	// TODO: the issue here is that "PatchedTreeNodeRequest" spec says
+	// "nullable", which omits the "omitempty" tag, which in turn sends all
+	// fields in the request, which in turn results in a "immutable fields
+	// can not be updated"
+	//
+	// There was not issue, when we just sent the one field to patch.
+	// body = PatchedTreeNodeRequest{
+	// 	// Name:                 &node.Name,
+	// 	// NodeType:             node.NodeType,
+	// 	// PreDepositModifiedAt: node.PreDepositModifiedAt,
+	// 	// UploadedAt:           node.UploadedAt,
+	// 	// Size:                 node.Size,
+	// 	// FileType:             node.FileType,
+	// 	// Comment:              node.Comment,
+	// 	// Md5Sum:               node.Md5Sum,
+	// 	// Sha1Sum:              node.Sha1Sum,
+	// 	// Sha256Sum:            node.Sha256Sum,
+	// 	Parent: &parent,
+	// }
+	payload := struct {
+		Parent string `json:"parent"`
+	}{newParent.URL}
+	fs.Debugf(capi, "move: %v => ", t.Parent, newParent.URL)
+	b, err := json.Marshal(payload)
+	if err != nil {
+		return err
 	}
-	resp, err := capi.client.TreenodesPartialUpdate(ctx, int(t.ID), body)
+	resp, err := capi.client.TreenodesPartialUpdateWithBody(ctx, int(t.ID), "application/json", bytes.NewReader(b))
 	if err != nil {
 		return err
 	}
 	if resp.StatusCode >= 400 {
-		return fmt.Errorf("move: got HTTP %v", resp.StatusCode)
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("move: got http %v: %s", resp.StatusCode, string(b))
 	}
 	return nil
 }
+
 func (capi *CompatAPI) Remove(ctx context.Context, t *api.TreeNode) error {
-	resp, err := capi.client.TreenodesDestroyWithResponse(ctx, int(t.ID))
+	resp, err := capi.client.TreenodesDestroy(ctx, int(t.ID))
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode() >= 400 {
-		return fmt.Errorf("remove: got HTTP %v", resp.StatusCode())
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("remove: got http %v", resp.StatusCode)
 	}
 	return nil
 }
+
 func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error) {
 	// TODO: this was the previous implementation; below is the OAPI generated
 	// variant; to be used going forward
@@ -333,8 +383,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 	if resp.StatusCode() != 200 {
 		return nil, err
 	}
-	result = toLegacyTreeNode(resp.JSON200.Results)
-	return result, nil
+	return toLegacyTreeNode(resp.JSON200.Results), nil
 }
 
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
@@ -375,9 +424,8 @@ func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection,
 		return nil, err
 	}
 	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("api returned: %v", resp.StatusCode())
+		return nil, fmt.Errorf("collections: got http %v", resp.StatusCode())
 	}
-	// TODO: toLegacy...
 	return toLegacyCollection(resp.JSON200.Results), nil
 }
 
@@ -414,7 +462,7 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err
 		return nil, err
 	}
 	if resp.StatusCode() != 200 {
-		return nil, fmt.Errorf("api returned %v", resp.StatusCode())
+		return nil, fmt.Errorf("treenode: got http %v", resp.StatusCode())
 	}
 	result = toLegacyTreeNode(resp.JSON200.Results)
 	return result, nil
@@ -422,17 +470,19 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err
 
 // User returns the current user. This is an example of using the new API internally.
 func (capi *CompatAPI) User() (*api.User, error) {
+	// TODO: use cache
 	ctx := context.Background()
-	// TODO: use retrieve
+	limit := 1
 	params := &UsersListParams{
 		Username: &capi.Username,
+		Limit:    &limit,
 	}
 	r, err := capi.client.UsersListWithResponse(ctx, params)
 	if err != nil {
 		return nil, err
 	}
 	if r.StatusCode() != 200 {
-		return nil, fmt.Errorf("got HTTP %d status from API", r.StatusCode())
+		return nil, fmt.Errorf("user: got http %d", r.StatusCode())
 	}
 	if *r.JSON200.Count == 0 {
 		return nil, fmt.Errorf("user not found: %s", capi.Username)
@@ -440,7 +490,6 @@ func (capi *CompatAPI) User() (*api.User, error) {
 	if *r.JSON200.Count > 1 {
 		return nil, fmt.Errorf("ambiguous query")
 	}
-	// Translate API response to legacy user type.
 	usr := (*r.JSON200.Results)[0]
 	return &api.User{
 		DateJoined:   usr.DateJoined.Format(time.RFC3339),
@@ -475,12 +524,13 @@ func (capi *CompatAPI) Organization() (*api.Organization, error) {
 	if r.StatusCode() != 200 {
 		return nil, fmt.Errorf("error retrieving organization: %v", r.StatusCode())
 	}
+	org := r.JSON200
 	return &api.Organization{
-		Name:       r.JSON200.Name,
-		Plan:       r.JSON200.Plan,
-		QuotaBytes: *r.JSON200.QuotaBytes,
-		TreeNode:   *r.JSON200.TreeNode,
-		URL:        *r.JSON200.Url,
+		Name:       org.Name,
+		Plan:       org.Plan,
+		QuotaBytes: *org.QuotaBytes,
+		TreeNode:   *org.TreeNode,
+		URL:        *org.Url,
 	}, nil
 }
 
@@ -532,94 +582,4 @@ func safeDereference(ptr interface{}) interface{} {
 		return nil
 	}
 	return value.Elem().Interface()
-}
-
-// toLegacyTreeNode is a transition helper, turns a oapi list of treenodes to
-// api.TreeNode values.
-func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
-	if vs == nil {
-		return
-	}
-	for _, t := range *vs {
-		// UploadedBy is a potentially nil object, and we want the ID, so need
-		// indirect once more.
-		var (
-			uploadedByID = 0
-			path         = ""
-			url          = ""
-		)
-		if t.UploadedBy != nil {
-			if v := safeDereference(t.UploadedBy.Id); v != nil {
-				uploadedByID = v.(int)
-			}
-		}
-		if v := safeDereference(t.Path); v != nil {
-			path = v.(string)
-		}
-		if v := safeDereference(t.Url); v != nil {
-			url = v.(string)
-		}
-		result = append(result, &api.TreeNode{
-			Comment:              safeDereference(t.Comment),
-			ContentURL:           safeDereference(t.ContentUrl),
-			FileType:             safeDereference(t.FileType),
-			ID:                   int64(*t.Id),
-			Md5Sum:               safeDereference(t.Md5Sum),
-			ModifiedAt:           safeTimeFormat(t.ModifiedAt, time.RFC3339),
-			Name:                 t.Name,
-			NodeType:             string(*t.NodeType),
-			Parent:               safeDereference(t.Parent),
-			Path:                 path,
-			PreDepositModifiedAt: safeTimeFormat(t.PreDepositModifiedAt, time.RFC3339),
-			Sha1Sum:              safeDereference(t.Sha1Sum),
-			Sha256Sum:            safeDereference(t.Sha256Sum),
-			ObjectSize:           *t.Size,
-			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),
-			UploadedBy:           uploadedByID,
-			URL:                  url,
-		})
-	}
-	return
-}
-
-func toLegacyTargetGeolocation(vs *[]Geolocation) (result []struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}) {
-	if vs == nil {
-		return
-	}
-	for _, v := range *vs {
-		result = append(result, struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		}{v.Name, *v.Url})
-	}
-	return
-}
-
-// toLegacyCollection is a helper to convert oapi values to legacy values.
-func toLegacyCollection(vs *[]Collection) (result []*api.Collection) {
-	if vs == nil {
-		return
-	}
-	for _, v := range *vs {
-		var targetReplication int64
-		i, err := strconv.Atoi(string(*v.TargetReplication))
-		if err == nil {
-			targetReplication = int64(i)
-		} else {
-			// TODO: this may never happen
-		}
-		result = append(result, &api.Collection{
-			FixityFrequency:    string(*v.FixityFrequency),
-			Name:               v.Name,
-			Organization:       v.Organization,
-			TargetGeolocations: toLegacyTargetGeolocation(v.TargetGeolocations),
-			TargetReplication:  targetReplication,
-			TreeNode:           *v.TreeNode,
-			URL:                *v.Url,
-		})
-	}
-	return
 }

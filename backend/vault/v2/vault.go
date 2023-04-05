@@ -695,13 +695,13 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 
 // Shutdown sends finalize signal.
 func (f *Fs) Shutdown(ctx context.Context) error {
-	fs.Debugf(f, "finalizing deposit")
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.inflightDepositID == 0 {
 		// nothing to be done
 		return nil
 	}
+	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
 		DepositId: f.inflightDepositID,
 	}
