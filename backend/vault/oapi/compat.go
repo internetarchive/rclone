@@ -76,8 +76,19 @@ type CompatAPI struct {
 	// any other operation.
 	VersionSupported string
 	loginPath        string
-	c                *http.Client         // vanilly HTTP client, will be wrapped by OpenAPI client
-	client           *ClientWithResponses // OpenAPI client
+	// c is a vanilla http.Client for now, will be wrapped by
+	// deepmap/oapi-codegen generated client.  On login, we need to set cookies
+	// on the HTTP client, that's why we need to keep this around separately
+	// from the higher-level client. We need the cookies as well, hence not
+	// just the Doer interface.
+	c *http.Client
+	// client is an initialized client, wrapping vault endpoints.
+	client *ClientWithResponses // OpenAPI client
+	// csrfTokenPattern is how we find tokens in the HTML to supply any
+	// operation. It would best, if we would not need this at all, but we do.
+	// We use Django REST Framework (DRF), and SessionAuthentication; [...] "if
+	// you're using SessionAuthentication you'll need to include valid CSRF
+	// tokens for any POST, PUT, PATCH or DELETE operations" (DRF docs).
 	csrfTokenPattern *regexp.Regexp
 	// legacyAPI, so we can replace and test one function at a time
 	legacyAPI *api.API
@@ -92,6 +103,7 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 		Password:         password,
 		VersionSupported: VersionSupported,
 		loginPath:        "/accounts/login/",
+		// TODO: using vanilla client for now, but could upgrade to pester or something else
 		c:                &http.Client{Timeout: 30 * time.Second},
 		csrfTokenPattern: regexp.MustCompile(`csrfToken:[ ]*"([^"]*)"`),
 		legacyAPI:        api.New(endpoint, username, password),
@@ -112,10 +124,11 @@ func (capi *CompatAPI) Client() *http.Client {
 	return capi.c
 }
 
-// Intercept adds required headers to each request, namely a csrf token and referer.
+// Intercept adds required headers to each request, namely a csrf token and
+// referer. Some vault endpoints are exempt from CSRF, but that's not reflected
+// here at the moment.
 func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 	fs.Debugf(capi, "api CSRF intercept")
-	// TODO: need to add cookie jar from capi
 	kind := "users"
 	re := regexp.MustCompile(".*/api/([^/]*)/")
 	matches := re.FindStringSubmatch(req.URL.String())
@@ -292,52 +305,17 @@ func (capi *CompatAPI) CreateCollection(ctx context.Context, name string) error 
 }
 
 func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, name string) error {
-	return capi.legacyAPI.CreateFolder(ctx, parent, name)
-}
-
-func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
-	return capi.legacyAPI.SetModTime(ctx, t)
-}
-
-func (capi *CompatAPI) Rename(ctx context.Context, t *api.TreeNode, name string) error {
-	fs.Debugf(capi, "rename")
-	return capi.legacyAPI.Rename(ctx, t, name)
-}
-
-func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) error {
-	fs.Debugf(capi, "move")
-	// "Immutable field(s) can not be updated: {'pre_deposit_modified_at',
-	// 'uploaded_at', 'size', 'file_type', 'comment', 'md5_sum',
-	// 'sha1_sum', 'sha256_sum'}"
-
-	// TODO: the issue here is that "PatchedTreeNodeRequest" spec says
-	// "nullable", which omits the "omitempty" tag, which in turn sends all
-	// fields in the request, which in turn results in a "immutable fields
-	// can not be updated"
-	//
-	// There was not issue, when we just sent the one field to patch.
-	// body = PatchedTreeNodeRequest{
-	// 	// Name:                 &node.Name,
-	// 	// NodeType:             node.NodeType,
-	// 	// PreDepositModifiedAt: node.PreDepositModifiedAt,
-	// 	// UploadedAt:           node.UploadedAt,
-	// 	// Size:                 node.Size,
-	// 	// FileType:             node.FileType,
-	// 	// Comment:              node.Comment,
-	// 	// Md5Sum:               node.Md5Sum,
-	// 	// Sha1Sum:              node.Sha1Sum,
-	// 	// Sha256Sum:            node.Sha256Sum,
-	// 	Parent: &parent,
-	// }
-	payload := struct {
-		Parent string `json:"parent"`
-	}{newParent.URL}
-	fs.Debugf(capi, "move: %v => ", t.Parent, newParent.URL)
-	b, err := json.Marshal(payload)
-	if err != nil {
-		return err
+	// return capi.legacyAPI.CreateFolder(ctx, parent, name)
+	var (
+		nodeType  = NodeTypeEnumFOLDER
+		parentURL = parent.URL
+	)
+	body := TreenodesCreateJSONRequestBody{
+		Name:     name,
+		NodeType: &nodeType,
+		Parent:   &parentURL,
 	}
-	resp, err := capi.client.TreenodesPartialUpdateWithBody(ctx, int(t.ID), "application/json", bytes.NewReader(b))
+	resp, err := capi.client.TreenodesCreate(ctx, body)
 	if err != nil {
 		return err
 	}
@@ -346,7 +324,100 @@ func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) err
 		if err != nil {
 			return err
 		}
-		return fmt.Errorf("move: got http %v: %s", resp.StatusCode, string(b))
+		fs.Debugf(capi, "move: got http %v: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("move: got http %v", resp.StatusCode)
+	}
+	return nil
+}
+
+// SetModTime is not naturally supported by vault. We do not alter the mod time for now.
+func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
+	fs.Debugf(capi, "not changing immutable treenode.modified_at")
+	return nil
+}
+
+// Rename a treenode.
+func (capi *CompatAPI) Rename(ctx context.Context, t *api.TreeNode, name string) error {
+	fs.Debugf(capi, "rename")
+	payload := struct {
+		Name string `json:"name"`
+	}{
+		name,
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(payload); err != nil {
+		return err
+	}
+	resp, err := capi.client.TreenodesPartialUpdateWithBody(
+		ctx, int(t.ID), "application/json", &buf)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return err
+		}
+		fs.Debugf(capi, "move: got http %v: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("move: got http %v", resp.StatusCode)
+	}
+	return nil
+}
+
+func (capi *CompatAPI) Move(ctx context.Context, t, newParent *api.TreeNode) error {
+	fs.Debugf(capi, "move %v => %v", t.Path, newParent.Path)
+	// Payload is a minimal struct, not the generated PatchedTreeNodeRequest.
+	// Reason is a mismatch in nullable field handling.
+	//
+	// When using PatchedTreeNodeRequest, we got:
+	//
+	// "Immutable field(s) can not be updated: {'pre_deposit_modified_at',
+	// 'uploaded_at', 'size', 'file_type', 'comment', 'md5_sum',
+	// 'sha1_sum', 'sha256_sum'}"
+	//
+	// The issue here is that "PatchedTreeNodeRequest" spec says "nullable",
+	// which omits the "omitempty" tag, which in turn sends all fields in the
+	// request (albeit being 'null'), which in turn results in a "immutable
+	// fields can not be updated"
+	//
+	// There was no issue, when we just sent the one field to patch.
+	//
+	// For illustration, the last struct we tried.
+	//
+	//   body = PatchedTreeNodeRequest{
+	//   	// Name:                 &node.Name,
+	//   	// NodeType:             node.NodeType,
+	//   	// PreDepositModifiedAt: node.PreDepositModifiedAt,
+	//   	// UploadedAt:           node.UploadedAt,
+	//   	// Size:                 node.Size,
+	//   	// FileType:             node.FileType,
+	//   	// Comment:              node.Comment,
+	//   	// Md5Sum:               node.Md5Sum,
+	//   	// Sha1Sum:              node.Sha1Sum,
+	//   	// Sha256Sum:            node.Sha256Sum,
+	//   	Parent: &parent,
+	//   }
+	payload := struct {
+		Parent string `json:"parent"`
+	}{
+		newParent.URL,
+	}
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(payload); err != nil {
+		return err
+	}
+	resp, err := capi.client.TreenodesPartialUpdateWithBody(
+		ctx, int(t.ID), "application/json", &buf)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return err
+		}
+		fs.Debugf(capi, "move: got http %v: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("move: got http %v", resp.StatusCode)
 	}
 	return nil
 }
