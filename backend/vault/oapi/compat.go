@@ -29,6 +29,7 @@ import (
 // * [ ] keep only types from the API (e.g. for signatures)
 // * [ ] remove all code from manual API except for the types
 // * [ ] start to rewrite client code in terms of the new API
+// * [ ] move legacy api types to generated types
 // * [ ] once client side code uses only new API constructs, delete manual API completely
 //
 
@@ -332,6 +333,8 @@ func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, n
 
 // SetModTime is not naturally supported by vault. We do not alter the mod time for now.
 func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
+	// TODO: There may be an effect by doing a pseudo-change like setting the
+	// name to name, and have "updated_at" reflect that.
 	fs.Debugf(capi, "not changing immutable treenode.modified_at")
 	return nil
 }
@@ -500,6 +503,8 @@ func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection,
 	return toLegacyCollection(resp.JSON200.Results), nil
 }
 
+// FindTreeNodes returns a list of treenodes given query parameters. We only
+// deal with fields that we previously used. Anything else will fail noticably.
 func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err error) {
 	var (
 		ctx    = context.Background()
