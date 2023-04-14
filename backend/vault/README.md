@@ -127,7 +127,7 @@ To run the command you can either:
 1. Stay in the directory where the binary is located and run it from there using:
 
 	1. `./rclone version` on macOS and Linux
-	2. `Rclone.exe version` on Windows
+	2. `.\rclone.exe version` on Windows
 
 2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
 
@@ -172,7 +172,7 @@ $ rclone config file
 
 ## First steps with the Rclone Vault backend
 
-To check if everything works, you can e.g. run `rclone config userinfo` to
+To check if everything works, you can e.g. run `rclone config userinfo vault:` to
 display information about the configured Vault user:
 
 ```shell
