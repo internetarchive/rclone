@@ -139,3 +139,18 @@ A few issues to address.
 * [x] Trying to move from "atexit" to "Shutdown", but that would require additional
 changes, discussing it here:
 [https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336](https://forum.rclone.org/t/support-for-returning-and-error-from-atexit-handlers-and-batch-uploads/31336)
+
+## Testing on Windows
+
+Report of a failed upload from Windows, 2023-04-15.
+
+```
+Looks like there is a path issue (or a docs issue) depositing files on Windows. Running .\rclone.exe copy 2023-04-07_18-36-11_scan_00001.tif vault:/TempSpace1
+I get:
+023/04/14 16:34:11 Failed to copy: open /?/C:/Users/gw234478/projects/vault/2023-04-07_18-36-11_scan_00001.tif: The filename, directory name, or volume label syntax is incorrect.
+It’s the same if I try different prefixes with the path (\, .\) or give it the full path, put it in quotes, etc. Not sure if this is just an rclone thing or something that needs better docs. Look like it does actually upload the file, but oddly I can’t download it though the UI.
+It also looks like my path experiments threw a bunch of stuff in there. Works fine on WSL or native CentOS. Everything not in TempSpace2 or ua746 was from a windows upload.
+I also put in a minor PR for the docs: https://github.com/internetarchive/rclone/pull/1. Happy to write the path issue up as an issue, but looks like they’re disabled.
+```
+
+* [https://stackoverflow.com/questions/24782826/the-filename-directory-name-or-volume-label-syntax-is-incorrect-inside-batch](https://stackoverflow.com/questions/24782826/the-filename-directory-name-or-volume-label-syntax-is-incorrect-inside-batch)
