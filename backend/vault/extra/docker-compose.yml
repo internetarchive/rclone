@@ -11,6 +11,7 @@ services:
       - postgres
       - temporal
     environment:
+      ALLOWED_HOSTS: "*"
       VAULT_POSTGRES_HOST: postgres
       WAIT_HOSTS: postgres:5432, temporal:7233 # https://github.com/ufoscout/docker-compose-wait
   minio:
