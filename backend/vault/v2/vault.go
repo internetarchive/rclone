@@ -141,7 +141,7 @@ var (
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
-	fs.Debugf(nil, "[exp] using experimental fs with deposits/v2")
+	fs.Debugf(nil, "using deposits/v2")
 	var opt Options
 	err := configstruct.Set(m, &opt)
 	if err != nil {
@@ -159,9 +159,6 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	}
 	// Setup v2 client, when requested, current endpoint:
 	// /api/deposits/v2/
-	//
-	// May fail, if flag is used against endpoint w/o support for v2.
-	// TODO: need to set auth handler for requests
 	var depositsV2Client *ClientWithResponses
 	endpoint, err := opt.EndpointNormalizedDepositsV2()
 	if err != nil {
@@ -415,6 +412,15 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		return ErrMissingDepositIdentifier
 	}
 	f.inflightDepositID = resp.JSON200.DepositId
+	// TODO: use atexit mechanism
+	// try to always run shutdown
+	// sigs := make(chan os.Signal, 1)
+	// signal.Notify(sigs, os.Interrupt)
+	// go func() {
+	// 	_ = <-sigs
+	// 	fs.Debugf(f, "interrupted deposit")
+	// 	f.Shutdown(ctx)
+	// }()
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
 	return nil
 }
