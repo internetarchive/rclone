@@ -28,7 +28,7 @@ const (
 	// VaultVersionHeader as served by vault site.
 	VaultVersionHeader = "X-Vault-API-Version"
 	// VersionSupported is the version of the vault API this package implements.
-	VersionSupported = "1"
+	VersionSupported = "2"
 	// maxResponseBody limit in bytes when reading a response body.
 	maxResponseBody = 1 << 24
 )

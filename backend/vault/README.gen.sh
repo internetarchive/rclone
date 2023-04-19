@@ -90,6 +90,25 @@ With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
 providers** and **download files or folders**.
 
+The currently supported Vault API version is 2.
+
+## Vault API upgrades
+
+### Upgrading rclone to use Vault API version 2
+
+On 2023-04-19 we upgraded to Vault API version 2. The previous version 1 of the
+Vault API is no longer supported. To be able to use rclone with the new Vault
+API version, **we ask all users of rclone to upgrade rclone to the latest
+release**.
+
+If you do not upgrade rclone to the latest version, it will stop working and
+you will get errors about "api version mismatch", similar to this:
+
+```
+$ rclone copy lib v:/martin-rclone-tests/RCT0
+2023/04/19 15:14:12 Failed to create file system for "v:/martin-rclone-tests/RCT0": api version mismatch
+```
+
 ## Requirements
 
 * An active [Vault](https://vault.archive-it.org/accounts/login/) account
