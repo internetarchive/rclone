@@ -148,8 +148,8 @@ var (
 ██    ██ ██   ██     ██  ██ ██ ██    ██
  ██████  ██   ██     ██   ████  ██████
 
-We detected a version mismatch between the Vault API and the version supported
-by rclone. We kindly ask you to upgrade to the latest rclone release to fix
+We detected a version mismatch between the Vault API (%v) and the version supported
+by rclone (%v). We kindly ask you to upgrade to the latest rclone release to fix
 this problem.
 
 You can download the latest release here: https://github.com/internetarchive/rclone/releases
@@ -175,7 +175,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
-		fmt.Fprintf(os.Stderr, VersionMismatchMessage)
+		fmt.Fprintf(os.Stderr, VersionMismatchMessage, api.Version(ctx), api.VersionSupported)
 		return nil, ErrVersionMismatch
 	}
 	// Setup v2 client, when requested, current endpoint:
@@ -438,7 +438,7 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 	f.handle = atexit.Register(func() {
 		err := f.Shutdown(ctx)
 		if err != nil {
-			fs.Infof(f, "could not finalize deposit from client")
+			fs.Infof(f, "could not finalize deposit from client: %v", err)
 		}
 	})
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
@@ -563,6 +563,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			return nil, err
 		}
 		if resp.StatusCode >= 400 {
+			fs.Debugf(f, "chunk upload failed (deposit id=%v)", f.inflightDepositID)
 			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
 			b, err := httputil.DumpResponse(resp, true)
 			if err != nil {
