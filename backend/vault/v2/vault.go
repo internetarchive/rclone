@@ -32,6 +32,7 @@ import (
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
+	"github.com/rclone/rclone/lib/atexit"
 )
 
 func init() {
@@ -239,6 +240,7 @@ type Fs struct {
 	depositsV2Client  *ClientWithResponses // v2 deposits API
 	mu                sync.Mutex           // locks inflightDepositID
 	inflightDepositID int                  // inflight deposit id, empty if none inflight
+	handle            atexit.FnHandle      //
 }
 
 // Fs Info
@@ -414,14 +416,12 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 	}
 	f.inflightDepositID = resp.JSON200.DepositId
 	// TODO: use atexit mechanism
-	// try to always run shutdown
-	// sigs := make(chan os.Signal, 1)
-	// signal.Notify(sigs, os.Interrupt)
-	// go func() {
-	// 	_ = <-sigs
-	// 	fs.Debugf(f, "interrupted deposit")
-	// 	f.Shutdown(ctx)
-	// }()
+	f.handle = atexit.Register(func() {
+		err := f.Shutdown(ctx)
+		if err != nil {
+			fs.Infof(f, "could not finalize deposit from client")
+		}
+	})
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
 	return nil
 }
@@ -789,6 +789,9 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	if f.inflightDepositID == 0 {
 		// nothing to be done
 		return nil
+	}
+	if f.handle != nil {
+		atexit.Unregister(f.handle)
 	}
 	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
