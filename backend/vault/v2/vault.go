@@ -35,21 +35,7 @@ import (
 	"github.com/rclone/rclone/lib/atexit"
 )
 
-const (
-	// Note: the biggest increase in upload throughput so far came from
-	// increasing the chunk size to 16M.
-	//
-	//  1M/1/1:  5M/s
-	// 16M/1/1: 15M/s
-	// 16M/2/2: 20M/s
-	//
-	// Target two-core QA machine was occassionally maxed out, not sure if
-	// that's imposing a limit.
-	defaultUploadChunkSize    = 1 << 24 // 16M
-	defaultMaxParallelChunks  = 2
-	defaultMaxParallelUploads = 2
-	flowIdentifierPrefix      = "rclone-vault-flow"
-)
+const flowIdentifierPrefix = "rclone-vault-flow"
 
 var (
 	ErrCannotCopyToRoot         = errors.New("copying files to root is not supported in vault")
