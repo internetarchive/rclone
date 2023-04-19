@@ -218,7 +218,7 @@ To run the command you can either:
 1. Stay in the directory where the binary is located and run it from there using:
 
 	1. `./rclone version` on macOS and Linux
-	2. `\rclone.exe version` on Windows
+	2. `rclone.exe version` on Windows
 
 2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
 
@@ -777,28 +777,6 @@ vault).
 ```shell
 $ rclone copy dropbox:/iris-data.csv vault:/C104
 ```
-
-#### Resuming an Interrupted Deposit
-
-It is possible to resume an interrupted deposit.
-
-Assuming we want to copy local path "A" to vault "B" - we can start a deposit by
-copying files. You'll see the deposit id logged to the terminal (e.g. 742):
-
-```shell
-$ rclone copy A vault:/B
-<5>NOTICE: vault (v1): deposit registered: 742
-...
-```
-
-You can interrupt the deposit e.g. with CTRL-C. To resume, add the
-`--vault-resume-deposit-id` flag:
-
-```shell
-$ rclone copy A vault:/B --vault-resume-deposit-id 742
-```
-
-Note that resuming only makes sense when the source and destination path are the same.
 
 ### Sync
 
