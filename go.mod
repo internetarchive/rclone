@@ -45,7 +45,6 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/ncw/go-acd v0.0.0-20201019170801-fe55f33415b1
 	github.com/ncw/swift/v2 v2.0.1
-	github.com/neilotoole/errgroup v0.1.6
 	github.com/oracle/oci-go-sdk/v65 v65.32.1
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/sftp v1.13.6-0.20230213180117-971c283182b6
@@ -54,7 +53,6 @@ require (
 	github.com/putdotio/go-putio/putio v0.0.0-20200123120452-16d982cac2b8
 	github.com/rfjakob/eme v1.1.2
 	github.com/rivo/uniseg v0.4.4
-	github.com/schollz/progressbar/v3 v3.13.0
 	github.com/shirou/gopsutil/v3 v3.23.2
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
@@ -124,7 +122,6 @@ require (
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
-	github.com/mitchellh/colorstring v0.0.0-20190213212951-d06e56a500db // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pengsrc/go-shared v0.2.1-0.20190131101655-1999055a4a14 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
