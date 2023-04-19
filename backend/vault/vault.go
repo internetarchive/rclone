@@ -45,18 +45,6 @@ func init() {
 				Default: "http://127.0.0.1:8000/api",
 			},
 			{
-				Name:    "suppress_progress_bar",
-				Help:    "Suppress deposit progress bar",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
-				Name:    "resume_deposit_id",
-				Help:    "Resume a deposit",
-				Default: 0,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
 				Name:     "chunk_size",
 				Help:     "Upload chunk size in bytes (limited)",
 				Default:  defaultUploadChunkSize,
