@@ -139,6 +139,24 @@ var (
 	ErrVersionMismatch          = errors.New("api version mismatch")
 	ErrMissingDepositIdentifier = errors.New("missing deposit identifier")
 	ErrInvalidEndpoint          = errors.New("invalid endpoint")
+
+	VersionMismatchMessage = `
+
+ ██████  ██   ██     ███    ██  ██████
+██    ██ ██   ██     ████   ██ ██    ██
+██    ██ ███████     ██ ██  ██ ██    ██
+██    ██ ██   ██     ██  ██ ██ ██    ██
+ ██████  ██   ██     ██   ████  ██████
+
+We detected a version mismatch between the Vault API and the version supported
+by rclone. We kindly ask you to upgrade to the latest rclone release to fix
+this problem.
+
+You can download the latest release here: https://github.com/internetarchive/rclone/releases
+
+Thank you for your understanding.
+
+`
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -157,6 +175,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 	if v := api.Version(ctx); v != "" && v != api.VersionSupported {
+		fmt.Fprintf(os.Stderr, VersionMismatchMessage)
 		return nil, ErrVersionMismatch
 	}
 	// Setup v2 client, when requested, current endpoint:
