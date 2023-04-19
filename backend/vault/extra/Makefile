@@ -20,7 +20,7 @@ image:
 	# temporarily copying bootstrap.sh into build context
 	cp ./bootstrap.sh $(VAULT)/dev
 	# to debug, you may want to add `--no-cache`
-	DOCKER_BUILDKIT=1 docker build --no-cache -t vault:latest -f Dockerfile $(VAULT)
+	DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
 	# cleanup bootstrap
 	rm -f $(VAULT)/dev/bootstrap.sh
 
