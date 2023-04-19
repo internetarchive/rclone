@@ -18,6 +18,25 @@ With this version of Rclone, you can **list your collections** in Vault and
 **upload files and folders** conveniently from **local disk** or other **cloud
 providers** and **download files or folders**.
 
+The currently supported Vault API version is 2.
+
+## Vault API upgrades
+
+### Upgrading rclone to use Vault API version 2
+
+On 2023-04-19 we upgraded to Vault API version 2. The previous version 1 of the
+Vault API is no longer supported. To be able to use rclone with the new Vault
+API version, **we ask all users of rclone to upgrade rclone to the latest
+release**.
+
+If you do not upgrade rclone to the latest version, it will stop working and
+you will get errors about "api version mismatch", similar to this:
+
+```
+$ rclone copy lib v:/martin-rclone-tests/RCT0
+2023/04/19 15:14:12 Failed to create file system for "v:/martin-rclone-tests/RCT0": api version mismatch
+```
+
 ## Requirements
 
 * An active [Vault](https://vault.archive-it.org/accounts/login/) account
@@ -61,14 +80,14 @@ After download with `curl` or `wget` the file needs to be made executable with [
 #### Intel-based Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Darwin_x86_64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Darwin_x86_64
 $ chmod +x rclone
 ```
 
 #### Apple Silicon Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Darwin_arm64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Darwin_arm64
 $ chmod +x rclone
 ```
 
@@ -76,10 +95,10 @@ $ chmod +x rclone
 
 Download the latest binary (e.g. with your browser):
 
-* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Windows_x86_64.exe)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Windows_x86_64.exe)
 
 In (the rare) case you have an ARM based computer running Windows, please
-download: [https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Windows_arm64.exe).
+download: [https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -106,8 +125,8 @@ recognized internal or external command*).
 
 Download the latest release depending on your architecture:
 
-* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Linux_x86_64)
-* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230328183044-b2dcf3f00/rclone_1.62.2-vault-20230328183044-b2dcf3f00_Linux_arm64)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.62.2-vault-20230419225014-8c13463b5/rclone_1.62.2-vault-20230419225014-8c13463b5_Linux_arm64)
 
 For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
@@ -127,7 +146,7 @@ To run the command you can either:
 1. Stay in the directory where the binary is located and run it from there using:
 
 	1. `./rclone version` on macOS and Linux
-	2. `.\rclone.exe version` on Windows
+	2. `\rclone.exe version` on Windows
 
 2. Put the binary (or a symlink to it) into your [PATH](https://en.wikipedia.org/wiki/PATH_(variable)).
 
