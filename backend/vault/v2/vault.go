@@ -121,15 +121,11 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 
 // Options for Vault.
 type Options struct {
-	Username                 string `config:"username"`
-	Password                 string `config:"password"`
-	Endpoint                 string `config:"endpoint"` // e.g. http://localhost:8000/api
-	SuppressProgressBar      bool   `config:"suppress_progress_bar"`
-	ResumeDepositId          int64  `config:"resume_deposit_id"`
-	ChunkSize                int64  `config:"chunk_size"`
-	MaxParallelChunks        int    `config:"max_parallel_chunks"`
-	MaxParallelUploads       int    `config:"max_parallel_uploads"`
-	SkipContentTypeDetection bool   `config:"skip_content_type_detection"`
+	Username        string `config:"username"`
+	Password        string `config:"password"`
+	Endpoint        string `config:"endpoint"` // e.g. http://localhost:8000/api
+	ResumeDepositId int64  `config:"resume_deposit_id"`
+	ChunkSize       int64  `config:"chunk_size"`
 }
 
 // EndpointNormalized handles trailing slashes.

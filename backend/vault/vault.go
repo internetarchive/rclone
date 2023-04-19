@@ -51,12 +51,6 @@ func init() {
 				Hide:    fs.OptionHideConfigurator,
 			},
 			{
-				Name:    "skip_content_type_detection",
-				Help:    "Skip content-type detection on the client side",
-				Default: false,
-				Hide:    fs.OptionHideConfigurator,
-			},
-			{
 				Name:    "resume_deposit_id",
 				Help:    "Resume a deposit",
 				Default: 0,
@@ -66,18 +60,6 @@ func init() {
 				Name:     "chunk_size",
 				Help:     "Upload chunk size in bytes (limited)",
 				Default:  defaultUploadChunkSize,
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_chunks",
-				Help:     "Maximum number of parallel chunk uploads",
-				Default:  defaultMaxParallelChunks, // TODO: find a good default
-				Advanced: true,
-			},
-			{
-				Name:     "max_parallel_uploads",
-				Help:     "Maximum number of parallel file uploads",
-				Default:  defaultMaxParallelUploads, // TODO: find a good default
 				Advanced: true,
 			},
 		},
