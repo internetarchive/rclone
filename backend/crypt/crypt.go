@@ -48,7 +48,7 @@ func init() {
 					Help:  "Very simple filename obfuscation.",
 				}, {
 					Value: "off",
-					Help:  "Don't encrypt the file names.\nAdds a \".bin\" extension only.",
+					Help:  "Don't encrypt the file names.\nAdds a \".bin\", or \"suffix\" extension only.",
 				},
 			},
 		}, {
@@ -147,9 +147,17 @@ length and if it's case sensitive.`,
 				},
 				{
 					Value: "base32768",
-					Help:  "Encode using base32768. Suitable if your remote counts UTF-16 or\nUnicode codepoint instead of UTF-8 byte length. (Eg. Onedrive)",
+					Help:  "Encode using base32768. Suitable if your remote counts UTF-16 or\nUnicode codepoint instead of UTF-8 byte length. (Eg. Onedrive, Dropbox)",
 				},
 			},
+			Advanced: true,
+		}, {
+			Name: "suffix",
+			Help: `If this is set it will override the default suffix of ".bin".
+
+Setting suffix to "none" will result in an empty suffix. This may be useful 
+when the path length is critical.`,
+			Default:  ".bin",
 			Advanced: true,
 		}},
 	})
@@ -183,6 +191,7 @@ func newCipherForConfig(opt *Options) (*Cipher, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to make cipher: %w", err)
 	}
+	cipher.setEncryptedSuffix(opt.Suffix)
 	cipher.setPassBadBlocks(opt.PassBadBlocks)
 	return cipher, nil
 }
@@ -274,6 +283,7 @@ type Options struct {
 	ShowMapping             bool   `config:"show_mapping"`
 	PassBadBlocks           bool   `config:"pass_bad_blocks"`
 	FilenameEncoding        string `config:"filename_encoding"`
+	Suffix                  string `config:"suffix"`
 }
 
 // Fs represents a wrapped fs.Fs

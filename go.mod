@@ -18,7 +18,7 @@ require (
 	github.com/antchfx/htmlquery v1.3.0
 	github.com/artyom/mtab v1.0.0
 	github.com/atotto/clipboard v0.1.4
-	github.com/aws/aws-sdk-go v1.44.228
+	github.com/aws/aws-sdk-go v1.44.246
 	github.com/buengese/sgzip v0.1.1
 	github.com/colinmarc/hdfs/v2 v2.3.0
 	github.com/coreos/go-semver v0.3.1
@@ -37,7 +37,7 @@ require (
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/jlaffaye/ftp v0.1.1-0.20230214004652-d84bf4be2b6e
 	github.com/jzelinskie/whirlpool v0.0.0-20201016144138-0675e54bb004
-	github.com/klauspost/compress v1.16.3
+	github.com/klauspost/compress v1.16.5
 	github.com/koofr/go-httpclient v0.0.0-20230225102643-5d51a2e9dea6
 	github.com/koofr/go-koofrclient v0.0.0-20221207135200-cbd7fc9ad6a6
 	github.com/mattn/go-colorable v0.1.13
@@ -53,10 +53,10 @@ require (
 	github.com/putdotio/go-putio/putio v0.0.0-20200123120452-16d982cac2b8
 	github.com/rfjakob/eme v1.1.2
 	github.com/rivo/uniseg v0.4.4
-	github.com/shirou/gopsutil/v3 v3.23.2
+	github.com/shirou/gopsutil/v3 v3.23.3
 	github.com/sirupsen/logrus v1.9.0
 	github.com/skratchdot/open-golang v0.0.0-20200116055534-eef842397966
-	github.com/spf13/cobra v1.6.1
+	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.8.2
 	github.com/t3rm1n4l/go-mega v0.0.0-20230228171823-a01a2cda13ca
@@ -70,16 +70,16 @@ require (
 	golang.org/x/net v0.8.0
 	golang.org/x/oauth2 v0.6.0
 	golang.org/x/sync v0.1.0
-	golang.org/x/sys v0.6.0
+	golang.org/x/sys v0.7.0
 	golang.org/x/text v0.8.0
 	golang.org/x/time v0.3.0
-	google.golang.org/api v0.114.0
+	google.golang.org/api v0.115.0
 	gopkg.in/yaml.v2 v2.4.0
 	storj.io/uplink v1.10.0
 )
 
 require (
-	cloud.google.com/go/compute v1.18.0 // indirect
+	cloud.google.com/go/compute v1.19.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.2.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v0.9.0 // indirect
@@ -98,9 +98,9 @@ require (
 	github.com/go-openapi/swag v0.21.1 // indirect
 	github.com/gofrs/flock v0.8.1 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
-	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.2.3 // indirect
-	github.com/googleapis/gax-go/v2 v2.7.1 // indirect
+	github.com/googleapis/gax-go/v2 v2.8.0 // indirect
 	github.com/hashicorp/errwrap v1.0.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
@@ -131,6 +131,7 @@ require (
 	github.com/prometheus/common v0.37.0 // indirect
 	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/shoenig/go-m1cpu v0.1.4 // indirect
 	github.com/sony/gobreaker v0.5.0 // indirect
 	github.com/spacemonkeygo/monkit/v3 v3.0.19 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
@@ -141,9 +142,9 @@ require (
 	github.com/zeebo/errs v1.3.0 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
-	google.golang.org/grpc v1.53.0 // indirect
-	google.golang.org/protobuf v1.29.1 // indirect
+	google.golang.org/genproto v0.0.0-20230331144136-dcfb400f0633 // indirect
+	google.golang.org/grpc v1.54.0 // indirect
+	google.golang.org/protobuf v1.30.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	storj.io/common v0.0.0-20221123115229-fed3e6651b63 // indirect
@@ -158,5 +159,5 @@ require (
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/pkg/xattr v0.4.9
 	golang.org/x/mobile v0.0.0-20230301163155-e0f57694e12c
-	golang.org/x/term v0.6.0
+	golang.org/x/term v0.7.0
 )

@@ -709,3 +709,14 @@ put them back in again.` >}}
   * Aditya Basu <ab.aditya.basu@gmail.com>
   * ed <s@ocv.me>
   * Drew Parsons <dparsons@emerall.com>
+  * Joel <joelnb@users.noreply.github.com>
+  * wiserain <mail275@gmail.com>
+  * Roel Arents <roel.arents@kadaster.nl>
+  * Shyim <github@shyim.de>
+  * Rintze Zelle <78232505+rzelle-lallemand@users.noreply.github.com>
+  * Damo <damoclark@users.noreply.github.com>
+  * WeidiDeng <weidi_deng@icloud.com>
+  * Brian Starkey <stark3y@gmail.com>
+  * jladbrook <jhladbrook@gmail.com>
+  * Loren Gordon <lorengordon@users.noreply.github.com>
+  * dlitster <davidlitster@gmail.com>

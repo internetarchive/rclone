@@ -63,6 +63,7 @@ See the following for detailed instructions for
   * [OpenDrive](/opendrive/)
   * [Oracle Object Storage](/oracleobjectstorage/)
   * [Pcloud](/pcloud/)
+  * [PikPak](/pikpak/)
   * [premiumize.me](/premiumizeme/)
   * [put.io](/putio/)
   * [QingStor](/qingstor/)
@@ -951,15 +952,17 @@ To reduce risk of corrupting an existing configuration file, rclone
 will not write directly to it when saving changes. Instead it will
 first write to a new, temporary, file. If a configuration file already
 existed, it will (on Unix systems) try to mirror its permissions to
-the new file. Then it will rename the existing file by adding suffix
-".old" to its name (e.g. `rclone.conf.old`), if a file with the same
-name already exists it will simply be replaced. Next, rclone will rename
-the new file to the correct name, before finally cleaning up by deleting
-the original file now which has now ".old" suffix to its name. Note that
-one side-effect of this is that if you happen to have a file in the same
-directory and with the same name as your configuration file, but with
-suffix ".old", then rclone will end up deleting this file next time it
-updates its configuration file!
+the new file. Then it will rename the existing file to a temporary
+name as backup. Next, rclone will rename the new file to the correct name,
+before finally cleaning up by deleting the backup file.
+
+If the configuration file path used by rclone is a symbolic link, then
+this will be evaluated and rclone will write to the resolved path, instead
+of overwriting the symbolic link. Temporary files used in the process
+(described above) will be written to the same parent directory as that
+of the resolved configuration file, but if this directory is also a
+symbolic link it will not be resolved and the temporary files will be
+written to the location of the directory symbolic link.
 
 ### --contimeout=TIME ###
 
