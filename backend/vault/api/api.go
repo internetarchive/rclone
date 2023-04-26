@@ -221,7 +221,7 @@ func (api *API) SplitPath(p string) (*PathInfo, error) {
 	)
 	switch {
 	case len(parts) < 2:
-		return nil, fmt.Errorf("invalid path")
+		return nil, fmt.Errorf("invalid path: %v, expected at least to path segments: %v", p, parts)
 	default:
 		pi.CollectionTreeNode, err = api.ResolvePath("/" + parts[0])
 		if err != nil {

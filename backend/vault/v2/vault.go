@@ -27,7 +27,6 @@ import (
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
-	"github.com/rclone/rclone/backend/vault/pathutil"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -359,9 +358,6 @@ func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (s string, err error) {
 // support object size information.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
-	if !pathutil.IsValidPath(src.Remote()) {
-		return nil, ErrInvalidPath
-	}
 	// (1) Start a deposit, if not already started. TODO: support resuming a deposit.
 	if err := f.requestDeposit(ctx); err != nil {
 		return nil, err
