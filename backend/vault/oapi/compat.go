@@ -132,16 +132,9 @@ func (capi *CompatAPI) Client() *http.Client {
 // here at the moment.
 func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 	fs.Debugf(capi, "api CSRF intercept")
-	kind := "users"
-	re := regexp.MustCompile(".*/api/([^/]*)/")
-	matches := re.FindStringSubmatch(req.URL.String())
-	if len(matches) == 2 {
-		kind = matches[1]
-	}
-	anyLink, err := url.JoinPath(capi.Endpoint, kind) // most likely, any valid path will do
-	if err != nil {
-		return err
-	}
+	// previously, we used api/collections or api/users, etc - but we don't get
+	// any HTML back from resource endpoints; but just .../api works
+	anyLink := capi.Endpoint
 	fs.Debugf(capi, "using referer: %v", anyLink)
 	r, err := http.NewRequest("GET", anyLink, nil)
 	if err != nil {
