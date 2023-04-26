@@ -47,6 +47,8 @@ var (
 	ErrUserNotFound = errors.New("user not found")
 	// ErrAmbiguousQuery when we except 0 or 1 result in the result set, but get more.
 	ErrAmbiguousQuery = errors.New("ambiguous query")
+	// ErrMissingCSRFToken may occur, if site structure changes
+	ErrMissingCSRFToken = errors.New("missing CSRF token")
 )
 
 // Error for failed api requests.
@@ -161,7 +163,7 @@ func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 		fs.Debugf(capi, "set header: %v", req.Header)
 		return nil
 	}
-	return fmt.Errorf("could not set csrf token")
+	return ErrMissingCSRFToken
 }
 
 // Compatibility methods, from vault/api/api.go
