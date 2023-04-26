@@ -26,7 +26,7 @@ make migrate
 # superuser admin:admin
 DJANGO_SUPERUSER_PASSWORD=admin DJANGO_SUPERUSER_USERNAME=admin DJANGO_SUPERUSER_EMAIL=admin@example.com ./venv/bin/python manage.py createsuperuser --noinput
 
-# fixtures are exported manually from a manually set up vault instances
+# fixtures are exported manually from a manually set up vault instance
 #
 #   $ ./venv/bin/python manage.py dumpdata \
 #           --exclude auth.permission \
