@@ -297,7 +297,23 @@ func (capi *CompatAPI) DepositStatus(id int64) (*api.DepositStatus, error) {
 }
 
 func (capi *CompatAPI) CreateCollection(ctx context.Context, name string) error {
-	return capi.legacyAPI.CreateCollection(ctx, name)
+	// return capi.legacyAPI.CreateCollection(ctx, name)
+	body := CollectionsCreateJSONRequestBody{
+		Name: name,
+	}
+	resp, err := capi.client.CollectionsCreate(ctx, body)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode >= 400 {
+		b, err := httputil.DumpResponse(resp, true)
+		if err != nil {
+			return err
+		}
+		fs.Debugf(capi, "create collection: got http %v: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("create collection: got http %v", resp.StatusCode)
+	}
+	return nil
 }
 
 func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, name string) error {
@@ -320,8 +336,8 @@ func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, n
 		if err != nil {
 			return err
 		}
-		fs.Debugf(capi, "move: got http %v: %s", resp.StatusCode, string(b))
-		return fmt.Errorf("move: got http %v", resp.StatusCode)
+		fs.Debugf(capi, "create folder: got http %v: %s", resp.StatusCode, string(b))
+		return fmt.Errorf("create folder: got http %v", resp.StatusCode)
 	}
 	return nil
 }
