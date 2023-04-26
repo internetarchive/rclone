@@ -11,6 +11,7 @@ import (
 
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/oapi"
+	v2 "github.com/rclone/rclone/backend/vault/v2"
 	"github.com/rclone/rclone/fstest/fstests"
 )
 
@@ -36,7 +37,7 @@ func TestIntegration(t *testing.T) {
 	// leads to failing tests; fix this.
 	fstests.Run(t, &fstests.Opt{
 		RemoteName:               remoteName,
-		NilObject:                (*Object)(nil),
+		NilObject:                (*v2.Object)(nil),
 		SkipFsCheckWrap:          true,
 		SkipInvalidUTF8:          true,
 		SkipBadWindowsCharacters: true,

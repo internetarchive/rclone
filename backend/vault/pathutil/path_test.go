@@ -28,11 +28,15 @@ func TestIsPathValidBucketPrefix(t *testing.T) {
 		{"invalid byte", P, "ab\x0ac", false},
 		{"invalid byte", P, "ab\x0dc", false},
 		{"illegal xml", P, "ab\x11c", false},
+		{"angle brackets and whitespaces are not ok", P, "a/b <123>.txt", false},
+		{"parentheses are ok", P, "a/b(123).txt", true},
+		{"parentheses and whitespaces are ok", P, "a/b (123).txt", true},
+		{"brackets and whitespaces are ok", P, "a/b [123].txt", true},
 	}
 	for _, c := range cases {
 		result := isValidPath(c.Path, c.BucketPrefix)
 		if result != c.Result {
-			t.Errorf("[%v] got %v, want %v", c.Path, result, c.Result)
+			t.Errorf("[%v] got %v, want %v (%v)", c.Path, result, c.Result, c.About)
 		}
 	}
 }
