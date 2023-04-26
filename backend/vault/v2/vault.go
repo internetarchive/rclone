@@ -136,7 +136,7 @@ func (opt Options) EndpointNormalized() string {
 // EndpointNormalizedDepositsV2 returns the deposits V2 endpoint.
 func (opt Options) EndpointNormalizedDepositsV2() (string, error) {
 	u := opt.EndpointNormalized()
-	if len(u) < len("http://a.to") {
+	if len(u) < 11 { // len("http://a.to")
 		return "", ErrInvalidEndpoint
 	}
 	if strings.HasSuffix(u, "/api") {
@@ -151,15 +151,15 @@ type Fs struct {
 	name     string
 	root     string
 	opt      Options         // vault options
-	api      *oapi.CompatAPI // compat api, wrapper around oapi, exposing legacy methods
+	api      *oapi.CompatAPI // compat api, wrapper around oapi, exposing legacy methods; TODO: get rid of
 	features *fs.Features    // optional features
-	// On a first put, we are registering a deposit and retrieving a deposit
-	// id. Any subsequent upload will be associated with that deposit id. On
-	// shutdown, we send a finalize signal.
+	// On a first put, we register a deposit to get a deposit id. Any
+	// subsequent upload will be associated with that deposit id. On shutdown,
+	// we send a finalize signal.
 	depositsV2Client  *ClientWithResponses // v2 deposits API
 	mu                sync.Mutex           // locks inflightDepositID
 	inflightDepositID int                  // inflight deposit id, empty if none inflight
-	handle            atexit.FnHandle      //
+	handle            atexit.FnHandle      // used to finalize deposits when interrupted
 }
 
 // Fs Info
