@@ -294,10 +294,36 @@ func (capi *CompatAPI) ResolvePath(p string) (*api.TreeNode, error) {
 
 func (capi *CompatAPI) DepositStatus(id int64) (*api.DepositStatus, error) {
 	return capi.legacyAPI.DepositStatus(id)
+	// TODO: "deposit_status" is not covered by openapi schema
+	// var body bytes.Buffer
+	// err := json.NewEncoder(&body).Encode(struct {
+	// 	ID string `json:"deposit_id"`
+	// }{
+	// 	ID: fmt.Sprintf("%v", id),
+	// })
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// req, err := http.NewRequest("GET", path.Join(capi.Endpoint, "deposit_status"), &body)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// resp, err := capi.c.Do(req)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// defer resp.Body.Close()
+	// if resp.StatusCode >= 400 {
+	// 	return nil, fmt.Errorf("deposit status: got %v", resp.StatusCode)
+	// }
+	// var ds api.DepositStatus
+	// if err := json.NewDecoder(resp.Body).Decode(&ds); err != nil {
+	// 	return nil, err
+	// }
+	// return &ds, nil
 }
 
 func (capi *CompatAPI) CreateCollection(ctx context.Context, name string) error {
-	// return capi.legacyAPI.CreateCollection(ctx, name)
 	body := CollectionsCreateJSONRequestBody{
 		Name: name,
 	}
