@@ -455,6 +455,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
 			return nil, err
 		}
+		// TODO: we get a HTTP 404 from prod, with message: {"detail": "Not Found"}
 		if resp.StatusCode >= 400 {
 			fs.Debugf(f, "chunk upload failed (deposit id=%v)", f.inflightDepositID)
 			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
