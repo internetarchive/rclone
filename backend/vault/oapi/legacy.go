@@ -17,9 +17,10 @@ func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
 		// UploadedBy is a potentially nil object, and we want the ID, so need
 		// indirect once more.
 		var (
-			uploadedByID = 0
-			path         = ""
-			url          = ""
+			uploadedByID       = 0
+			path               = ""
+			url                = ""
+			size         int64 = 0
 		)
 		if t.UploadedBy != nil {
 			if v := safeDereference(t.UploadedBy.Id); v != nil {
@@ -31,6 +32,9 @@ func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
 		}
 		if v := safeDereference(t.Url); v != nil {
 			url = v.(string)
+		}
+		if v := safeDereference(t.Size); v != nil {
+			size = v.(int64)
 		}
 		result = append(result, &api.TreeNode{
 			Comment:              safeDereference(t.Comment),
@@ -46,7 +50,7 @@ func toLegacyTreeNode(vs *[]TreeNode) (result []*api.TreeNode) {
 			PreDepositModifiedAt: safeTimeFormat(t.PreDepositModifiedAt, time.RFC3339),
 			Sha1Sum:              safeDereference(t.Sha1Sum),
 			Sha256Sum:            safeDereference(t.Sha256Sum),
-			ObjectSize:           *t.Size,
+			ObjectSize:           size,
 			UploadedAt:           safeTimeFormat(t.UploadedAt, time.RFC3339),
 			UploadedBy:           uploadedByID,
 			URL:                  url,
