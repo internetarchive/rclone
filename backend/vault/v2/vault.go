@@ -158,7 +158,6 @@ type Fs struct {
 	depositsV2Client  *ClientWithResponses // v2 deposits API
 	mu                sync.Mutex           // locks inflightDepositID
 	inflightDepositID int                  // inflight deposit id, empty if none inflight
-	handle            atexit.FnHandle      // used to finalize deposits when interrupted
 }
 
 // Fs Info
@@ -330,9 +329,11 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		return ErrMissingDepositIdentifier
 	}
 	f.inflightDepositID = resp.JSON200.DepositId
-	// TODO: use atexit mechanism
-	f.handle = atexit.Register(func() {
-		err := f.Shutdown(ctx)
+	// We want to call finalize, even if we exit with an error.
+	atexit.Register(func() {
+		// TODO: At this point, we want to wrap up the current upload at least,
+		// so we do not get a 400.
+		err := f.finalize(ctx)
 		if err != nil {
 			fs.Infof(f, "could not finalize deposit from client: %v", err)
 		}
@@ -358,66 +359,118 @@ func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (s string, err error) {
 // support object size information.
 func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) (fs.Object, error) {
 	fs.Debugf(f, "put %v [%v]", src.Remote(), src.Size())
+	var (
+		flowIdentifier string
+		err            error
+	)
 	// (1) Start a deposit, if not already started. TODO: support resuming a deposit.
 	if err := f.requestDeposit(ctx); err != nil {
 		return nil, err
 	}
 	// (2) Get a flow identifier for file.
-	flowIdentifier, err := f.getFlowIdentifier(src)
-	if err != nil {
+	if flowIdentifier, err = f.getFlowIdentifier(src); err != nil {
 		return nil, err
 	}
 	// (3) Determine, whether we can get the size of the object.
 	var (
-		filename   string
+		tempfile   string
 		objectSize int
 	)
-	switch {
-	case src.Size() == -1: // https://is.gd/O7uQoq
-		if filename, err = iotemp.TempFileFromReader(in); err != nil {
-			return nil, err
-		}
-		fs.Debugf(f, "object does not support size, spooled to temp file: %v", filename)
-		fi, err := os.Stat(filename)
-		if err != nil {
-			return nil, err
-		}
-		objectSize = int(fi.Size())
-		f, err := os.Open(filename)
+	if tempfile, objectSize, err = f.objectSize(in, src); err != nil {
+		return nil, err
+	}
+	if tempfile != "" {
+		f, err := os.Open(tempfile)
 		if err != nil {
 			return nil, err
 		}
 		in = f // breaks "accounting", does it affect anything?
 		defer func() {
 			_ = f.Close()
-			_ = os.Remove(filename)
+			_ = os.Remove(tempfile)
 		}()
-	default:
-		objectSize = int(src.Size())
 	}
 	// (4) Need to get total size, and total number of chunks.
-	var (
-		flowTotalSize   = objectSize
-		flowTotalChunks = int(math.Ceil(float64(flowTotalSize) / float64(f.opt.ChunkSize)))
-	)
+	var uploadInfo = &UploadInfo{
+		flowTotalSize:   objectSize,
+		flowTotalChunks: int(math.Ceil(float64(objectSize) / float64(f.opt.ChunkSize))),
+		flowIdentifier:  flowIdentifier,
+		in:              in,
+		src:             src,
+	}
+	if err := f.upload(ctx, uploadInfo); err != nil {
+		return nil, err
+	}
 	// (5) Upload file in chunks. TODO: this can be parallelized as well.
 	// We're loading a small (order 1M) chunk into memory, so we get the
 	// correct total size of the chunk.
-	for i := 1; i <= flowTotalChunks; i++ {
-		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", src.Remote(), i, flowTotalChunks)
+	//
+	// TODO: if we get interrupted inside this loop, we may not be able to
+	// finalize the deposit, refs WT-2150, potentially related:
+	// https://github.com/rclone/rclone/issues/966
+	fs.Debugf(f, "chunk upload complete")
+	return &Object{
+		fs:     f,
+		remote: src.Remote(),
+		treeNode: &api.TreeNode{
+			NodeType:   "FILE",
+			ObjectSize: src.Size(),
+		},
+	}, nil
+}
+
+// objectSize tries to get the size of the object. If the object does not
+// support reading its size, we spool the data into a temporary file and return
+// the temporary filename.
+func (f *Fs) objectSize(in io.Reader, src fs.ObjectInfo) (tempfile string, size int, err error) {
+	switch {
+	case src.Size() == -1:
 		var (
-			buf      bytes.Buffer                          // buffer for file data (we need the actual size at upload time)
-			lr       = io.LimitReader(in, f.opt.ChunkSize) // chunk reader over stream
-			wbuf     = bytes.Buffer{}                      // buffer for multipart message
-			w        = multipart.NewWriter(&wbuf)          // multipart writer
-			mimeType = "application/octet-stream"          // file mime type
-			n        int64                                 // actual length of this chunk
-			err      error                                 // any error
-			fw       io.Writer                             // formfile writer
-			resp     *http.Response                        // deposit API response
+			fi os.FileInfo
+			f  *os.File
+		)
+		// Source does not support size, we stream to a temporary file and
+		// return a reader of that file.
+		if tempfile, err = iotemp.TempFileFromReader(in); err != nil {
+			return "", 0, err
+		}
+		fs.Debugf(f, "object does not support size, spooled to temp file: %v", tempfile)
+		if fi, err = os.Stat(tempfile); err != nil {
+			return "", 0, err
+		}
+		size = int(fi.Size())
+	default:
+		// Most objects support size
+		size = int(src.Size())
+	}
+	return "", size, nil
+}
+
+// UploadInfo contains all information for a single file upload.
+type UploadInfo struct {
+	flowTotalChunks int
+	flowTotalSize   int
+	flowIdentifier  string
+	in              io.Reader
+	src             fs.ObjectInfo
+}
+
+func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
+	for i := 1; i <= info.flowTotalChunks; i++ {
+		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", info.src.Remote(), i, info.flowTotalChunks)
+		var (
+			buf      bytes.Buffer                               // buffer for file data (we need the actual size at upload time)
+			lr       = io.LimitReader(info.in, f.opt.ChunkSize) // chunk reader over stream
+			wbuf     = bytes.Buffer{}                           // buffer for multipart message
+			w        = multipart.NewWriter(&wbuf)               // multipart writer
+			mimeType = "application/octet-stream"               // file mime type
+			n        int64                                      // actual length of this chunk
+			err      error                                      // any error
+			fw       io.Writer                                  // formfile writer
+			resp     *http.Response                             // deposit API response
 		)
 		if n, err = io.Copy(&buf, lr); err != nil { // n <= opt.ChunkSize
-			return nil, err
+			return err
 		}
 		// (5a) on first chunk, try to find mime type
 		if i == 1 {
@@ -429,31 +482,31 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", i))
 		mfw.WriteField("flowChunkSize", fmt.Sprintf("%v", f.opt.ChunkSize))
 		mfw.WriteField("flowCurrentChunkSize", fmt.Sprintf("%v", n))
-		mfw.WriteField("flowFilename", path.Base(src.Remote()))
-		mfw.WriteField("flowIdentifier", flowIdentifier)
-		mfw.WriteField("flowRelativePath", src.Remote())
-		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", flowTotalChunks))
-		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", flowTotalSize))
+		mfw.WriteField("flowFilename", path.Base(info.src.Remote()))
+		mfw.WriteField("flowIdentifier", info.flowIdentifier)
+		mfw.WriteField("flowRelativePath", info.src.Remote())
+		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", info.flowTotalChunks))
+		mfw.WriteField("flowTotalSize", fmt.Sprintf("%v", info.flowTotalSize))
 		mfw.WriteField("flowMimetype", mimeType)
-		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", src.ModTime(ctx).Format(time.RFC3339)))
+		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", info.src.ModTime(ctx).Format(time.RFC3339)))
 		if err := mfw.Err(); err != nil {
-			return nil, err
+			return err
 		}
 		// (5c) write multipart file
-		formFileName := fmt.Sprintf("%s-%016d", flowIdentifier, i)
+		formFileName := fmt.Sprintf("%s-%016d", info.flowIdentifier, i)
 		if fw, err = w.CreateFormFile("file", formFileName); err != nil { // can we use a random file name?
-			return nil, err
+			return err
 		}
 		if _, err := io.Copy(fw, &buf); err != nil {
-			return nil, err
+			return err
 		}
 		// (5d) finalize multipart writer
 		if err := w.Close(); err != nil {
-			return nil, err
+			return err
 		}
 		// (5e) send chunk
 		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
-			return nil, err
+			return err
 		}
 		// TODO: we get a HTTP 404 from prod, with message: {"detail": "Not Found"}
 		if resp.StatusCode >= 400 {
@@ -461,20 +514,12 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
 			b, err := httputil.DumpResponse(resp, true)
 			if err != nil {
-				return nil, err
+				return err
 			}
 			fs.Debugf(f, string(b))
 		}
 	}
-	fs.Debugf(f, "chunk upload complete")
-	return &Object{
-		fs:     f,
-		remote: src.Remote(),
-		treeNode: &api.TreeNode{
-			NodeType:   "FILE",
-			ObjectSize: src.Size(),
-		},
-	}, nil
+	return nil
 }
 
 // Mkdir creates a directory, if it does not exist.
@@ -696,16 +741,22 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 	return f.api.Remove(ctx, t)
 }
 
-// Shutdown sends finalize signal.
 func (f *Fs) Shutdown(ctx context.Context) error {
+	// atexit.Run() is called on interrupts, but should as per docs also called
+	// in the normal workflow. If a deposit has been started, we registered a
+	// callback at deposit creation time.
+	atexit.Run()
+	// TODO: shutdown may check if deposit state is not REGISTERED any more
+	return nil
+}
+
+// finalize sends finalize signal, only once.
+func (f *Fs) finalize(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.inflightDepositID == 0 {
 		// nothing to be done
 		return nil
-	}
-	if f.handle != nil {
-		atexit.Unregister(f.handle)
 	}
 	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
