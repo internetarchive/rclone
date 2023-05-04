@@ -115,6 +115,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		Shutdown:                f.Shutdown,
 		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
+	f.inflightUploads = make(map[string]*UploadInfo)
 	return f, nil
 }
 
@@ -155,9 +156,10 @@ type Fs struct {
 	// On a first put, we register a deposit to get a deposit id. Any
 	// subsequent upload will be associated with that deposit id. On shutdown,
 	// we send a finalize signal.
-	depositsV2Client  *ClientWithResponses // v2 deposits API
-	mu                sync.Mutex           // locks inflightDepositID
-	inflightDepositID int                  // inflight deposit id, empty if none inflight
+	depositsV2Client  *ClientWithResponses   // v2 deposits API
+	mu                sync.Mutex             // locks inflightDepositID and inflightUploads
+	inflightDepositID int                    // inflight deposit id, empty if none inflight
+	inflightUploads   map[string]*UploadInfo // currently uploading file, for graceful shutdown
 }
 
 // Fs Info
@@ -387,6 +389,8 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		in = f // breaks "accounting", does it affect anything?
 		defer func() {
 			_ = f.Close()
+			// TODO: may be a problem on shutdown, as that will happen
+			// elsewhere; TODO: move this into upload altogether
 			_ = os.Remove(tempfile)
 		}()
 	}
@@ -398,9 +402,10 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		in:              in,
 		src:             src,
 	}
-	if err := f.upload(ctx, uploadInfo); err != nil {
-		return nil, err
-	}
+	// (4a) mark this upload as inflight
+	f.mu.Lock()
+	f.inflightUploads[flowIdentifier] = uploadInfo
+	f.mu.Unlock()
 	// (5) Upload file in chunks. TODO: this can be parallelized as well.
 	// We're loading a small (order 1M) chunk into memory, so we get the
 	// correct total size of the chunk.
@@ -408,6 +413,13 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	// TODO: if we get interrupted inside this loop, we may not be able to
 	// finalize the deposit, refs WT-2150, potentially related:
 	// https://github.com/rclone/rclone/issues/966
+	if err := f.upload(ctx, uploadInfo); err != nil {
+		return nil, err
+	}
+	// (6) Unmark as inflight.
+	f.mu.Lock()
+	delete(f.inflightUploads, flowIdentifier)
+	f.mu.Unlock()
 	fs.Debugf(f, "chunk upload complete")
 	return &Object{
 		fs:     f,
@@ -453,11 +465,37 @@ type UploadInfo struct {
 	flowIdentifier  string
 	in              io.Reader
 	src             fs.ObjectInfo
+	// i is the inflightChunkNumber keeps track of where we are with the
+	// upload, modified during upload and only here, so we may pick up some
+	// half-done work in the shutdown process, so we can get a HTTP 200 from
+	// finalize
+	i int
+}
+
+// IsDone returns the
+func (info *UploadInfo) IsDone() bool {
+	return info.i == info.flowTotalChunks
+}
+
+func (info *UploadInfo) resetStream() error {
+	if info.src.Fs().Name() == "local" {
+		filename := path.Join(info.src.Fs().Root(), info.src.String())
+		f, err := os.Open(filename)
+		if err != nil {
+			return err
+		}
+		info.in = f
+		info.i = 0
+		return nil
+	} else {
+		return fmt.Errorf("cannot reset non-local stream")
+	}
 }
 
 func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
-	for i := 1; i <= info.flowTotalChunks; i++ {
-		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", info.src.Remote(), i, info.flowTotalChunks)
+	for info.i < info.flowTotalChunks {
+		info.i++
+		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", info.src.Remote(), info.i, info.flowTotalChunks)
 		var (
 			buf      bytes.Buffer                               // buffer for file data (we need the actual size at upload time)
 			lr       = io.LimitReader(info.in, f.opt.ChunkSize) // chunk reader over stream
@@ -473,13 +511,13 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			return err
 		}
 		// (5a) on first chunk, try to find mime type
-		if i == 1 {
+		if info.i == 1 {
 			mimeType = http.DetectContentType(buf.Bytes())
 		}
 		// (5b) write multipart fields
 		mfw := &iotemp.MultipartFieldWriter{W: w}
 		mfw.WriteField("depositId", fmt.Sprintf("%v", f.inflightDepositID))
-		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", i))
+		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", info.i))
 		mfw.WriteField("flowChunkSize", fmt.Sprintf("%v", f.opt.ChunkSize))
 		mfw.WriteField("flowCurrentChunkSize", fmt.Sprintf("%v", n))
 		mfw.WriteField("flowFilename", path.Base(info.src.Remote()))
@@ -493,7 +531,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			return err
 		}
 		// (5c) write multipart file
-		formFileName := fmt.Sprintf("%s-%016d", info.flowIdentifier, i)
+		formFileName := fmt.Sprintf("%s-%016d", info.flowIdentifier, info.i)
 		if fw, err = w.CreateFormFile("file", formFileName); err != nil { // can we use a random file name?
 			return err
 		}
@@ -750,13 +788,28 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	return nil
 }
 
-// finalize sends finalize signal, only once.
+// finalize sends finalize signal, only once, called on normal shutdown and on
+// interrupted shutdown.
 func (f *Fs) finalize(ctx context.Context) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
 	if f.inflightDepositID == 0 {
 		// nothing to be done
 		return nil
+	}
+	// Try to upload any local file, otherwise fail, related issue, refs WT-2050.
+	if len(f.inflightUploads) > 0 {
+		fs.Infof(f, "trying to wrap up inflight %v upload(s) ...", len(f.inflightUploads))
+	}
+	for _, info := range f.inflightUploads {
+		fs.Debugf(f, "inflight upload [done=%v]: %#v", info.IsDone(), info)
+		if err := info.resetStream(); err != nil {
+			fs.Infof(f, "note: interrupting cloud-to-vault uploads is currently flaky, expect finalize to fail")
+		} else {
+			if err := f.upload(ctx, info); err != nil {
+				fs.Infof(f, "upload failed (finalize will likely fail, too): %v", err)
+			}
+		}
 	}
 	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
@@ -767,6 +820,12 @@ func (f *Fs) finalize(ctx context.Context) error {
 		return err
 	}
 	if resp.StatusCode() != 200 {
+		fs.Debugf(f, "[finalize] got %v -- response dump follows", resp.Status)
+		b, err := httputil.DumpResponse(resp.HTTPResponse, true)
+		if err != nil {
+			return err
+		}
+		fs.Debugf(f, string(b))
 		return fmt.Errorf("finalize got: %v", resp.StatusCode())
 	}
 	fs.Debugf(f, "finalize done")
