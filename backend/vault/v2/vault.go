@@ -543,6 +543,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			return err
 		}
 		// (5e) send chunk
+		// TODO: should we ask first with HasChunk?
 		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
 			return err
 		}
@@ -804,7 +805,7 @@ func (f *Fs) finalize(ctx context.Context) error {
 	for _, info := range f.inflightUploads {
 		fs.Debugf(f, "inflight upload [done=%v]: %#v", info.IsDone(), info)
 		if err := info.resetStream(); err != nil {
-			fs.Infof(f, "note: interrupting cloud-to-vault uploads is currently flaky, expect finalize to fail")
+			fs.Infof(f, "note: graceful shutdown of cloud-to-vault uploads currently not supported, expect finalize to fail")
 		} else {
 			if err := f.upload(ctx, info); err != nil {
 				fs.Infof(f, "upload failed (finalize will likely fail, too): %v", err)
@@ -820,7 +821,7 @@ func (f *Fs) finalize(ctx context.Context) error {
 		return err
 	}
 	if resp.StatusCode() != 200 {
-		fs.Debugf(f, "[finalize] got %v -- response dump follows", resp.Status)
+		fs.Debugf(f, "[finalize] got %v -- response dump follows", resp.StatusCode())
 		b, err := httputil.DumpResponse(resp.HTTPResponse, true)
 		if err != nil {
 			return err
