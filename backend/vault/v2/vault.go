@@ -31,7 +31,6 @@ import (
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
-	"github.com/rclone/rclone/lib/atexit"
 )
 
 const flowIdentifierPrefix = "rclone-vault-flow"
@@ -115,7 +114,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		Shutdown:                f.Shutdown,
 		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
-	f.inflightUploads = make(map[string]*UploadInfo)
+	// f.inflightUploads = make(map[string]*UploadInfo)
 	return f, nil
 }
 
@@ -156,10 +155,9 @@ type Fs struct {
 	// On a first put, we register a deposit to get a deposit id. Any
 	// subsequent upload will be associated with that deposit id. On shutdown,
 	// we send a finalize signal.
-	depositsV2Client  *ClientWithResponses   // v2 deposits API
-	mu                sync.Mutex             // locks inflightDepositID and inflightUploads
-	inflightDepositID int                    // inflight deposit id, empty if none inflight
-	inflightUploads   map[string]*UploadInfo // currently uploading file, for graceful shutdown
+	depositsV2Client  *ClientWithResponses // v2 deposits API
+	mu                sync.Mutex           // locks inflightDepositID
+	inflightDepositID int                  // inflight deposit id, empty if none inflight
 }
 
 // Fs Info
@@ -331,15 +329,6 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		return ErrMissingDepositIdentifier
 	}
 	f.inflightDepositID = resp.JSON200.DepositId
-	// We want to call finalize, even if we exit with an error.
-	atexit.Register(func() {
-		// TODO: At this point, we want to wrap up the current upload at least,
-		// so we do not get a 400.
-		err := f.finalize(ctx)
-		if err != nil {
-			fs.Infof(f, "could not finalize deposit from client: %v", err)
-		}
-	})
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
 	return nil
 }
@@ -402,10 +391,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		in:              in,
 		src:             src,
 	}
-	// (4a) mark this upload as inflight
-	f.mu.Lock()
-	f.inflightUploads[flowIdentifier] = uploadInfo
-	f.mu.Unlock()
 	// (5) Upload file in chunks. TODO: this can be parallelized as well.
 	// We're loading a small (order 1M) chunk into memory, so we get the
 	// correct total size of the chunk.
@@ -416,10 +401,6 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if err := f.upload(ctx, uploadInfo); err != nil {
 		return nil, err
 	}
-	// (6) Unmark as inflight.
-	f.mu.Lock()
-	delete(f.inflightUploads, flowIdentifier)
-	f.mu.Unlock()
 	fs.Debugf(f, "chunk upload complete")
 	return &Object{
 		fs:     f,
@@ -548,6 +529,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			return err
 		}
 		// TODO: we get a HTTP 404 from prod, with message: {"detail": "Not Found"}
+		// TODO: we get a 404 because deposit switches to "REPLICATED" quickly
 		if resp.StatusCode >= 400 {
 			fs.Debugf(f, "chunk upload failed (deposit id=%v)", f.inflightDepositID)
 			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
@@ -784,9 +766,9 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 	// atexit.Run() is called on interrupts, but should as per docs also called
 	// in the normal workflow. If a deposit has been started, we registered a
 	// callback at deposit creation time.
-	atexit.Run()
+	// atexit.Run()
 	// TODO: shutdown may check if deposit state is not REGISTERED any more
-	return nil
+	return f.finalize(ctx)
 }
 
 // finalize sends finalize signal, only once, called on normal shutdown and on
@@ -799,19 +781,19 @@ func (f *Fs) finalize(ctx context.Context) error {
 		return nil
 	}
 	// Try to upload any local file, otherwise fail, related issue, refs WT-2050.
-	if len(f.inflightUploads) > 0 {
-		fs.Infof(f, "trying to wrap up inflight %v upload(s) ...", len(f.inflightUploads))
-	}
-	for _, info := range f.inflightUploads {
-		fs.Debugf(f, "inflight upload [done=%v]: %#v", info.IsDone(), info)
-		if err := info.resetStream(); err != nil {
-			fs.Infof(f, "note: graceful shutdown of cloud-to-vault uploads currently not supported, expect finalize to fail")
-		} else {
-			if err := f.upload(ctx, info); err != nil {
-				fs.Infof(f, "upload failed (finalize will likely fail, too): %v", err)
-			}
-		}
-	}
+	// if len(f.inflightUploads) > 0 {
+	// 	fs.Infof(f, "trying to wrap up inflight %v upload(s) ...", len(f.inflightUploads))
+	// }
+	// for _, info := range f.inflightUploads {
+	// 	fs.Debugf(f, "inflight upload [done=%v]: %#v", info.IsDone(), info)
+	// 	if err := info.resetStream(); err != nil {
+	// 		fs.Infof(f, "note: graceful shutdown of cloud-to-vault uploads currently not supported, expect finalize to fail")
+	// 	} else {
+	// 		if err := f.upload(ctx, info); err != nil {
+	// 			fs.Infof(f, "upload failed (finalize will likely fail, too): %v", err)
+	// 		}
+	// 	}
+	// }
 	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
 		DepositId: f.inflightDepositID,
