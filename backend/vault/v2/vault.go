@@ -524,7 +524,11 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			return err
 		}
 		// (5e) send chunk
-		// TODO: should we ask first with HasChunk?
+		// The context passed may have a too eager deadline, so we give it a
+		// fresh timeout per request. Note: we still get a 404.
+		ctx, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
+		defer cancelFunc()
+		fs.Debugf(f, "starting upload... (buffer size: %v)", wbuf.Len())
 		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
 			return err
 		}
