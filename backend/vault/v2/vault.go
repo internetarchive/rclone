@@ -158,6 +158,7 @@ type Fs struct {
 	depositsV2Client  *ClientWithResponses // v2 deposits API
 	mu                sync.Mutex           // locks inflightDepositID
 	inflightDepositID int                  // inflight deposit id, empty if none inflight
+	started           time.Time            // registration time of the deposit
 }
 
 // Fs Info
@@ -329,6 +330,7 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		return ErrMissingDepositIdentifier
 	}
 	f.inflightDepositID = resp.JSON200.DepositId
+	f.started = time.Now()
 	fs.Debugf(f, "successfully registered deposit: %v", f.inflightDepositID)
 	return nil
 }
@@ -476,7 +478,7 @@ func (info *UploadInfo) resetStream() error {
 func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 	for info.i < info.flowTotalChunks {
 		info.i++
-		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d", info.src.Remote(), info.i, info.flowTotalChunks)
+		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d [%v]", info.src.Remote(), info.i, info.flowTotalChunks, time.Since(f.started))
 		var (
 			buf      bytes.Buffer                               // buffer for file data (we need the actual size at upload time)
 			lr       = io.LimitReader(info.in, f.opt.ChunkSize) // chunk reader over stream
@@ -528,7 +530,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 		// fresh timeout per request. Note: we still get a 404.
 		ctx, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
 		defer cancelFunc()
-		fs.Debugf(f, "starting upload... (buffer size: %v)", wbuf.Len())
+		fs.Debugf(f, "starting upload... (buffer size: %v, [%v])", wbuf.Len(), time.Since(f.started))
 		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
 			return err
 		}
