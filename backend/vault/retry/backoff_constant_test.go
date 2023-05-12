@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sethvargo/go-retry"
+	"github.com/rclone/rclone/backend/vault/retry"
 )
 
 func TestConstantBackoff(t *testing.T) {
