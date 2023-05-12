@@ -343,7 +343,6 @@ func (capi *CompatAPI) CreateCollection(ctx context.Context, name string) error 
 }
 
 func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, name string) error {
-	// return capi.legacyAPI.CreateFolder(ctx, parent, name)
 	var (
 		nodeType  = NodeTypeEnumFOLDER
 		parentURL = parent.URL
@@ -379,12 +378,12 @@ func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
 // Rename a treenode.
 func (capi *CompatAPI) Rename(ctx context.Context, t *api.TreeNode, name string) error {
 	fs.Debugf(capi, "rename")
-	payload := struct {
-		Name string `json:"name"`
-	}{
-		name,
-	}
-	var buf bytes.Buffer
+	var (
+		payload = struct {
+			Name string `json:"name"`
+		}{name}
+		buf bytes.Buffer
+	)
 	if err := json.NewEncoder(&buf).Encode(payload); err != nil {
 		return err
 	}
@@ -494,7 +493,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 	if resp.StatusCode() != 200 {
 		return nil, err
 	}
-	return toLegacyTreeNode(resp.JSON200.Results), nil
+	return toLegacyTreeNodes(resp.JSON200.Results), nil
 }
 
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
@@ -577,7 +576,7 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err
 	if resp.StatusCode() != 200 {
 		return nil, fmt.Errorf("treenode: got http %v", resp.StatusCode())
 	}
-	result = toLegacyTreeNode(resp.JSON200.Results)
+	result = toLegacyTreeNodes(resp.JSON200.Results)
 	return result, nil
 }
 
@@ -671,6 +670,24 @@ func (capi *CompatAPI) Plan() (*api.Plan, error) {
 		PricePerTerabyte:       r.JSON200.PricePerTerabyte,
 		URL:                    *r.JSON200.Url,
 	}, nil
+}
+
+// root returns the organization treenode for the current API user.
+func (capi *CompatAPI) root() (*api.TreeNode, error) {
+	organization, err := capi.Organization()
+	if err != nil {
+		return nil, err
+	}
+	id, err := strconv.Atoi(organization.TreeNodeIdentifier())
+	if err != nil {
+		return nil, err
+	}
+	ctx := context.Background()
+	resp, err := capi.client.TreenodesRetrieveWithResponse(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return toLegacyTreeNode(resp.JSON200), nil
 }
 
 // safeTimeFormat return a formatted time or the empty string.
