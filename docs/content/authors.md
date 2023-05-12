@@ -720,3 +720,8 @@ put them back in again.` >}}
   * jladbrook <jhladbrook@gmail.com>
   * Loren Gordon <lorengordon@users.noreply.github.com>
   * dlitster <davidlitster@gmail.com>
+  * Tobias Gion <tobias@gion.io>
+  * Jānis Bebrītis <janis.bebritis@wunder.io>
+  * Adam K <github.com@ak.tidy.email>
+  * Andrei Smirnov <smirnov.captain@gmail.com>
+  * Janne Hellsten <jjhellst@gmail.com>

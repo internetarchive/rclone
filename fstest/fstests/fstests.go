@@ -526,23 +526,33 @@ func Run(t *testing.T, opt *Opt) {
 	t.Run("FsName", func(t *testing.T) {
 		skipIfNotOk(t)
 		got := removeConfigID(f.Name())
-		want := remoteName[:strings.LastIndex(remoteName, ":")+1]
+		var want string
 		if isLocalRemote {
-			want = "local:"
+			want = "local"
+		} else {
+			want = remoteName[:strings.LastIndex(remoteName, ":")]
+			comma := strings.IndexRune(remoteName, ',')
+			if comma >= 0 {
+				want = want[:comma]
+			}
 		}
-		require.Equal(t, want, got+":")
+		require.Equal(t, want, got)
 	})
 
 	// TestFsRoot tests the Root method
 	t.Run("FsRoot", func(t *testing.T) {
 		skipIfNotOk(t)
-		name := removeConfigID(f.Name()) + ":"
-		root := f.Root()
+		got := f.Root()
+		want := subRemoteName
+		colon := strings.LastIndex(want, ":")
+		if colon >= 0 {
+			want = want[colon+1:]
+		}
 		if isLocalRemote {
 			// only check last path element on local
-			require.Equal(t, filepath.Base(subRemoteName), filepath.Base(root))
+			require.Equal(t, filepath.Base(subRemoteName), filepath.Base(got))
 		} else {
-			require.Equal(t, subRemoteName, name+root)
+			require.Equal(t, want, got)
 		}
 	})
 
@@ -1512,9 +1522,12 @@ func Run(t *testing.T, opt *Opt) {
 
 				file1.Size = int64(buf.Len())
 				obj := findObject(ctx, t, f, file1.Path)
-				obji := object.NewStaticObjectInfo(file1.Path, file1.ModTime, int64(len(contents)), true, nil, obj.Fs())
+				remoteBefore := obj.Remote()
+				obji := object.NewStaticObjectInfo(file1.Path+"-should-be-ignored.bin", file1.ModTime, int64(len(contents)), true, nil, obj.Fs())
 				err := obj.Update(ctx, in, obji)
 				require.NoError(t, err)
+				remoteAfter := obj.Remote()
+				assert.Equal(t, remoteBefore, remoteAfter, "Remote should not change")
 				file1.Hashes = hash.Sums()
 
 				// check the object has been updated

@@ -144,6 +144,8 @@ type ConfigInfo struct {
 	Metadata                bool
 	ServerSideAcrossConfigs bool
 	TerminalColorMode       TerminalColorMode
+	DefaultTime             Time // time that directories with no time should display
+	Inplace                 bool // Download directly to destination file instead of atomic download to temp/rename
 }
 
 // NewConfig creates a new config with everything set to the default
@@ -185,6 +187,7 @@ func NewConfig() *ConfigInfo {
 	c.FsCacheExpireDuration = 300 * time.Second
 	c.FsCacheExpireInterval = 60 * time.Second
 	c.KvLockTime = 1 * time.Second
+	c.DefaultTime = Time(time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC))
 
 	// Perform a simple check for debug flags to enable debug logging during the flag initialization
 	for argIndex, arg := range os.Args {
