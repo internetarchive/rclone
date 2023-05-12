@@ -27,6 +27,7 @@ import (
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
+	"github.com/rclone/rclone/backend/vault/retry"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
@@ -59,6 +60,10 @@ You can download the latest release here: https://github.com/internetarchive/rcl
 Thank you for your understanding.
 
 `
+
+	UploadChunkTimeout                       = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
+	UploadChunkMaxRetries             uint64 = 10                     // how often to attempt to upload a single chunk, if it fails
+	UploadChunkExponentialBackoffBase        = 100 * time.Millisecond // exponential backoff base timeout
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -475,6 +480,7 @@ func (info *UploadInfo) resetStream() error {
 	}
 }
 
+// upload is the main transfer function for a single file, which is wrapped in an UploadInfo value.
 func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 	for info.i < info.flowTotalChunks {
 		info.i++
@@ -527,23 +533,43 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 		}
 		// (5e) send chunk
 		// The context passed may have a too eager deadline, so we give it a
-		// fresh timeout per request. Note: we still get a 404.
-		ctx, cancelFunc := context.WithTimeout(context.Background(), 300*time.Second)
-		defer cancelFunc()
-		fs.Debugf(f, "starting upload... (buffer size: %v, [%v])", wbuf.Len(), time.Since(f.started))
-		if resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf); err != nil {
-			return err
-		}
-		// TODO: we get a HTTP 404 from prod, with message: {"detail": "Not Found"}
-		// TODO: we get a 404 because deposit switches to "REPLICATED" quickly
-		if resp.StatusCode >= 400 {
-			fs.Debugf(f, "chunk upload failed (deposit id=%v)", f.inflightDepositID)
-			fs.Debugf(f, "got %v -- response dump follows", resp.Status)
-			b, err := httputil.DumpResponse(resp, true)
-			if err != nil {
-				return err
+		// fresh timeout per chunk upload request (note: this did not seem to
+		// have been the cause of the previously encountered 404).
+		ctx, cancel := context.WithTimeout(context.Background(), UploadChunkTimeout)
+		defer cancel()
+		backoff := retry.WithMaxRetries(UploadChunkMaxRetries, retry.NewExponential(UploadChunkExponentialBackoffBase))
+		err = retry.Do(ctx, backoff, func(ctx context.Context) error {
+			fs.Debugf(f, "starting upload... (buffer size: %v, [T=%v])", wbuf.Len(), time.Since(f.started))
+			resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
+			switch {
+			case err != nil:
+				// This may be cause by infrastructure errors, like DNS
+				// failures, etc., so we can retry them as well. It's important
+				// that we check this case first.
+				return retry.RetryableError(err)
+			case resp.StatusCode == 500:
+				// We may recover from an HTTP 500 cause by a rare race
+				// condition in a database trigger, encountered in 05/2023.
+				fs.Debugf(f, "chunk upload retry: %v", resp.Status)
+				return retry.RetryableError(err)
+			case resp.StatusCode >= 400:
+				// TODO: we get a HTTP 404 from prod, with message: {"detail": "Not Found"}
+				// TODO: we get a 404 because deposit switches to "REPLICATED" quickly
+				fs.Debugf(f, "chunk upload failed (deposit id=%v)", f.inflightDepositID)
+				fs.Debugf(f, "got %v -- response dump follows", resp.Status)
+				b, err := httputil.DumpResponse(resp, true)
+				if err != nil {
+					return err
+				}
+				fs.Debugf(f, string(b))
+				return fmt.Errorf("api responded with an HTTP %v, stopping chunk upload", resp.StatusCode)
+			default:
+				return nil
 			}
-			fs.Debugf(f, string(b))
+		})
+		// When chunk retry failed, we bail out.
+		if err != nil {
+			return err
 		}
 	}
 	return nil
@@ -769,11 +795,6 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 }
 
 func (f *Fs) Shutdown(ctx context.Context) error {
-	// atexit.Run() is called on interrupts, but should as per docs also called
-	// in the normal workflow. If a deposit has been started, we registered a
-	// callback at deposit creation time.
-	// atexit.Run()
-	// TODO: shutdown may check if deposit state is not REGISTERED any more
 	return f.finalize(ctx)
 }
 
@@ -786,20 +807,6 @@ func (f *Fs) finalize(ctx context.Context) error {
 		// nothing to be done
 		return nil
 	}
-	// Try to upload any local file, otherwise fail, related issue, refs WT-2050.
-	// if len(f.inflightUploads) > 0 {
-	// 	fs.Infof(f, "trying to wrap up inflight %v upload(s) ...", len(f.inflightUploads))
-	// }
-	// for _, info := range f.inflightUploads {
-	// 	fs.Debugf(f, "inflight upload [done=%v]: %#v", info.IsDone(), info)
-	// 	if err := info.resetStream(); err != nil {
-	// 		fs.Infof(f, "note: graceful shutdown of cloud-to-vault uploads currently not supported, expect finalize to fail")
-	// 	} else {
-	// 		if err := f.upload(ctx, info); err != nil {
-	// 			fs.Infof(f, "upload failed (finalize will likely fail, too): %v", err)
-	// 		}
-	// 	}
-	// }
 	fs.Debugf(f, "finalizing deposit %v", f.inflightDepositID)
 	body := VaultDepositApiFinalizeDepositJSONRequestBody{
 		DepositId: f.inflightDepositID,
