@@ -1,7 +1,6 @@
 package oapi
 
 import (
-	"strconv"
 	"time"
 
 	"github.com/rclone/rclone/backend/vault/api"
@@ -89,11 +88,8 @@ func toLegacyCollection(vs *[]Collection) (result []*api.Collection) {
 	}
 	for _, v := range *vs {
 		var targetReplication int64
-		i, err := strconv.Atoi(string(*v.TargetReplication))
-		if err == nil {
-			targetReplication = int64(i)
-		} else {
-			// TODO: this may never happen
+		if v.TargetReplication != nil {
+			targetReplication = int64(*v.TargetReplication)
 		}
 		result = append(result, &api.Collection{
 			FixityFrequency:    string(*v.FixityFrequency),
