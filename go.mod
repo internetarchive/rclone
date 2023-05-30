@@ -81,8 +81,8 @@ require (
 require (
 	cloud.google.com/go/compute v1.19.0 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/internal v1.2.0 // indirect
-	github.com/AzureAD/microsoft-authentication-library-for-go v0.9.0 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.3.0 // indirect
+	github.com/AzureAD/microsoft-authentication-library-for-go v1.0.0 // indirect
 	github.com/antchfx/xpath v1.2.3 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
