@@ -27,3 +27,9 @@ Assuming current working directory is `backend/vault/extra`, i.e. where this
 
         $ VAULT_TEST_REMOTE_NAME=vo: go test -v ./backend/vault/
 
+## Limitations
+
+* The `bootstrap.sh` script creates the superuser account, but executed on
+  every `docker-compose up` - so it will fail the second time it run (since the
+  user is already there)
+
