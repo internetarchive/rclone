@@ -368,7 +368,9 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if flowIdentifier, err = f.getFlowIdentifier(src); err != nil {
 		return nil, err
 	}
-	// (3) Determine, whether we can get the size of the object.
+	// (3) Determine, whether we can get the size of the object. Some backend
+	// do not support size, then we have to move the data from the backend to a
+	// temporary file first (which should rarely happen).
 	var (
 		tempfile   string
 		objectSize int
@@ -408,6 +410,8 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	if err != nil {
 		return nil, err
 	}
+	// We do not strictly need the hash sums, but we can compute the on the
+	// fly, so we can augment the TreeNode value.
 	sums := h.Sums()
 	fs.Debugf(f, "chunk upload complete")
 	return &Object{
@@ -533,8 +537,6 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, e
 		if fw, err = w.CreateFormFile("file", formFileName); err != nil { // can we use a random file name?
 			return nil, err
 		}
-		// TODO: we could run this through hashing here and use it for the
-		// newly uploaded object
 		if _, err := io.Copy(fw, &buf); err != nil {
 			return nil, err
 		}
@@ -559,7 +561,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, e
 				// that we check this case first.
 				return retry.RetryableError(err)
 			case resp.StatusCode == 500:
-				// We may recover from an HTTP 500 cause by a rare race
+				// We may recover from an HTTP 500 likely caused by a rare race
 				// condition in a database trigger, encountered in 05/2023.
 				fs.Debugf(f, "chunk upload retry: %v", resp.Status)
 				return retry.RetryableError(err)
