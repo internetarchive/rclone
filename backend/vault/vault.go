@@ -76,27 +76,6 @@ func init() {
 				Advanced: true,
 			},
 		},
-		CommandHelp: []fs.CommandHelp{
-			fs.CommandHelp{
-				Name:  "status",
-				Short: "show deposit status",
-				Long: `Display status of deposit, pass deposit id (e.g. 742) as argument, e.g.:
-
-    $ rclone backend ds vault: 742
-
-Will return a JSON like this:
-
-    {
-      "assembled_files": 6,
-      "errored_files": 0,
-      "file_queue": 0,
-      "in_storage_files": 0,
-      "total_files": 6,
-      "uploaded_files": 0
-    }
-`,
-			},
-		},
 	})
 }
 

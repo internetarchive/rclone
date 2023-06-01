@@ -19,7 +19,6 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -833,22 +832,9 @@ func (f *Fs) finalize(ctx context.Context) error {
 func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
 	// TODO: fixity reports, distribution, ...
 	switch name {
-	case "status", "st", "deposit-status", "ds", "dst":
-		if len(args) == 0 {
-			return nil, fmt.Errorf("deposit id required")
-		}
-		id, err := strconv.Atoi(args[0])
-		if err != nil {
-			return nil, fmt.Errorf("deposit id must be numeric")
-		}
-		ds, err := f.api.DepositStatus(int64(id))
-		if err != nil {
-			return nil, fmt.Errorf("failed to get deposit status")
-		}
-		return ds, nil
-		// Add more custom commands here.
+	default:
+		return nil, fmt.Errorf("command not found")
 	}
-	return nil, fmt.Errorf("command not found")
 }
 
 // Fs helpers
