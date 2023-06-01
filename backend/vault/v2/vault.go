@@ -182,7 +182,7 @@ func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 
 // Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
 // SHA256 - but for large deposits, this would slow down uploads considerably.
-// So for now, we do not want to support any hash.
+// So for now, we do not want to support any hash. TODO: re-add this.
 func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
 
 // Features returns optional features.
@@ -404,9 +404,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	// TODO: if we get interrupted inside this loop, we may not be able to
 	// finalize the deposit, refs WT-2150, potentially related:
 	// https://github.com/rclone/rclone/issues/966
-	if err := f.upload(ctx, uploadInfo); err != nil {
+	h, err := f.upload(ctx, uploadInfo)
+	if err != nil {
 		return nil, err
 	}
+	sums := h.Sums()
 	fs.Debugf(f, "chunk upload complete")
 	return &Object{
 		fs:     f,
@@ -414,6 +416,9 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		treeNode: &api.TreeNode{
 			NodeType:   "FILE",
 			ObjectSize: src.Size(),
+			Md5Sum:     sums[hash.MD5],
+			Sha1Sum:    sums[hash.SHA1],
+			Sha256Sum:  sums[hash.SHA256],
 		},
 	}, nil
 }
@@ -480,7 +485,11 @@ func (info *UploadInfo) resetStream() error {
 }
 
 // upload is the main transfer function for a single file, which is wrapped in an UploadInfo value.
-func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
+func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, error) {
+	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
+	if err != nil {
+		return nil, err
+	}
 	for info.i < info.flowTotalChunks {
 		info.i++
 		fs.Infof(f, "[>>>] uploading file %v chunk %d/%d [%v]", info.src.Remote(), info.i, info.flowTotalChunks, time.Since(f.started))
@@ -490,13 +499,14 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 			wbuf     = bytes.Buffer{}                           // buffer for multipart message
 			w        = multipart.NewWriter(&wbuf)               // multipart writer
 			mimeType = "application/octet-stream"               // file mime type
+			wrapIn   = io.TeeReader(lr, hasher)                 // wrap input stream for hashing
 			n        int64                                      // actual length of this chunk
 			err      error                                      // any error
 			fw       io.Writer                                  // formfile writer
 			resp     *http.Response                             // deposit API response
 		)
-		if n, err = io.Copy(&buf, lr); err != nil { // n <= opt.ChunkSize
-			return err
+		if n, err = io.Copy(&buf, wrapIn); err != nil { // n <= opt.ChunkSize
+			return nil, err
 		}
 		// (5a) on first chunk, try to find mime type
 		if info.i == 1 {
@@ -516,19 +526,21 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 		mfw.WriteField("flowMimetype", mimeType)
 		mfw.WriteField("flowUserMtime", fmt.Sprintf("%v", info.src.ModTime(ctx).Format(time.RFC3339)))
 		if err := mfw.Err(); err != nil {
-			return err
+			return nil, err
 		}
 		// (5c) write multipart file
 		formFileName := fmt.Sprintf("%s-%016d", info.flowIdentifier, info.i)
 		if fw, err = w.CreateFormFile("file", formFileName); err != nil { // can we use a random file name?
-			return err
+			return nil, err
 		}
+		// TODO: we could run this through hashing here and use it for the
+		// newly uploaded object
 		if _, err := io.Copy(fw, &buf); err != nil {
-			return err
+			return nil, err
 		}
 		// (5d) finalize multipart writer
 		if err := w.Close(); err != nil {
-			return err
+			return nil, err
 		}
 		// (5e) send chunk
 		// The context passed may have a too eager deadline, so we give it a
@@ -568,10 +580,10 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) error {
 		})
 		// When chunk retry failed, we bail out.
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
-	return nil
+	return hasher, nil
 }
 
 // Mkdir creates a directory, if it does not exist.
