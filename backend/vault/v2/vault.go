@@ -427,9 +427,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	}, nil
 }
 
-// objectSize tries to get the size of the object. If the object does not
+// objectSize tries to get the size of an object. If the object does not
 // support reading its size, we spool the data into a temporary file and return
-// the temporary filename.
+// the temporary filename. This may be necessary for rare cases, where the
+// other backend does not support getting the size of an object before reading
+// it in full.
 func (f *Fs) objectSize(in io.Reader, src fs.ObjectInfo) (tempfile string, size int, err error) {
 	switch {
 	case src.Size() == -1:
@@ -448,8 +450,7 @@ func (f *Fs) objectSize(in io.Reader, src fs.ObjectInfo) (tempfile string, size 
 		}
 		size = int(fi.Size())
 	default:
-		// Most objects support size
-		size = int(src.Size())
+		size = int(src.Size()) // most objects will support size
 	}
 	return "", size, nil
 }
@@ -488,7 +489,9 @@ func (info *UploadInfo) resetStream() error {
 	}
 }
 
-// upload is the main transfer function for a single file, which is wrapped in an UploadInfo value.
+// upload is the main transfer function for a single file, which is wrapped in
+// an UploadInfo value. Returns a hasher that contains the supported hashes of
+// this backends of the file object.
 func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, error) {
 	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
 	if err != nil {
