@@ -49,6 +49,8 @@ var (
 	ErrAmbiguousQuery = errors.New("ambiguous query")
 	// ErrMissingCSRFToken may occur, if site structure changes
 	ErrMissingCSRFToken = errors.New("missing CSRF token")
+	// VaultRcloneUserAgentString set the User-Agent string (for most requests)
+	VaultRcloneUserAgentString = fmt.Sprintf("rclone/%s (vault-api v%s)", fs.Version, VersionSupported)
 )
 
 // Error for failed api requests.
@@ -131,6 +133,7 @@ func (capi *CompatAPI) Client() *http.Client {
 // referer. Some vault endpoints are exempt from CSRF, but that's not reflected
 // here at the moment.
 func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
+	req.Header.Set("User-Agent", VaultRcloneUserAgentString)
 	fs.Debugf(capi, "api CSRF intercept")
 	// previously, we used api/collections or api/users, etc - but we don't get
 	// any HTML back from resource endpoints; but just .../api works
