@@ -10,12 +10,12 @@ RUN make clean
 RUN --mount=type=cache,target=/root/.cache make setup
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.0/wait /wait
-RUN echo "a15492f93abf399b25aff4367a320a0539740820  /wait" | sha1sum --check
-RUN chmod +x /wait
+RUN echo "a15492f93abf399b25aff4367a320a0539740820  /wait" | sha1sum --check && \
+    chmod +x /wait
 
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "ff8881e0c431cd79fda9385ad0314af09647466f ./bootstrap.sh" | sha1sum --check
-RUN chmod +x ./bootstrap.sh
+RUN echo "ff8881e0c431cd79fda9385ad0314af09647466f ./bootstrap.sh" | sha1sum --check && \
+    chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
 ENV VAULT_POSTGRES_HOST=postgres
