@@ -5,7 +5,7 @@ Assuming current working directory is `backend/vault/extra`, i.e. where this
 
 1. If there are any leftover images, remove them first:
 
-        $ make clean # ~ docker rmi vault
+        $ make clean
 
 2. Checkout vault. You can use an already existing checkout, if available.
 

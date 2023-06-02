@@ -20,10 +20,9 @@ Y8b Y88888P                   888   d8     888 88b,                       d8    
                                                                                                            888
 EOM
 
-# apply migrations, TODO(martin): is squashmigrations faster?
 make migrate
 
-# superuser admin:admin
+# create superuser admin:admin
 DJANGO_SUPERUSER_PASSWORD=admin DJANGO_SUPERUSER_USERNAME=admin DJANGO_SUPERUSER_EMAIL=admin@example.com ./venv/bin/python manage.py createsuperuser --noinput
 
 # fixtures are exported manually from a manually set up vault instance
@@ -60,4 +59,3 @@ make run-workers &
 
 # start web app
 RUNSERVER_ADDRPORT=0.0.0.0:8000 make run
-
