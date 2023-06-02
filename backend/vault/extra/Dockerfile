@@ -1,30 +1,22 @@
 # syntax = docker/dockerfile:experimental
 #
-# Containerfile for vault, build with vault-site as context
+# Containerfile for vault, build with "vault-site" repo as context
 #
-FROM python:3.8.16-slim-bullseye
+FROM python:3.8.16-slim-bullseye@sha256:13856bb0fadf6bc658125bae44d41ffd3cc42e423c399cfc7300d41a47f66237
 RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git
 WORKDIR /app
 COPY . .
-RUN --mount=type=cache,target=/root/.cache make clean && make setup
+RUN make clean
+RUN --mount=type=cache,target=/root/.cache make setup
 
-# wait script, TODO(martin): make a copy
-ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.9.0/wait /wait
-RUN echo "189a4a2b04b072a1fd5e7c346877ba50d565a2c0  /wait" | sha1sum --check
+ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.0/wait /wait
+RUN echo "a15492f93abf399b25aff4367a320a0539740820  /wait" | sha1sum --check
 RUN chmod +x /wait
 
-# TODO(martin): streamline
-#
-# Problem was to keep fixture in sync between various versions; also docker
-# build does not allow symlinking, so we need to copy the bootstrap script
-# temporarily to the VAULT repo to include it in the image.
-#
-# ADD https://raw.githubusercontent.com/internetarchive/rclone/ia-wt-1168/backend/vault/extra/bootstrap.sh bootstrap.sh
 ADD dev/bootstrap.sh bootstrap.sh
 RUN echo "ff8881e0c431cd79fda9385ad0314af09647466f ./bootstrap.sh" | sha1sum --check
 RUN chmod +x ./bootstrap.sh
 
-# components, settings
 ENV REDIS_HOST=redis
 ENV VAULT_POSTGRES_HOST=postgres
 ENV TEMPORAL_FRONTEND_URI=temporal:7233
