@@ -98,8 +98,8 @@ The currently supported Vault API version is 2.
 
 On 2023-04-19 we upgraded to Vault API version 2. The previous version 1 of the
 Vault API is no longer supported. To be able to use rclone with the new Vault
-API version, **we ask all users of rclone to upgrade rclone to the latest
-release**.
+API version, **we ask all users of rclone to upgrade rclone to the [latest
+release](https://github.com/internetarchive/rclone/releases/latest)**.
 
 If you do not upgrade rclone to the latest version, it will stop working and
 you will get errors about "api version mismatch", similar to this:
