@@ -180,10 +180,13 @@ func (f *Fs) String() string { return f.name }
 // Precision returns the support precision.
 func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 
-// Hashes returns the supported hashes. Previously, we supported MD5, SHA1,
-// SHA256 - but for large deposits, this would slow down uploads considerably.
-// So for now, we do not want to support any hash. TODO: re-add this.
-func (f *Fs) Hashes() hash.Set { return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256) }
+// Hashes returns the supported hashes. Vault supports various hashes
+// internally, but on upload, these may not be available directly, due to some
+// async processing. Therefore, we are not supporting any hashing client side
+// at this point.
+func (f *Fs) Hashes() hash.Set {
+	return hash.Set(hash.None) // hash.MD5 | hash.SHA1 | hash.SHA256
+}
 
 // Features returns optional features.
 func (f *Fs) Features() *fs.Features { return f.features }
