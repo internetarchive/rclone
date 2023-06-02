@@ -289,7 +289,7 @@ development and QA Vault instances, a few limitations remain.
 * ~~**uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/) to upload or synchronize files without considering existing files)~~ fixed in production since 10/2022 and currently testing
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be stored temporarily on the machine where rclone runs**, which means that if you want to transfer 10TB of data from a cloud service to vault, you will have to have at least 10TB of free disk space on the machine where rclone runs; if you want to upload files from the local filesystem to vault, this limitation does not apply
-* when you sync a folder that is already in vault, but where some files has changed (outside vault), then you may encounter an error like `Attempt 1/3 failed with 1 errors and: corrupted on transfer: sizes differ 44 vs 43` - to work around that, we currently recommend using the `--ignore-size` flag in your command, like so:
+* when you sync a folder that is already in vault, but where some files has changed (outside vault), then you may encounter an error like `Attempt 1/3 failed with 1 errors and: corrupted on transfer: sizes differ 44 vs 43` - to work around that, we currently recommend using the [`--ignore-size`](https://rclone.org/docs/#ignore-size) flag in your command, like so:
 
 ```
 $ rclone sync --ignore-size A vault:/C/A
