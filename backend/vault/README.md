@@ -111,7 +111,7 @@ ends with `_checksums.txt` - on Windows you can generate various hash sums of a
 file with
 [certutil](https://docs.microsoft.com/en-us/windows-server/administration/windows-commands/certutil),
 a pre-installed command line utility;
-[examples](https://superuser.com/a/898377))
+[examples](https://superuser.com/a/898377).
 
 ![Using certutil to verify a SHA256 checksum](static/Windows_GitHub_Checksum.png)
 
@@ -171,7 +171,7 @@ API endpoint.
 > The current Vault API endpoint is at: [https://vault.archive-it.org/api](https://vault.archive-it.org/api)
 
 You can configure your Vault username, password and API endpoint using the
-`config` subcommand of rclone, like so (replace `alice` and `secret` to match
+`config` [subcommand of rclone](https://rclone.org/commands/rclone_config_create/), like so (replace `alice` and `secret` to match
 your credentials):
 
 ```
@@ -217,6 +217,11 @@ development and QA Vault instances, a few limitations remain.
 * ~~**uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/) to upload or synchronize files without considering existing files)~~ fixed in production since 10/2022 and currently testing
 * read and write support **only on the command line** level (mount and serve are read only)
 * currently, if you copy data from another cloud service to vault, **data will be stored temporarily on the machine where rclone runs**, which means that if you want to transfer 10TB of data from a cloud service to vault, you will have to have at least 10TB of free disk space on the machine where rclone runs; if you want to upload files from the local filesystem to vault, this limitation does not apply
+* when you sync a folder that is already in vault, but where some files has changed (outside vault), then you may encounter an error like `Attempt 1/3 failed with 1 errors and: corrupted on transfer: sizes differ 44 vs 43` - to work around that, we currently recommend using the `--ignore-size` flag in your command, like so:
+
+```
+$ rclone sync --ignore-size A vault:/C/A
+```
 
 ## Tasks
 
