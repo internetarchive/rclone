@@ -14,13 +14,13 @@ $ goreleaser release --rm-dist
 
 A new release should become available under
 [https://github.com/internetarchive/rclone/releases](https://github.com/internetarchive/rclone/releases)
-within a minute.
+within a few minutes.
 
 ## Post-Release Task
 
 The
 [README](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
-contains various link, which need to be updated after a new release has been
+contains various links, which need to be updated after a new release has been
 published. There is a `README.gen.sh` generator script, that will inspect the
 latest release on GitHub and will print a README to stdout (the generator
 script uses the same `GITHUB_TOKEN` environment variable to access the GitHub
