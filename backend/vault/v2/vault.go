@@ -19,6 +19,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -495,8 +496,8 @@ func (info *UploadInfo) resetStream() error {
 // upload is the main transfer function for a single file, which is wrapped in
 // an UploadInfo value. Returns a hasher that contains the supported hashes of
 // this backends of the file object.
-func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, error) {
-	hasher, err := hash.NewMultiHasherTypes(f.Hashes())
+func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHasher, err error) {
+	hasher, err = hash.NewMultiHasherTypes(f.Hashes())
 	if err != nil {
 		return nil, err
 	}
@@ -528,7 +529,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (*hash.MultiHasher, e
 		mfw.WriteField("flowChunkNumber", fmt.Sprintf("%v", info.i))
 		mfw.WriteField("flowChunkSize", fmt.Sprintf("%v", f.opt.ChunkSize))
 		mfw.WriteField("flowCurrentChunkSize", fmt.Sprintf("%v", n))
-		mfw.WriteField("flowFilename", path.Base(info.src.Remote()))
+		mfw.WriteField("flowFilename", filepath.Base(info.src.Remote()))
 		mfw.WriteField("flowIdentifier", info.flowIdentifier)
 		mfw.WriteField("flowRelativePath", info.src.Remote())
 		mfw.WriteField("flowTotalChunks", fmt.Sprintf("%v", info.flowTotalChunks))
