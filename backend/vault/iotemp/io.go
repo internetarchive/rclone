@@ -2,11 +2,14 @@
 package iotemp
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
 )
+
+var ErrInvalidSize = errors.New("N must be positive")
 
 // DummyReader reads a fixed number of dummy bytes, e.g. dots; placeholder.
 type DummyReader struct {
@@ -21,7 +24,7 @@ func (r *DummyReader) Read(p []byte) (n int, err error) {
 		return 0, io.EOF
 	}
 	if r.N < 0 {
-		return 0, fmt.Errorf("N must be positive")
+		return 0, ErrInvalidSize
 	}
 	for i := range p {
 		p[i] = r.C
