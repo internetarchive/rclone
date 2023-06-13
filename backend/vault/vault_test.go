@@ -26,7 +26,7 @@ const (
 //
 //	$ VAULT_TEST_REMOTE_NAME=v: go test -v ./backend/vault/...
 func TestIntegration(t *testing.T) {
-	t.Skip("skipping integration tests temporarily")
+	// t.Skip("skipping integration tests temporarily")
 	var remoteName string
 	if v := os.Getenv("VAULT_TEST_REMOTE_NAME"); v != "" {
 		remoteName = v
