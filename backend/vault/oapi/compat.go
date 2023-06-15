@@ -49,6 +49,8 @@ var (
 	ErrAmbiguousQuery = errors.New("ambiguous query")
 	// ErrMissingCSRFToken may occur, if site structure changes
 	ErrMissingCSRFToken = errors.New("missing CSRF token")
+	// ErrObsolete marks a method obsoleted.
+	ErrObsolete = errors.New("obsolete: api has been removed")
 	// VaultRcloneUserAgentString set the User-Agent string (for most requests)
 	VaultRcloneUserAgentString = fmt.Sprintf("rclone/%s (vault-api v%s)", fs.Version, VersionSupported)
 )
@@ -500,7 +502,7 @@ func (capi *CompatAPI) List(t *api.TreeNode) (result []*api.TreeNode, err error)
 }
 
 func (capi *CompatAPI) RegisterDeposit(ctx context.Context, rdr *api.RegisterDepositRequest) (id int64, err error) {
-	return capi.legacyAPI.RegisterDeposit(ctx, rdr)
+	return 0, ErrObsolete
 }
 
 func (capi *CompatAPI) TreeNodeToCollection(t *api.TreeNode) (*api.Collection, error) {
