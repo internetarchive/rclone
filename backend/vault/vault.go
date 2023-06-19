@@ -27,6 +27,7 @@ import (
 	"github.com/rclone/rclone/fs/config/configmap"
 	"github.com/rclone/rclone/fs/config/configstruct"
 	"github.com/rclone/rclone/fs/hash"
+	"github.com/rclone/rclone/lib/atexit"
 )
 
 const (
@@ -185,7 +186,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		Shutdown:                f.Shutdown,
 		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
-	// f.inflightUploads = make(map[string]*UploadInfo)
+	// f.atexit = atexit.Register()
 	return f, nil
 }
 
@@ -221,7 +222,7 @@ type Fs struct {
 	name     string
 	root     string
 	opt      Options         // vault options
-	api      *oapi.CompatAPI // compat api, wrapper around oapi, exposing legacy methods; TODO: get rid of
+	api      *oapi.CompatAPI // compat api, wrapper around oapi, exposing legacy methods; TODO: get rid of this
 	features *fs.Features    // optional features
 	// On a first put, we register a deposit to get a deposit id. Any
 	// subsequent upload will be associated with that deposit id. On shutdown,
@@ -230,6 +231,7 @@ type Fs struct {
 	mu                sync.Mutex           // locks inflightDepositID
 	inflightDepositID int                  // inflight deposit id, empty if none inflight
 	started           time.Time            // registration time of the deposit
+	atexit            atexit.FnHandle
 }
 
 // Fs Info
