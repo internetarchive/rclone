@@ -186,7 +186,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		Shutdown:                f.Shutdown,
 		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
-	// f.atexit = atexit.Register()
+	f.atexit = atexit.Register(f.Terminate)
 	return f, nil
 }
 
@@ -884,6 +884,29 @@ func (f *Fs) Purge(ctx context.Context, dir string) error {
 
 func (f *Fs) Shutdown(ctx context.Context) error {
 	return f.finalize(ctx)
+}
+
+// Terminate the currently running deposit.
+func (f *Fs) Terminate() {
+	if f.inflightDepositID == 0 {
+		return
+	}
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	body := TerminateDepositRequest{
+		DepositId: f.inflightDepositID,
+	}
+	ctx := context.Background()
+	resp, err := f.depositsV2Client.VaultDepositApiTerminateDeposit(ctx, body)
+	if err != nil {
+		fs.Infof(f, "terminate deposit failed: %v", err)
+		return
+	}
+	if resp.StatusCode != 200 {
+		fs.Infof(f, "terminate deposit failed: %v", resp.StatusCode)
+		return
+	}
+	fs.Infof(f, "terminated deposit %d on user request", f.inflightDepositID)
 }
 
 // finalize sends finalize signal, only once, called on normal shutdown and on
