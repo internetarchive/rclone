@@ -899,14 +899,14 @@ func (f *Fs) Terminate() {
 	ctx := context.Background()
 	resp, err := f.depositsV2Client.VaultDepositApiTerminateDeposit(ctx, body)
 	if err != nil {
-		fs.Infof(f, "terminate deposit failed: %v", err)
+		fs.LogLevelPrintf(fs.LogLevelWarning, f, "terminate deposit failed: %v", err)
 		return
 	}
 	if resp.StatusCode != 200 {
-		fs.Infof(f, "terminate deposit failed: %v", resp.StatusCode)
+		fs.LogLevelPrintf(fs.LogLevelWarning, f, "terminate deposit failed: %v", resp.StatusCode)
 		return
 	}
-	fs.Infof(f, "terminated deposit %d on user request", f.inflightDepositID)
+	fs.Logf(f, "terminated deposit %d on user request", f.inflightDepositID)
 }
 
 // finalize sends finalize signal, only once, called on normal shutdown and on
