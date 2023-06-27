@@ -59,7 +59,7 @@ See the following for detailed instructions for
   * [Memory](/memory/)
   * [Microsoft Azure Blob Storage](/azureblob/)
   * [Microsoft OneDrive](/onedrive/)
-  * [OpenStack Swift / Rackspace Cloudfiles / Memset Memstore](/swift/)
+  * [OpenStack Swift / Rackspace Cloudfiles / Blomp Cloud Storage / Memset Memstore](/swift/)
   * [OpenDrive](/opendrive/)
   * [Oracle Object Storage](/oracleobjectstorage/)
   * [Pcloud](/pcloud/)
@@ -1510,6 +1510,25 @@ if you are reading and writing to an OS X filing system this will be
 `1s` by default.
 
 This command line flag allows you to override that computed default.
+
+### --multi-thread-write-buffer-size=SIZE ###
+
+When downloading with multiple threads, rclone will buffer SIZE bytes in
+memory before writing to disk for each thread.
+
+This can improve performance if the underlying filesystem does not deal
+well with a lot of small writes in different positions of the file, so
+if you see downloads being limited by disk write speed, you might want
+to experiment with different values. Specially for magnetic drives and
+remote file systems a higher value can be useful.
+
+Nevertheless, the default of `128k` should be fine for almost all use
+cases, so before changing it ensure that network is not really your
+bottleneck.
+
+As a final hint, size is not the only factor: block size (or similar
+concept) can have an impact. In one case, we observed that exact
+multiples of 16k performed much better than other values.
 
 ### --multi-thread-cutoff=SIZE ###
 

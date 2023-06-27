@@ -113,7 +113,7 @@ WebDAV or S3, that work out of the box.)
 {{< provider name="Box" home="https://www.box.com/" config="/box/" >}}
 {{< provider name="Ceph" home="http://ceph.com/" config="/s3/#ceph" >}}
 {{< provider name="China Mobile Ecloud Elastic Object Storage (EOS)" home="https://ecloud.10086.cn/home/product-introduction/eos/" config="/s3/#china-mobile-ecloud-eos" >}}
-{{< provider name="Arvan Cloud Object Storage (AOS)" home="https://www.arvancloud.com/en/products/cloud-storage" config="/s3/#arvan-cloud-object-storage-aos" >}}
+{{< provider name="Arvan Cloud Object Storage (AOS)" home="https://www.arvancloud.ir/en/products/cloud-storage" config="/s3/#arvan-cloud-object-storage-aos" >}}
 {{< provider name="Citrix ShareFile" home="http://sharefile.com/" config="/sharefile/" >}}
 {{< provider name="Cloudflare R2" home="https://blog.cloudflare.com/r2-open-beta/" config="/s3/#cloudflare-r2" >}}
 {{< provider name="DigitalOcean Spaces" home="https://www.digitalocean.com/products/object-storage/" config="/s3/#digitalocean-spaces" >}}
@@ -146,6 +146,7 @@ WebDAV or S3, that work out of the box.)
 {{< provider name="Minio" home="https://www.minio.io/" config="/s3/#minio" >}}
 {{< provider name="Nextcloud" home="https://nextcloud.com/" config="/webdav/#nextcloud" >}}
 {{< provider name="OVH" home="https://www.ovh.co.uk/public-cloud/storage/object-storage/" config="/swift/" >}}
+{{< provider name="Blomp Cloud Storage" home="https://rclone.org/swift/" config="/swift/" >}}
 {{< provider name="OpenDrive" home="https://www.opendrive.com/" config="/opendrive/" >}}
 {{< provider name="OpenStack Swift" home="https://docs.openstack.org/swift/latest/" config="/swift/" >}}
 {{< provider name="Oracle Cloud Storage Swift" home="https://docs.oracle.com/en-us/iaas/integration/doc/configure-object-storage.html" config="/swift/" >}}

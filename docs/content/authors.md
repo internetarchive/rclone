@@ -587,7 +587,7 @@ put them back in again.` >}}
   * Leroy van Logchem <lr.vanlogchem@gmail.com>
   * Zsolt Ero <zsolt.ero@gmail.com>
   * Lesmiscore <nao20010128@gmail.com>
-  * ehsantdy <ehsan.tadayon@arvancloud.com>
+  * ehsantdy <ehsan.tadayon@arvancloud.com> <ehsantadayon85@gmail.com>
   * SwazRGB <65694696+swazrgb@users.noreply.github.com>
   * Mateusz Puczyński <mati6095@gmail.com>
   * Michael C Tiernan - MIT-Research Computing Project <mtiernan@mit.edu>
@@ -728,3 +728,13 @@ put them back in again.` >}}
   * cc <12904584+shvc@users.noreply.github.com>
   * Tareq Sharafy <tareq.sha@gmail.com>
   * kapitainsky <dariuszb@me.com>
+  * douchen <playgoobug@gmail.com>
+  * Sam Lai <70988+slai@users.noreply.github.com>
+  * URenko <18209292+URenko@users.noreply.github.com>
+  * Stanislav Gromov <kullfar@gmail.com>
+  * Paulo Schreiner <paulo.schreiner@delivion.de>
+  * Mariusz Suchodolski <mariusz@suchodol.ski>
+  * danielkrajnik <dan94kra@gmail.com>
+  * Peter Fern <github@0xc0dedbad.com>
+  * zzq <i@zhangzqs.cn>
+  * mac-15 <usman.ilamdin@phpstudios.com>
