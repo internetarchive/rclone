@@ -66,7 +66,7 @@ import (
 func init() {
 	fs.Register(&fs.RegInfo{
 		Name:        "s3",
-		Description: "Amazon S3 Compliant Storage Providers including AWS, Alibaba, ArvanCloud, Ceph, China Mobile, Cloudflare, GCS, DigitalOcean, Dreamhost, Huawei OBS, IBM COS, IDrive e2, IONOS Cloud, Liara, Lyve Cloud, Minio, Netease, Petabox, RackCorp, Scaleway, SeaweedFS, StackPath, Storj, Tencent COS, Qiniu and Wasabi",
+		Description: "Amazon S3 Compliant Storage Providers including AWS, Alibaba, ArvanCloud, Ceph, China Mobile, Cloudflare, GCS, DigitalOcean, Dreamhost, Huawei OBS, IBM COS, IDrive e2, IONOS Cloud, Leviia, Liara, Lyve Cloud, Minio, Netease, Petabox, RackCorp, Scaleway, SeaweedFS, StackPath, Storj, Synology, Tencent COS, Qiniu and Wasabi",
 		NewFs:       NewFs,
 		CommandHelp: commandHelp,
 		Config: func(ctx context.Context, name string, m configmap.Mapper, config fs.ConfigIn) (*fs.ConfigOut, error) {
@@ -128,6 +128,9 @@ func init() {
 				Value: "LyveCloud",
 				Help:  "Seagate Lyve Cloud",
 			}, {
+				Value: "Leviia",
+				Help:  "Leviia Object Storage",
+			}, {
 				Value: "Liara",
 				Help:  "Liara Object Storage",
 			}, {
@@ -155,6 +158,9 @@ func init() {
 				Value: "Storj",
 				Help:  "Storj (S3 Compatible Gateway)",
 			}, {
+				Value: "Synology",
+				Help:  "Synology C2 Object Storage",
+			}, {
 				Value: "TencentCOS",
 				Help:  "Tencent Cloud Object Storage (COS)",
 			}, {
@@ -179,11 +185,13 @@ func init() {
 				Help:  "Get AWS credentials from the environment (env vars or IAM).",
 			}},
 		}, {
-			Name: "access_key_id",
-			Help: "AWS Access Key ID.\n\nLeave blank for anonymous access or runtime credentials.",
+			Name:      "access_key_id",
+			Help:      "AWS Access Key ID.\n\nLeave blank for anonymous access or runtime credentials.",
+			Sensitive: true,
 		}, {
-			Name: "secret_access_key",
-			Help: "AWS Secret Access Key (password).\n\nLeave blank for anonymous access or runtime credentials.",
+			Name:      "secret_access_key",
+			Help:      "AWS Secret Access Key (password).\n\nLeave blank for anonymous access or runtime credentials.",
+			Sensitive: true,
 		}, {
 			// References:
 			// 1. https://docs.aws.amazon.com/general/latest/gr/rande.html
@@ -465,8 +473,28 @@ func init() {
 			}},
 		}, {
 			Name:     "region",
+			Help:     "Region where your data stored.\n",
+			Provider: "Synology",
+			Examples: []fs.OptionExample{{
+				Value: "eu-001",
+				Help:  "Europe Region 1",
+			}, {
+				Value: "eu-002",
+				Help:  "Europe Region 2",
+			}, {
+				Value: "us-001",
+				Help:  "US Region 1",
+			}, {
+				Value: "us-002",
+				Help:  "US Region 2",
+			}, {
+				Value: "tw-001",
+				Help:  "Asia (Taiwan)",
+			}},
+		}, {
+			Name:     "region",
 			Help:     "Region to connect to.\n\nLeave blank if you are using an S3 clone and you don't have a region.",
-			Provider: "!AWS,Alibaba,ArvanCloud,ChinaMobile,Cloudflare,IONOS,Petabox,Liara,Qiniu,RackCorp,Scaleway,Storj,TencentCOS,HuaweiOBS,IDrive",
+			Provider: "!AWS,Alibaba,ArvanCloud,ChinaMobile,Cloudflare,IONOS,Petabox,Liara,Qiniu,RackCorp,Scaleway,Storj,Synology,TencentCOS,HuaweiOBS,IDrive",
 			Examples: []fs.OptionExample{{
 				Value: "",
 				Help:  "Use this if unsure.\nWill use v4 signatures and an empty region.",
@@ -816,6 +844,15 @@ func init() {
 				Help:  "South America (São Paulo)",
 			}},
 		}, {
+			// Leviia endpoints: https://www.leviia.com/object-storage/
+			Name:     "endpoint",
+			Help:     "Endpoint for Leviia Object Storage API.",
+			Provider: "Leviia",
+			Examples: []fs.OptionExample{{
+				Value: "s3.leviia.com",
+				Help:  "The default endpoint\nLeviia",
+			}},
+		}, {
 			// Liara endpoints: https://liara.ir/landing/object-storage
 			Name:     "endpoint",
 			Help:     "Endpoint for Liara Object Storage API.",
@@ -1001,6 +1038,26 @@ func init() {
 				Help:  "Global Hosted Gateway",
 			}},
 		}, {
+			Name:     "endpoint",
+			Help:     "Endpoint for Synology C2 Object Storage API.",
+			Provider: "Synology",
+			Examples: []fs.OptionExample{{
+				Value: "eu-001.s3.synologyc2.net",
+				Help:  "EU Endpoint 1",
+			}, {
+				Value: "eu-002.s3.synologyc2.net",
+				Help:  "EU Endpoint 2",
+			}, {
+				Value: "us-001.s3.synologyc2.net",
+				Help:  "US Endpoint 1",
+			}, {
+				Value: "us-002.s3.synologyc2.net",
+				Help:  "US Endpoint 2",
+			}, {
+				Value: "tw-001.s3.synologyc2.net",
+				Help:  "TW Endpoint 1",
+			}},
+		}, {
 			// cos endpoints: https://intl.cloud.tencent.com/document/product/436/6224
 			Name:     "endpoint",
 			Help:     "Endpoint for Tencent COS API.",
@@ -1156,7 +1213,7 @@ func init() {
 		}, {
 			Name:     "endpoint",
 			Help:     "Endpoint for S3 API.\n\nRequired when using an S3 clone.",
-			Provider: "!AWS,ArvanCloud,IBMCOS,IDrive,IONOS,TencentCOS,HuaweiOBS,Alibaba,ChinaMobile,GCS,Liara,Scaleway,StackPath,Storj,RackCorp,Qiniu,Petabox",
+			Provider: "!AWS,ArvanCloud,IBMCOS,IDrive,IONOS,TencentCOS,HuaweiOBS,Alibaba,ChinaMobile,GCS,Liara,Scaleway,StackPath,Storj,Synology,RackCorp,Qiniu,Petabox",
 			Examples: []fs.OptionExample{{
 				Value:    "objects-us-east-1.dream.io",
 				Help:     "Dream Objects endpoint",
@@ -1644,7 +1701,7 @@ func init() {
 		}, {
 			Name:     "location_constraint",
 			Help:     "Location constraint - must be set to match the Region.\n\nLeave blank if not sure. Used when creating buckets only.",
-			Provider: "!AWS,Alibaba,ArvanCloud,HuaweiOBS,ChinaMobile,Cloudflare,IBMCOS,IDrive,IONOS,Liara,Qiniu,RackCorp,Scaleway,StackPath,Storj,TencentCOS,Petabox",
+			Provider: "!AWS,Alibaba,ArvanCloud,HuaweiOBS,ChinaMobile,Cloudflare,IBMCOS,IDrive,IONOS,Leviia,Liara,Qiniu,RackCorp,Scaleway,StackPath,Storj,TencentCOS,Petabox",
 		}, {
 			Name: "acl",
 			Help: `Canned ACL used when creating buckets and storing or copying objects.
@@ -1659,7 +1716,7 @@ doesn't copy the ACL from the source but rather writes a fresh one.
 If the acl is an empty string then no X-Amz-Acl: header is added and
 the default (private) will be used.
 `,
-			Provider: "!Storj,Cloudflare",
+			Provider: "!Storj,Synology,Cloudflare",
 			Examples: []fs.OptionExample{{
 				Value:    "default",
 				Help:     "Owner gets Full_CONTROL.\nNo one else has access rights (default).",
@@ -1775,6 +1832,7 @@ header is added and the default (private) will be used.
 				Value: "arn:aws:kms:us-east-1:*",
 				Help:  "arn:aws:kms:*",
 			}},
+			Sensitive: true,
 		}, {
 			Name: "sse_customer_key",
 			Help: `To use SSE-C you may provide the secret encryption key used to encrypt/decrypt your data.
@@ -1786,6 +1844,7 @@ Alternatively you can provide --sse-customer-key-base64.`,
 				Value: "",
 				Help:  "None",
 			}},
+			Sensitive: true,
 		}, {
 			Name: "sse_customer_key_base64",
 			Help: `If using SSE-C you must provide the secret encryption key encoded in base64 format to encrypt/decrypt your data.
@@ -1797,6 +1856,7 @@ Alternatively you can provide --sse-customer-key.`,
 				Value: "",
 				Help:  "None",
 			}},
+			Sensitive: true,
 		}, {
 			Name: "sse_customer_key_md5",
 			Help: `If using SSE-C you may provide the secret encryption key MD5 checksum (optional).
@@ -1809,6 +1869,7 @@ If you leave it blank, this is calculated automatically from the sse_customer_ke
 				Value: "",
 				Help:  "None",
 			}},
+			Sensitive: true,
 		}, {
 			Name:     "storage_class",
 			Help:     "The storage class to use when storing new objects in S3.",
@@ -2050,9 +2111,10 @@ If empty it will default to the environment variable "AWS_PROFILE" or
 `,
 			Advanced: true,
 		}, {
-			Name:     "session_token",
-			Help:     "An AWS session token.",
-			Advanced: true,
+			Name:      "session_token",
+			Help:      "An AWS session token.",
+			Advanced:  true,
+			Sensitive: true,
 		}, {
 			Name: "upload_concurrency",
 			Help: `Concurrency for multipart uploads.
@@ -2969,10 +3031,14 @@ func setQuirks(opt *Options) {
 		if opt.ChunkSize < 64*fs.Mebi {
 			opt.ChunkSize = 64 * fs.Mebi
 		}
+	case "Synology":
+		useMultipartEtag = false
 	case "TencentCOS":
 		listObjectsV2 = false    // untested
 		useMultipartEtag = false // untested
 	case "Wasabi":
+		// No quirks
+	case "Leviia":
 		// No quirks
 	case "Qiniu":
 		useMultipartEtag = false

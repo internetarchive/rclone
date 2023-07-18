@@ -77,7 +77,7 @@ var (
 )
 
 type boxCustomClaims struct {
-	jwt.RegisteredClaims
+	jwt.StandardClaims
 	BoxSubType string `json:"box_sub_type,omitempty"`
 }
 
@@ -107,16 +107,18 @@ func init() {
 			return nil, nil
 		},
 		Options: append(oauthutil.SharedOptions, []fs.Option{{
-			Name:     "root_folder_id",
-			Help:     "Fill in for rclone to use a non root folder as its starting point.",
-			Default:  "0",
-			Advanced: true,
+			Name:      "root_folder_id",
+			Help:      "Fill in for rclone to use a non root folder as its starting point.",
+			Default:   "0",
+			Advanced:  true,
+			Sensitive: true,
 		}, {
 			Name: "box_config_file",
 			Help: "Box App config.json location\n\nLeave blank normally." + env.ShellExpandHelp,
 		}, {
-			Name: "access_token",
-			Help: "Box App Primary Access Token\n\nLeave blank normally.",
+			Name:      "access_token",
+			Help:      "Box App Primary Access Token\n\nLeave blank normally.",
+			Sensitive: true,
 		}, {
 			Name:    "box_sub_type",
 			Default: "user",
@@ -206,12 +208,14 @@ func getClaims(boxConfig *api.ConfigJSON, boxSubType string) (claims *boxCustomC
 	}
 
 	claims = &boxCustomClaims{
-		RegisteredClaims: jwt.RegisteredClaims{
-			ID:        val,
+		//lint:ignore SA1019 since we need to use jwt.StandardClaims even if deprecated in jwt-go v4 until a more permanent solution is ready in time before jwt-go v5 where it is removed entirely
+		//nolint:staticcheck // Don't include staticcheck when running golangci-lint to avoid SA1019
+		StandardClaims: jwt.StandardClaims{
+			Id:        val,
 			Issuer:    boxConfig.BoxAppSettings.ClientID,
 			Subject:   boxConfig.EnterpriseID,
-			Audience:  jwt.ClaimStrings{tokenURL},
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Second * 45)),
+			Audience:  tokenURL,
+			ExpiresAt: time.Now().Add(time.Second * 45).Unix(),
 		},
 		BoxSubType: boxSubType,
 	}
