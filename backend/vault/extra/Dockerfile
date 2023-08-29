@@ -14,7 +14,7 @@ RUN echo "a15492f93abf399b25aff4367a320a0539740820  /wait" | sha1sum --check && 
     chmod +x /wait
 
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "df29cd100b1e570f7066849ae4ac1c3d608ad4da  ./bootstrap.sh" | sha1sum --check && \
+RUN echo "a06d0b4068885dce6fc6c0cf458edf90b3f6c0eb  ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
