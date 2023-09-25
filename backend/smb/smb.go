@@ -9,6 +9,7 @@ import (
 	"path"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/rclone/rclone/fs"
@@ -140,7 +141,7 @@ type Fs struct {
 	features *fs.Features // optional features
 	pacer    *fs.Pacer    // pacer for operations
 
-	sessions int32
+	sessions atomic.Int32
 	poolMu   sync.Mutex
 	pool     []*conn
 	drain    *time.Timer // used to drain the pool when we stop using the connections
@@ -473,6 +474,45 @@ func (f *Fs) About(ctx context.Context) (_ *fs.Usage, err error) {
 		Free:  fs.NewUsageValue(bs * int64(stat.AvailableBlockCount())),
 	}
 	return usage, nil
+}
+
+// OpenWriterAt opens with a handle for random access writes
+//
+// Pass in the remote desired and the size if known.
+//
+// It truncates any existing object
+func (f *Fs) OpenWriterAt(ctx context.Context, remote string, size int64) (fs.WriterAtCloser, error) {
+	var err error
+	o := &Object{
+		fs:     f,
+		remote: remote,
+	}
+	share, filename := o.split()
+	if share == "" || filename == "" {
+		return nil, fs.ErrorIsDir
+	}
+
+	err = o.fs.ensureDirectory(ctx, share, filename)
+	if err != nil {
+		return nil, fmt.Errorf("failed to make parent directories: %w", err)
+	}
+
+	filename = o.fs.toSambaPath(filename)
+
+	o.fs.addSession() // Show session in use
+	defer o.fs.removeSession()
+
+	cn, err := o.fs.getConnection(ctx, share)
+	if err != nil {
+		return nil, err
+	}
+
+	fl, err := cn.smbShare.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
+	if err != nil {
+		return nil, fmt.Errorf("failed to open: %w", err)
+	}
+
+	return fl, nil
 }
 
 // Shutdown the backend, closing any background tasks and any

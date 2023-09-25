@@ -38,7 +38,6 @@ import (
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/accounting"
 	"github.com/rclone/rclone/fs/filter"
-	"github.com/rclone/rclone/fs/fserrors"
 	"github.com/rclone/rclone/fs/fshttp"
 	"github.com/rclone/rclone/fs/hash"
 	"github.com/rclone/rclone/fs/operations"
@@ -702,6 +701,22 @@ func TestRmdirsNoLeaveRoot(t *testing.T) {
 		fs.GetModifyWindow(ctx, r.Fremote),
 	)
 
+	// Delete the files so we can remove everything including the root
+	for _, file := range []fstest.Item{file1, file2} {
+		o, err := r.Fremote.NewObject(ctx, file.Path)
+		require.NoError(t, err)
+		require.NoError(t, o.Remove(ctx))
+	}
+
+	require.NoError(t, operations.Rmdirs(ctx, r.Fremote, "", false))
+
+	fstest.CheckListingWithPrecision(
+		t,
+		r.Fremote,
+		[]fstest.Item{},
+		[]string{},
+		fs.GetModifyWindow(ctx, r.Fremote),
+	)
 }
 
 func TestRmdirsLeaveRoot(t *testing.T) {
@@ -1903,8 +1918,13 @@ func TestCopyFileMaxTransfer(t *testing.T) {
 	accounting.Stats(ctx).ResetCounters()
 	err = operations.CopyFile(ctx, r.Fremote, r.Flocal, file2.Path, file2.Path)
 	require.NotNil(t, err, "Did not get expected max transfer limit error")
-	assert.Contains(t, err.Error(), "max transfer limit reached")
-	assert.True(t, fserrors.IsFatalError(err), fmt.Sprintf("Not fatal error: %v: %#v:", err, err))
+	if !errors.Is(err, accounting.ErrorMaxTransferLimitReachedFatal) {
+		t.Log("Expecting error to contain accounting.ErrorMaxTransferLimitReachedFatal")
+		// Sometimes the backends or their SDKs don't pass the
+		// error through properly, so check that it at least
+		// has the text we expect in.
+		assert.Contains(t, err.Error(), "max transfer limit reached")
+	}
 	r.CheckLocalItems(t, file1, file2, file3, file4)
 	r.CheckRemoteItems(t, file1)
 
@@ -1915,8 +1935,7 @@ func TestCopyFileMaxTransfer(t *testing.T) {
 	accounting.Stats(ctx).ResetCounters()
 	err = operations.CopyFile(ctx, r.Fremote, r.Flocal, file3.Path, file3.Path)
 	require.NotNil(t, err)
-	assert.Contains(t, err.Error(), "max transfer limit reached")
-	assert.True(t, fserrors.IsNoRetryError(err))
+	assert.True(t, errors.Is(err, accounting.ErrorMaxTransferLimitReachedGraceful))
 	r.CheckLocalItems(t, file1, file2, file3, file4)
 	r.CheckRemoteItems(t, file1)
 

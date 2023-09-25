@@ -8,7 +8,6 @@ rclone.iml
 .idea
 .history
 *.test
-*.log
 *.iml
 fuzz-build.zip
 *.orig
