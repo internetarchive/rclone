@@ -650,6 +650,10 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 					return err
 				}
 				fs.Debugf(f, string(b))
+				// TODO: this can be triggered by running "sync", then
+				// "CTRL-C", then without delay rerunning the "sync" command;
+				// if the repeated command is issued after a delay, this issue
+				// does not surface
 				return fmt.Errorf("api responded with an HTTP %v, stopping chunk upload", resp.StatusCode)
 			default:
 				return nil
