@@ -33,7 +33,7 @@ Here is an overview of the major features of each cloud storage system.
 | HiDrive                      | HiDrive ¹²        | R/W     | No               | No              | -         | -        |
 | HTTP                         | -                 | R       | No               | No              | R         | -        |
 | Internet Archive             | MD5, SHA1, CRC32  | R/W ¹¹  | No               | No              | -         | RWU      |
-| Jottacloud                   | MD5               | R/W     | Yes              | No              | R         | -        |
+| Jottacloud                   | MD5               | R/W     | Yes              | No              | R         | RW       |
 | Koofr                        | MD5               | -       | Yes              | No              | -         | -        |
 | Mail.ru Cloud                | Mailru ⁶          | R/W     | Yes              | No              | -         | -        |
 | Mega                         | -                 | -       | No               | Yes             | -         | -        |
@@ -492,7 +492,7 @@ upon backend-specific capabilities.
 | Mega                         | Yes   | No   | Yes  | Yes     | Yes     | No    | No           | No  | Yes          | Yes   | Yes      |
 | Memory                       | No    | Yes  | No   | No      | No      | Yes   | Yes          | No  | No           | No    | No       |
 | Microsoft Azure Blob Storage | Yes   | Yes  | No   | No      | No      | Yes   | Yes          | Yes | No           | No    | No       |
-| Microsoft OneDrive           | Yes   | Yes  | Yes  | Yes     | Yes     | No    | No           | No  | Yes          | Yes   | Yes      |
+| Microsoft OneDrive           | Yes   | Yes  | Yes  | Yes     | Yes     | Yes   | No           | No  | Yes          | Yes   | Yes      |
 | OpenDrive                    | Yes   | Yes  | Yes  | Yes     | No      | No    | No           | No  | No           | No    | Yes      |
 | OpenStack Swift              | Yes † | Yes  | No   | No      | No      | Yes   | Yes          | No  | No           | Yes   | No       |
 | Oracle Object Storage        | No    | Yes  | No   | No      | Yes     | Yes   | Yes          | Yes | No           | No    | No       |
