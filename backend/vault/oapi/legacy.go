@@ -65,21 +65,22 @@ func toLegacyTreeNode(t *TreeNode) *api.TreeNode {
 	}
 }
 
-func toLegacyTargetGeolocation(vs *[]Geolocation) (result []struct {
-	Name string `json:"name"`
-	URL  string `json:"url"`
-}) {
-	if vs == nil {
-		return
-	}
-	for _, v := range *vs {
-		result = append(result, struct {
-			Name string `json:"name"`
-			URL  string `json:"url"`
-		}{v.Name, *v.Url})
-	}
-	return
-}
+// TODO: 1.0.0 has no geolocation, make sure we can delete this
+// func toLegacyTargetGeolocation(vs *[]Geolocation) (result []struct {
+// 	Name string `json:"name"`
+// 	URL  string `json:"url"`
+// }) {
+// 	if vs == nil {
+// 		return
+// 	}
+// 	for _, v := range *vs {
+// 		result = append(result, struct {
+// 			Name string `json:"name"`
+// 			URL  string `json:"url"`
+// 		}{v.Name, *v.Url})
+// 	}
+// 	return
+// }
 
 // toLegacyCollection is a helper to convert oapi values to legacy values.
 func toLegacyCollection(vs *[]Collection) (result []*api.Collection) {
@@ -92,13 +93,14 @@ func toLegacyCollection(vs *[]Collection) (result []*api.Collection) {
 			targetReplication = int64(*v.TargetReplication)
 		}
 		result = append(result, &api.Collection{
-			FixityFrequency:    string(*v.FixityFrequency),
-			Name:               v.Name,
-			Organization:       v.Organization,
-			TargetGeolocations: toLegacyTargetGeolocation(v.TargetGeolocations),
-			TargetReplication:  targetReplication,
-			TreeNode:           *v.TreeNode,
-			URL:                *v.Url,
+			FixityFrequency: string(*v.FixityFrequency),
+			Name:            v.Name,
+			Organization:    v.Organization,
+			// TODO: 1.0.0 has no geolocation, make sure we can delete this
+			// TargetGeolocations: toLegacyTargetGeolocation(v.TargetGeolocations),
+			TargetReplication: targetReplication,
+			TreeNode:          *v.TreeNode,
+			URL:               *v.Url,
 		})
 	}
 	return

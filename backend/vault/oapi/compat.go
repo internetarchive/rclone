@@ -669,11 +669,12 @@ func (capi *CompatAPI) Plan() (*api.Plan, error) {
 	}
 	return &api.Plan{
 		DefaultFixityFrequency: string(*r.JSON200.DefaultFixityFrequency),
-		DefaultGeolocations:    r.JSON200.DefaultGeolocations,
-		DefaultReplication:     int64(*r.JSON200.DefaultReplication),
-		Name:                   r.JSON200.Name,
-		PricePerTerabyte:       r.JSON200.PricePerTerabyte,
-		URL:                    *r.JSON200.Url,
+		// TODO: 1.0.0 has no geolocation, make sure we can delete this
+		// DefaultGeolocations:    r.JSON200.DefaultGeolocations,
+		DefaultReplication: int64(*r.JSON200.DefaultReplication),
+		Name:               r.JSON200.Name,
+		PricePerTerabyte:   r.JSON200.PricePerTerabyte,
+		URL:                *r.JSON200.Url,
 	}, nil
 }
 

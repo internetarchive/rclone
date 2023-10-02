@@ -74,6 +74,7 @@ const (
 	StateEnumHASHED             StateEnum = "HASHED"
 	StateEnumREGISTERED         StateEnum = "REGISTERED"
 	StateEnumREPLICATED         StateEnum = "REPLICATED"
+	StateEnumTERMINATEDBYUSER   StateEnum = "TERMINATED_BY_USER"
 	StateEnumUPLOADED           StateEnum = "UPLOADED"
 )
 
@@ -96,6 +97,7 @@ const (
 	UploadStateEnumHASHED             UploadStateEnum = "HASHED"
 	UploadStateEnumREGISTERED         UploadStateEnum = "REGISTERED"
 	UploadStateEnumREPLICATED         UploadStateEnum = "REPLICATED"
+	UploadStateEnumTERMINATEDBYUSER   UploadStateEnum = "TERMINATED_BY_USER"
 	UploadStateEnumUPLOADED           UploadStateEnum = "UPLOADED"
 )
 
@@ -119,6 +121,7 @@ const (
 	DepositsListParamsStateHASHED             DepositsListParamsState = "HASHED"
 	DepositsListParamsStateREGISTERED         DepositsListParamsState = "REGISTERED"
 	DepositsListParamsStateREPLICATED         DepositsListParamsState = "REPLICATED"
+	DepositsListParamsStateTERMINATEDBYUSER   DepositsListParamsState = "TERMINATED_BY_USER"
 	DepositsListParamsStateUPLOADED           DepositsListParamsState = "UPLOADED"
 )
 
@@ -134,6 +137,7 @@ const (
 	EventsListParamsUploadStateHASHED             EventsListParamsUploadState = "HASHED"
 	EventsListParamsUploadStateREGISTERED         EventsListParamsUploadState = "REGISTERED"
 	EventsListParamsUploadStateREPLICATED         EventsListParamsUploadState = "REPLICATED"
+	EventsListParamsUploadStateTERMINATEDBYUSER   EventsListParamsUploadState = "TERMINATED_BY_USER"
 	EventsListParamsUploadStateUPLOADED           EventsListParamsUploadState = "UPLOADED"
 )
 
@@ -174,18 +178,23 @@ const (
 
 // Collection defines model for Collection.
 type Collection struct {
-	FixityFrequency    *FixityFrequencyEnum   `json:"fixity_frequency,omitempty"`
-	Id                 *int                   `json:"id,omitempty"`
-	Name               string                 `json:"name"`
-	Organization       string                 `json:"organization"`
-	TargetGeolocations *[]Geolocation         `json:"target_geolocations,omitempty"`
-	TargetReplication  *TargetReplicationEnum `json:"target_replication,omitempty"`
-	TreeNode           *string                `json:"tree_node"`
-	Url                *string                `json:"url,omitempty"`
+	// FixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
+	FixityFrequency   *FixityFrequencyEnum   `json:"fixity_frequency,omitempty"`
+	Id                *int                   `json:"id,omitempty"`
+	Name              string                 `json:"name"`
+	Organization      string                 `json:"organization"`
+	TargetReplication *TargetReplicationEnum `json:"target_replication,omitempty"`
+	TreeNode          *string                `json:"tree_node"`
+	Url               *string                `json:"url,omitempty"`
 }
 
 // CollectionRequest defines model for CollectionRequest.
 type CollectionRequest struct {
+	// FixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
 	FixityFrequency   *FixityFrequencyEnum   `json:"fixity_frequency,omitempty"`
 	Name              string                 `json:"name"`
 	Organization      string                 `json:"organization"`
@@ -193,10 +202,25 @@ type CollectionRequest struct {
 	TreeNode          *string                `json:"tree_node"`
 }
 
-// DefaultFixityFrequencyEnum defines model for DefaultFixityFrequencyEnum.
+// CollectionSummary defines model for CollectionSummary.
+type CollectionSummary struct {
+	// FixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
+	FixityFrequency        FixityFrequencyEnum     `json:"fixity_frequency"`
+	Name                   string                  `json:"name"`
+	SizeBytes              int                     `json:"size_bytes"`
+	TargetReplicaLocations []ReplicaLocationConfig `json:"target_replica_locations"`
+}
+
+// DefaultFixityFrequencyEnum * `TWICE_YEARLY` - Twice Yearly
+// * `QUARTERLY` - Quarterly
+// * `MONTHLY` - Monthly
 type DefaultFixityFrequencyEnum string
 
-// DefaultReplicationEnum defines model for DefaultReplicationEnum.
+// DefaultReplicationEnum * `2` - 2x
+// * `3` - 3x
+// * `4` - 4x
 type DefaultReplicationEnum int
 
 // Deposit defines model for Deposit.
@@ -208,32 +232,45 @@ type Deposit struct {
 	ParentNode   string             `json:"parent_node"`
 	RegisteredAt *time.Time         `json:"registered_at,omitempty"`
 	ReplicatedAt *time.Time         `json:"replicated_at"`
-	State        *StateEnum         `json:"state,omitempty"`
-	UploadedAt   *time.Time         `json:"uploaded_at"`
-	User         *MinimalUser       `json:"user,omitempty"`
+
+	// State * `REGISTERED` - Registered
+	// * `UPLOADED` - Uploaded
+	// * `HASHED` - Hashed
+	// * `REPLICATED` - Replicated
+	// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+	// * `TERMINATED_BY_USER` - Terminated by user action
+	State      *StateEnum   `json:"state,omitempty"`
+	UploadedAt *time.Time   `json:"uploaded_at"`
+	User       *MinimalUser `json:"user,omitempty"`
 }
 
 // Event defines model for Event.
 type Event struct {
-	Collection  *MinimalCollection `json:"collection,omitempty"`
-	EndedAt     *time.Time         `json:"ended_at"`
-	ErrorCount  *int64             `json:"error_count"`
-	FileCount   *int64             `json:"file_count"`
-	Id          *int               `json:"id,omitempty"`
-	StartedAt   *time.Time         `json:"started_at"`
-	Type        *TypeEnum          `json:"type,omitempty"`
-	UploadState UploadStateEnum    `json:"upload_state"`
-	Url         *string            `json:"url,omitempty"`
+	Collection *MinimalCollection `json:"collection,omitempty"`
+	EndedAt    *time.Time         `json:"ended_at"`
+	ErrorCount *int64             `json:"error_count"`
+	FileCount  *int64             `json:"file_count"`
+	Id         *int               `json:"id,omitempty"`
+	StartedAt  *time.Time         `json:"started_at"`
+
+	// Type * `DEPOSIT` - Deposit
+	// * `FIXITY` - Fixity
+	Type *TypeEnum `json:"type,omitempty"`
+
+	// UploadState * `REGISTERED` - Registered
+	// * `UPLOADED` - Uploaded
+	// * `HASHED` - Hashed
+	// * `REPLICATED` - Replicated
+	// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+	// * `TERMINATED_BY_USER` - Terminated by user action
+	UploadState UploadStateEnum `json:"upload_state"`
+	Url         *string         `json:"url,omitempty"`
 }
 
-// FixityFrequencyEnum defines model for FixityFrequencyEnum.
+// FixityFrequencyEnum * `TWICE_YEARLY` - Twice Yearly
+// * `QUARTERLY` - Quarterly
+// * `MONTHLY` - Monthly
 type FixityFrequencyEnum string
-
-// Geolocation defines model for Geolocation.
-type Geolocation struct {
-	Name string  `json:"name"`
-	Url  *string `json:"url,omitempty"`
-}
 
 // MinimalCollection defines model for MinimalCollection.
 type MinimalCollection struct {
@@ -251,7 +288,10 @@ type MinimalUser struct {
 	Username string `json:"username"`
 }
 
-// NodeTypeEnum defines model for NodeTypeEnum.
+// NodeTypeEnum * `FILE` - File
+// * `FOLDER` - Folder
+// * `COLLECTION` - Collection
+// * `ORGANIZATION` - Organization
 type NodeTypeEnum string
 
 // Organization defines model for Organization.
@@ -271,6 +311,14 @@ type PaginatedCollectionList struct {
 	Results  *[]Collection `json:"results,omitempty"`
 }
 
+// PaginatedCollectionSummaryList defines model for PaginatedCollectionSummaryList.
+type PaginatedCollectionSummaryList struct {
+	Count    *int                 `json:"count,omitempty"`
+	Next     *string              `json:"next"`
+	Previous *string              `json:"previous"`
+	Results  *[]CollectionSummary `json:"results,omitempty"`
+}
+
 // PaginatedDepositList defines model for PaginatedDepositList.
 type PaginatedDepositList struct {
 	Count    *int       `json:"count,omitempty"`
@@ -285,14 +333,6 @@ type PaginatedEventList struct {
 	Next     *string  `json:"next"`
 	Previous *string  `json:"previous"`
 	Results  *[]Event `json:"results,omitempty"`
-}
-
-// PaginatedGeolocationList defines model for PaginatedGeolocationList.
-type PaginatedGeolocationList struct {
-	Count    *int           `json:"count,omitempty"`
-	Next     *string        `json:"next"`
-	Previous *string        `json:"previous"`
-	Results  *[]Geolocation `json:"results,omitempty"`
 }
 
 // PaginatedOrganizationList defines model for PaginatedOrganizationList.
@@ -337,6 +377,9 @@ type PaginatedUserList struct {
 
 // PatchedCollectionRequest defines model for PatchedCollectionRequest.
 type PatchedCollectionRequest struct {
+	// FixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
 	FixityFrequency   *FixityFrequencyEnum   `json:"fixity_frequency,omitempty"`
 	Name              *string                `json:"name,omitempty"`
 	Organization      *string                `json:"organization,omitempty"`
@@ -346,10 +389,16 @@ type PatchedCollectionRequest struct {
 
 // PatchedTreeNodeRequest defines model for PatchedTreeNodeRequest.
 type PatchedTreeNodeRequest struct {
-	Comment              *string       `json:"comment"`
-	FileType             *string       `json:"file_type"`
-	Md5Sum               *string       `json:"md5_sum"`
-	Name                 *string       `json:"name,omitempty"`
+	Comment  *string                 `json:"comment"`
+	FileType *string                 `json:"file_type"`
+	Md5Sum   *string                 `json:"md5_sum"`
+	Metadata *map[string]interface{} `json:"metadata"`
+	Name     *string                 `json:"name,omitempty"`
+
+	// NodeType * `FILE` - File
+	// * `FOLDER` - Folder
+	// * `COLLECTION` - Collection
+	// * `ORGANIZATION` - Organization
 	NodeType             *NodeTypeEnum `json:"node_type,omitempty"`
 	Parent               *string       `json:"parent"`
 	PreDepositModifiedAt *time.Time    `json:"pre_deposit_modified_at"`
@@ -377,7 +426,11 @@ type PatchedUserRequest struct {
 	LastLogin    *time.Time `json:"last_login"`
 	LastName     *string    `json:"last_name,omitempty"`
 	Organization *string    `json:"organization"`
-	Role         *RoleEnum  `json:"role,omitempty"`
+
+	// Role * `ADMIN` - Admin
+	// * `USER` - User
+	// * `VIEWER` - Viewer
+	Role *RoleEnum `json:"role,omitempty"`
 
 	// Username Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
 	Username *string `json:"username,omitempty"`
@@ -385,12 +438,23 @@ type PatchedUserRequest struct {
 
 // Plan defines model for Plan.
 type Plan struct {
+	// DefaultFixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
 	DefaultFixityFrequency *DefaultFixityFrequencyEnum `json:"default_fixity_frequency,omitempty"`
-	DefaultGeolocations    []string                    `json:"default_geolocations"`
 	DefaultReplication     *DefaultReplicationEnum     `json:"default_replication,omitempty"`
 	Name                   string                      `json:"name"`
 	PricePerTerabyte       string                      `json:"price_per_terabyte"`
 	Url                    *string                     `json:"url,omitempty"`
+}
+
+// ReplicaLocationConfig defines model for ReplicaLocationConfig.
+type ReplicaLocationConfig struct {
+	Abbreviation      string `json:"abbreviation"`
+	DisplayName       string `json:"display_name"`
+	NumCopies         int    `json:"num_copies"`
+	PhysicalLocation  string `json:"physical_location"`
+	SystemDescription string `json:"system_description"`
 }
 
 // Report defines model for Report.
@@ -403,37 +467,77 @@ type Report struct {
 	ErrorCount          int64              `json:"error_count"`
 	FileCount           int64              `json:"file_count"`
 	Id                  *int               `json:"id,omitempty"`
-	ReportType          *ReportTypeEnum    `json:"report_type,omitempty"`
-	StartedAt           time.Time          `json:"started_at"`
-	Title               string             `json:"title"`
-	TotalSize           int64              `json:"total_size"`
-	Url                 *string            `json:"url,omitempty"`
+
+	// ReportType * `FIXITY` - Fixity
+	// * `DEPOSIT` - Deposit
+	ReportType *ReportTypeEnum `json:"report_type,omitempty"`
+	StartedAt  time.Time       `json:"started_at"`
+	Title      string          `json:"title"`
+	TotalSize  int64           `json:"total_size"`
+	Url        *string         `json:"url,omitempty"`
 }
 
-// ReportTypeEnum defines model for ReportTypeEnum.
+// ReportTypeEnum * `FIXITY` - Fixity
+// * `DEPOSIT` - Deposit
 type ReportTypeEnum string
 
-// RoleEnum defines model for RoleEnum.
+// RoleEnum * `ADMIN` - Admin
+// * `USER` - User
+// * `VIEWER` - Viewer
 type RoleEnum string
 
-// StateEnum defines model for StateEnum.
+// StateEnum * `REGISTERED` - Registered
+// * `UPLOADED` - Uploaded
+// * `HASHED` - Hashed
+// * `REPLICATED` - Replicated
+// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+// * `TERMINATED_BY_USER` - Terminated by user action
 type StateEnum string
 
-// TargetReplicationEnum defines model for TargetReplicationEnum.
+// TargetReplicationEnum * `2` - 2x
+// * `3` - 3x
+// * `4` - 4x
 type TargetReplicationEnum int
 
 // TreeNode defines model for TreeNode.
 type TreeNode struct {
-	Comment              *string       `json:"comment"`
-	ContentUrl           *string       `json:"content_url"`
-	FileType             *string       `json:"file_type"`
-	Id                   *int          `json:"id,omitempty"`
-	Md5Sum               *string       `json:"md5_sum"`
-	ModifiedAt           *time.Time    `json:"modified_at,omitempty"`
-	Name                 string        `json:"name"`
+	Comment *string `json:"comment"`
+
+	// ContentUrl Generates a URL for downloading the content of this *TreeNode*.
+	//
+	// Returns ``None`` if this *TreeNode* is not of *node_type* *FILE* or if
+	// content isn't downloadable.
+	//
+	// .. note::
+	//
+	//     As of ``0.4.0``, the implementation depends on content being
+	//     present in a petabox-backed :py:class:`.Replica`. In the future,
+	//     downloads should be resolvable from any :py:class:`.Replica`,
+	//     regardless of the storage backend used, provided said replica(s)
+	//     have a healthy recent :py:class:`.FixityCheck`.
+	//
+	//     Another note: a database query is required to resolve the url, which
+	//     is unfortunate; ideally the requisite data for generating content
+	//     urls should be resolvable for a page of :py:class:`.TreeNode`s in a
+	//     constant number of queries. It's not clear to me (mwilson) right
+	//     now whether this is possible or reasonable, but if performance
+	//     problems arise because of excessive queries, this could be an area
+	//     for investigation.
+	ContentUrl *string                 `json:"content_url"`
+	FileType   *string                 `json:"file_type"`
+	Id         *int                    `json:"id,omitempty"`
+	Md5Sum     *string                 `json:"md5_sum"`
+	Metadata   *map[string]interface{} `json:"metadata"`
+	ModifiedAt *time.Time              `json:"modified_at"`
+	Name       string                  `json:"name"`
+
+	// NodeType * `FILE` - File
+	// * `FOLDER` - Folder
+	// * `COLLECTION` - Collection
+	// * `ORGANIZATION` - Organization
 	NodeType             *NodeTypeEnum `json:"node_type,omitempty"`
 	Parent               *string       `json:"parent"`
-	Path                 *string       `json:"path,omitempty"`
+	Path                 *string       `json:"path"`
 	PreDepositModifiedAt *time.Time    `json:"pre_deposit_modified_at"`
 	Sha1Sum              *string       `json:"sha1_sum"`
 	Sha256Sum            *string       `json:"sha256_sum"`
@@ -445,10 +549,16 @@ type TreeNode struct {
 
 // TreeNodeRequest defines model for TreeNodeRequest.
 type TreeNodeRequest struct {
-	Comment              *string       `json:"comment"`
-	FileType             *string       `json:"file_type"`
-	Md5Sum               *string       `json:"md5_sum"`
-	Name                 string        `json:"name"`
+	Comment  *string                 `json:"comment"`
+	FileType *string                 `json:"file_type"`
+	Md5Sum   *string                 `json:"md5_sum"`
+	Metadata *map[string]interface{} `json:"metadata"`
+	Name     string                  `json:"name"`
+
+	// NodeType * `FILE` - File
+	// * `FOLDER` - Folder
+	// * `COLLECTION` - Collection
+	// * `ORGANIZATION` - Organization
 	NodeType             *NodeTypeEnum `json:"node_type,omitempty"`
 	Parent               *string       `json:"parent"`
 	PreDepositModifiedAt *time.Time    `json:"pre_deposit_modified_at"`
@@ -458,10 +568,16 @@ type TreeNodeRequest struct {
 	UploadedAt           *time.Time    `json:"uploaded_at"`
 }
 
-// TypeEnum defines model for TypeEnum.
+// TypeEnum * `DEPOSIT` - Deposit
+// * `FIXITY` - Fixity
 type TypeEnum string
 
-// UploadStateEnum defines model for UploadStateEnum.
+// UploadStateEnum * `REGISTERED` - Registered
+// * `UPLOADED` - Uploaded
+// * `HASHED` - Hashed
+// * `REPLICATED` - Replicated
+// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+// * `TERMINATED_BY_USER` - Terminated by user action
 type UploadStateEnum string
 
 // User defines model for User.
@@ -483,8 +599,12 @@ type User struct {
 	LastLogin    *time.Time `json:"last_login"`
 	LastName     *string    `json:"last_name,omitempty"`
 	Organization *string    `json:"organization"`
-	Role         *RoleEnum  `json:"role,omitempty"`
-	Url          *string    `json:"url,omitempty"`
+
+	// Role * `ADMIN` - Admin
+	// * `USER` - User
+	// * `VIEWER` - Viewer
+	Role *RoleEnum `json:"role,omitempty"`
+	Url  *string   `json:"url,omitempty"`
 
 	// Username Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
 	Username string `json:"username"`
@@ -508,10 +628,29 @@ type UserRequest struct {
 	LastLogin    *time.Time `json:"last_login"`
 	LastName     *string    `json:"last_name,omitempty"`
 	Organization *string    `json:"organization"`
-	Role         *RoleEnum  `json:"role,omitempty"`
+
+	// Role * `ADMIN` - Admin
+	// * `USER` - User
+	// * `VIEWER` - Viewer
+	Role *RoleEnum `json:"role,omitempty"`
 
 	// Username Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.
 	Username string `json:"username"`
+}
+
+// CollectionSummariesListParams defines parameters for CollectionSummariesList.
+type CollectionSummariesListParams struct {
+	// Limit Number of results to return per page.
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+
+	// Offset The initial index from which to return the results.
+	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
+
+	// Ordering Which field to use when ordering the results.
+	Ordering *string `form:"ordering,omitempty" json:"ordering,omitempty"`
+
+	// Search A search term.
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
 }
 
 // CollectionsListParams defines parameters for CollectionsList.
@@ -520,7 +659,11 @@ type CollectionsListParams struct {
 	Flat *string `form:"_flat,omitempty" json:"_flat,omitempty"`
 
 	// Pluck A subset of response item fields to include
-	Pluck                    *string                               `form:"_pluck,omitempty" json:"_pluck,omitempty"`
+	Pluck *string `form:"_pluck,omitempty" json:"_pluck,omitempty"`
+
+	// FixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
 	FixityFrequency          *CollectionsListParamsFixityFrequency `form:"fixity_frequency,omitempty" json:"fixity_frequency,omitempty"`
 	FixityFrequencyContains  *string                               `form:"fixity_frequency__contains,omitempty" json:"fixity_frequency__contains,omitempty"`
 	FixityFrequencyEndswith  *string                               `form:"fixity_frequency__endswith,omitempty" json:"fixity_frequency__endswith,omitempty"`
@@ -562,7 +705,11 @@ type CollectionsListParams struct {
 	OrganizationIn *[]int `form:"organization__in,omitempty" json:"organization__in,omitempty"`
 
 	// Search A search term.
-	Search               *string                                 `form:"search,omitempty" json:"search,omitempty"`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// TargetReplication * `2` - 2x
+	// * `3` - 3x
+	// * `4` - 4x
 	TargetReplication    *CollectionsListParamsTargetReplication `form:"target_replication,omitempty" json:"target_replication,omitempty"`
 	TargetReplicationGt  *int                                    `form:"target_replication__gt,omitempty" json:"target_replication__gt,omitempty"`
 	TargetReplicationGte *int                                    `form:"target_replication__gte,omitempty" json:"target_replication__gte,omitempty"`
@@ -642,7 +789,14 @@ type DepositsListParams struct {
 	ReplicatedAtLte *time.Time   `form:"replicated_at__lte,omitempty" json:"replicated_at__lte,omitempty"`
 
 	// Search A search term.
-	Search         *string                  `form:"search,omitempty" json:"search,omitempty"`
+	Search *string `form:"search,omitempty" json:"search,omitempty"`
+
+	// State * `REGISTERED` - Registered
+	// * `UPLOADED` - Uploaded
+	// * `HASHED` - Hashed
+	// * `REPLICATED` - Replicated
+	// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+	// * `TERMINATED_BY_USER` - Terminated by user action
 	State          *DepositsListParamsState `form:"state,omitempty" json:"state,omitempty"`
 	StateContains  *string                  `form:"state__contains,omitempty" json:"state__contains,omitempty"`
 	StateEndswith  *string                  `form:"state__endswith,omitempty" json:"state__endswith,omitempty"`
@@ -727,9 +881,12 @@ type EventsListParams struct {
 	StartedAtGte *time.Time `form:"started_at__gte,omitempty" json:"started_at__gte,omitempty"`
 
 	// StartedAtIn Multiple values may be separated by commas.
-	StartedAtIn   *[]time.Time          `form:"started_at__in,omitempty" json:"started_at__in,omitempty"`
-	StartedAtLt   *time.Time            `form:"started_at__lt,omitempty" json:"started_at__lt,omitempty"`
-	StartedAtLte  *time.Time            `form:"started_at__lte,omitempty" json:"started_at__lte,omitempty"`
+	StartedAtIn  *[]time.Time `form:"started_at__in,omitempty" json:"started_at__in,omitempty"`
+	StartedAtLt  *time.Time   `form:"started_at__lt,omitempty" json:"started_at__lt,omitempty"`
+	StartedAtLte *time.Time   `form:"started_at__lte,omitempty" json:"started_at__lte,omitempty"`
+
+	// Type * `DEPOSIT` - Deposit
+	// * `FIXITY` - Fixity
 	Type          *EventsListParamsType `form:"type,omitempty" json:"type,omitempty"`
 	TypeContains  *string               `form:"type__contains,omitempty" json:"type__contains,omitempty"`
 	TypeEndswith  *string               `form:"type__endswith,omitempty" json:"type__endswith,omitempty"`
@@ -737,8 +894,15 @@ type EventsListParams struct {
 	TypeIexact    *string               `form:"type__iexact,omitempty" json:"type__iexact,omitempty"`
 
 	// TypeIn Multiple values may be separated by commas.
-	TypeIn               *[]string                    `form:"type__in,omitempty" json:"type__in,omitempty"`
-	TypeStartswith       *string                      `form:"type__startswith,omitempty" json:"type__startswith,omitempty"`
+	TypeIn         *[]string `form:"type__in,omitempty" json:"type__in,omitempty"`
+	TypeStartswith *string   `form:"type__startswith,omitempty" json:"type__startswith,omitempty"`
+
+	// UploadState * `REGISTERED` - Registered
+	// * `UPLOADED` - Uploaded
+	// * `HASHED` - Hashed
+	// * `REPLICATED` - Replicated
+	// * `COMPLETE_WITH_ERRORS` - Complete With Errors
+	// * `TERMINATED_BY_USER` - Terminated by user action
 	UploadState          *EventsListParamsUploadState `form:"upload_state,omitempty" json:"upload_state,omitempty"`
 	UploadStateContains  *string                      `form:"upload_state__contains,omitempty" json:"upload_state__contains,omitempty"`
 	UploadStateEndswith  *string                      `form:"upload_state__endswith,omitempty" json:"upload_state__endswith,omitempty"`
@@ -755,36 +919,6 @@ type EventsListParamsType string
 
 // EventsListParamsUploadState defines parameters for EventsList.
 type EventsListParamsUploadState string
-
-// GeolocationsListParams defines parameters for GeolocationsList.
-type GeolocationsListParams struct {
-	// Flat Create a flat array from plucked field values
-	Flat *string `form:"_flat,omitempty" json:"_flat,omitempty"`
-
-	// Pluck A subset of response item fields to include
-	Pluck *string `form:"_pluck,omitempty" json:"_pluck,omitempty"`
-
-	// Limit Number of results to return per page.
-	Limit         *int    `form:"limit,omitempty" json:"limit,omitempty"`
-	Name          *string `form:"name,omitempty" json:"name,omitempty"`
-	NameContains  *string `form:"name__contains,omitempty" json:"name__contains,omitempty"`
-	NameEndswith  *string `form:"name__endswith,omitempty" json:"name__endswith,omitempty"`
-	NameIcontains *string `form:"name__icontains,omitempty" json:"name__icontains,omitempty"`
-	NameIexact    *string `form:"name__iexact,omitempty" json:"name__iexact,omitempty"`
-
-	// NameIn Multiple values may be separated by commas.
-	NameIn         *[]string `form:"name__in,omitempty" json:"name__in,omitempty"`
-	NameStartswith *string   `form:"name__startswith,omitempty" json:"name__startswith,omitempty"`
-
-	// Offset The initial index from which to return the results.
-	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
-
-	// Ordering Which field to use when ordering the results.
-	Ordering *string `form:"ordering,omitempty" json:"ordering,omitempty"`
-
-	// Search A search term.
-	Search *string `form:"search,omitempty" json:"search,omitempty"`
-}
 
 // OrganizationsListParams defines parameters for OrganizationsList.
 type OrganizationsListParams struct {
@@ -835,7 +969,11 @@ type PlansListParams struct {
 	Flat *string `form:"_flat,omitempty" json:"_flat,omitempty"`
 
 	// Pluck A subset of response item fields to include
-	Pluck                           *string                                `form:"_pluck,omitempty" json:"_pluck,omitempty"`
+	Pluck *string `form:"_pluck,omitempty" json:"_pluck,omitempty"`
+
+	// DefaultFixityFrequency * `TWICE_YEARLY` - Twice Yearly
+	// * `QUARTERLY` - Quarterly
+	// * `MONTHLY` - Monthly
 	DefaultFixityFrequency          *PlansListParamsDefaultFixityFrequency `form:"default_fixity_frequency,omitempty" json:"default_fixity_frequency,omitempty"`
 	DefaultFixityFrequencyContains  *string                                `form:"default_fixity_frequency__contains,omitempty" json:"default_fixity_frequency__contains,omitempty"`
 	DefaultFixityFrequencyEndswith  *string                                `form:"default_fixity_frequency__endswith,omitempty" json:"default_fixity_frequency__endswith,omitempty"`
@@ -843,11 +981,15 @@ type PlansListParams struct {
 	DefaultFixityFrequencyIexact    *string                                `form:"default_fixity_frequency__iexact,omitempty" json:"default_fixity_frequency__iexact,omitempty"`
 
 	// DefaultFixityFrequencyIn Multiple values may be separated by commas.
-	DefaultFixityFrequencyIn         *[]string                          `form:"default_fixity_frequency__in,omitempty" json:"default_fixity_frequency__in,omitempty"`
-	DefaultFixityFrequencyStartswith *string                            `form:"default_fixity_frequency__startswith,omitempty" json:"default_fixity_frequency__startswith,omitempty"`
-	DefaultReplication               *PlansListParamsDefaultReplication `form:"default_replication,omitempty" json:"default_replication,omitempty"`
-	DefaultReplicationGt             *int                               `form:"default_replication__gt,omitempty" json:"default_replication__gt,omitempty"`
-	DefaultReplicationGte            *int                               `form:"default_replication__gte,omitempty" json:"default_replication__gte,omitempty"`
+	DefaultFixityFrequencyIn         *[]string `form:"default_fixity_frequency__in,omitempty" json:"default_fixity_frequency__in,omitempty"`
+	DefaultFixityFrequencyStartswith *string   `form:"default_fixity_frequency__startswith,omitempty" json:"default_fixity_frequency__startswith,omitempty"`
+
+	// DefaultReplication * `2` - 2x
+	// * `3` - 3x
+	// * `4` - 4x
+	DefaultReplication    *PlansListParamsDefaultReplication `form:"default_replication,omitempty" json:"default_replication,omitempty"`
+	DefaultReplicationGt  *int                               `form:"default_replication__gt,omitempty" json:"default_replication__gt,omitempty"`
+	DefaultReplicationGte *int                               `form:"default_replication__gte,omitempty" json:"default_replication__gte,omitempty"`
 
 	// DefaultReplicationIn Multiple values may be separated by commas.
 	DefaultReplicationIn  *[]int `form:"default_replication__in,omitempty" json:"default_replication__in,omitempty"`
@@ -955,7 +1097,10 @@ type ReportsListParams struct {
 	Offset *int `form:"offset,omitempty" json:"offset,omitempty"`
 
 	// Ordering Which field to use when ordering the results.
-	Ordering            *string                      `form:"ordering,omitempty" json:"ordering,omitempty"`
+	Ordering *string `form:"ordering,omitempty" json:"ordering,omitempty"`
+
+	// ReportType * `FIXITY` - Fixity
+	// * `DEPOSIT` - Deposit
 	ReportType          *ReportsListParamsReportType `form:"report_type,omitempty" json:"report_type,omitempty"`
 	ReportTypeContains  *string                      `form:"report_type__contains,omitempty" json:"report_type__contains,omitempty"`
 	ReportTypeEndswith  *string                      `form:"report_type__endswith,omitempty" json:"report_type__endswith,omitempty"`
@@ -1049,8 +1194,13 @@ type TreenodesListParams struct {
 	NameIexact    *string      `form:"name__iexact,omitempty" json:"name__iexact,omitempty"`
 
 	// NameIn Multiple values may be separated by commas.
-	NameIn            *[]string                    `form:"name__in,omitempty" json:"name__in,omitempty"`
-	NameStartswith    *string                      `form:"name__startswith,omitempty" json:"name__startswith,omitempty"`
+	NameIn         *[]string `form:"name__in,omitempty" json:"name__in,omitempty"`
+	NameStartswith *string   `form:"name__startswith,omitempty" json:"name__startswith,omitempty"`
+
+	// NodeType * `FILE` - File
+	// * `FOLDER` - Folder
+	// * `COLLECTION` - Collection
+	// * `ORGANIZATION` - Organization
 	NodeType          *TreenodesListParamsNodeType `form:"node_type,omitempty" json:"node_type,omitempty"`
 	NodeTypeContains  *string                      `form:"node_type__contains,omitempty" json:"node_type__contains,omitempty"`
 	NodeTypeEndswith  *string                      `form:"node_type__endswith,omitempty" json:"node_type__endswith,omitempty"`
@@ -1200,12 +1350,16 @@ type UsersListParams struct {
 	Organization *int    `form:"organization,omitempty" json:"organization,omitempty"`
 
 	// OrganizationIn Multiple values may be separated by commas.
-	OrganizationIn *[]int               `form:"organization__in,omitempty" json:"organization__in,omitempty"`
-	Role           *UsersListParamsRole `form:"role,omitempty" json:"role,omitempty"`
-	RoleContains   *string              `form:"role__contains,omitempty" json:"role__contains,omitempty"`
-	RoleEndswith   *string              `form:"role__endswith,omitempty" json:"role__endswith,omitempty"`
-	RoleIcontains  *string              `form:"role__icontains,omitempty" json:"role__icontains,omitempty"`
-	RoleIexact     *string              `form:"role__iexact,omitempty" json:"role__iexact,omitempty"`
+	OrganizationIn *[]int `form:"organization__in,omitempty" json:"organization__in,omitempty"`
+
+	// Role * `ADMIN` - Admin
+	// * `USER` - User
+	// * `VIEWER` - Viewer
+	Role          *UsersListParamsRole `form:"role,omitempty" json:"role,omitempty"`
+	RoleContains  *string              `form:"role__contains,omitempty" json:"role__contains,omitempty"`
+	RoleEndswith  *string              `form:"role__endswith,omitempty" json:"role__endswith,omitempty"`
+	RoleIcontains *string              `form:"role__icontains,omitempty" json:"role__icontains,omitempty"`
+	RoleIexact    *string              `form:"role__iexact,omitempty" json:"role__iexact,omitempty"`
 
 	// RoleIn Multiple values may be separated by commas.
 	RoleIn         *[]string `form:"role__in,omitempty" json:"role__in,omitempty"`
@@ -1381,6 +1535,9 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
+	// CollectionSummariesList request
+	CollectionSummariesList(ctx context.Context, params *CollectionSummariesListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CollectionsList request
 	CollectionsList(ctx context.Context, params *CollectionsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
@@ -1419,12 +1576,6 @@ type ClientInterface interface {
 
 	// EventsRetrieve request
 	EventsRetrieve(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GeolocationsList request
-	GeolocationsList(ctx context.Context, params *GeolocationsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GeolocationsRetrieve request
-	GeolocationsRetrieve(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// OrganizationsList request
 	OrganizationsList(ctx context.Context, params *OrganizationsListParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -1500,6 +1651,18 @@ type ClientInterface interface {
 	UsersUpdate(ctx context.Context, id int, body UsersUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	UsersUpdateWithFormdataBody(ctx context.Context, id int, body UsersUpdateFormdataRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+func (c *Client) CollectionSummariesList(ctx context.Context, params *CollectionSummariesListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCollectionSummariesListRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 func (c *Client) CollectionsList(ctx context.Context, params *CollectionsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -1672,30 +1835,6 @@ func (c *Client) EventsList(ctx context.Context, params *EventsListParams, reqEd
 
 func (c *Client) EventsRetrieve(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewEventsRetrieveRequest(c.Server, id)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GeolocationsList(ctx context.Context, params *GeolocationsListParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGeolocationsListRequest(c.Server, params)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-func (c *Client) GeolocationsRetrieve(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGeolocationsRetrieveRequest(c.Server, id)
 	if err != nil {
 		return nil, err
 	}
@@ -2052,6 +2191,101 @@ func (c *Client) UsersUpdateWithFormdataBody(ctx context.Context, id int, body U
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewCollectionSummariesListRequest generates requests for CollectionSummariesList
+func NewCollectionSummariesListRequest(server string, params *CollectionSummariesListParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/collection-summaries/")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	queryValues := queryURL.Query()
+
+	if params.Limit != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Offset != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Ordering != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ordering", runtime.ParamLocationQuery, *params.Ordering); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	if params.Search != nil {
+
+		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "search", runtime.ParamLocationQuery, *params.Search); err != nil {
+			return nil, err
+		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
+			return nil, err
+		} else {
+			for k, v := range parsed {
+				for _, v2 := range v {
+					queryValues.Add(k, v2)
+				}
+			}
+		}
+
+	}
+
+	queryURL.RawQuery = queryValues.Encode()
+
+	req, err := http.NewRequest("GET", queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
 }
 
 // NewCollectionsListRequest generates requests for CollectionsList
@@ -4591,279 +4825,6 @@ func NewEventsRetrieveRequest(server string, id int) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/events/%s/", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGeolocationsListRequest generates requests for GeolocationsList
-func NewGeolocationsListRequest(server string, params *GeolocationsListParams) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/geolocations/")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	queryValues := queryURL.Query()
-
-	if params.Flat != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "_flat", runtime.ParamLocationQuery, *params.Flat); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Pluck != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "_pluck", runtime.ParamLocationQuery, *params.Pluck); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Limit != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "limit", runtime.ParamLocationQuery, *params.Limit); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Name != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name", runtime.ParamLocationQuery, *params.Name); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameContains != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name__contains", runtime.ParamLocationQuery, *params.NameContains); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameEndswith != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name__endswith", runtime.ParamLocationQuery, *params.NameEndswith); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameIcontains != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name__icontains", runtime.ParamLocationQuery, *params.NameIcontains); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameIexact != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name__iexact", runtime.ParamLocationQuery, *params.NameIexact); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameIn != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", false, "name__in", runtime.ParamLocationQuery, *params.NameIn); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.NameStartswith != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "name__startswith", runtime.ParamLocationQuery, *params.NameStartswith); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Offset != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "offset", runtime.ParamLocationQuery, *params.Offset); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Ordering != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "ordering", runtime.ParamLocationQuery, *params.Ordering); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	if params.Search != nil {
-
-		if queryFrag, err := runtime.StyleParamWithLocation("form", true, "search", runtime.ParamLocationQuery, *params.Search); err != nil {
-			return nil, err
-		} else if parsed, err := url.ParseQuery(queryFrag); err != nil {
-			return nil, err
-		} else {
-			for k, v := range parsed {
-				for _, v2 := range v {
-					queryValues.Add(k, v2)
-				}
-			}
-		}
-
-	}
-
-	queryURL.RawQuery = queryValues.Encode()
-
-	req, err := http.NewRequest("GET", queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGeolocationsRetrieveRequest generates requests for GeolocationsRetrieve
-func NewGeolocationsRetrieveRequest(server string, id int) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithLocation("simple", false, "id", runtime.ParamLocationPath, id)
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/geolocations/%s/", pathParam0)
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -9969,6 +9930,9 @@ func WithBaseURL(baseURL string) ClientOption {
 
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
+	// CollectionSummariesList request
+	CollectionSummariesListWithResponse(ctx context.Context, params *CollectionSummariesListParams, reqEditors ...RequestEditorFn) (*CollectionSummariesListResponse, error)
+
 	// CollectionsList request
 	CollectionsListWithResponse(ctx context.Context, params *CollectionsListParams, reqEditors ...RequestEditorFn) (*CollectionsListResponse, error)
 
@@ -10007,12 +9971,6 @@ type ClientWithResponsesInterface interface {
 
 	// EventsRetrieve request
 	EventsRetrieveWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*EventsRetrieveResponse, error)
-
-	// GeolocationsList request
-	GeolocationsListWithResponse(ctx context.Context, params *GeolocationsListParams, reqEditors ...RequestEditorFn) (*GeolocationsListResponse, error)
-
-	// GeolocationsRetrieve request
-	GeolocationsRetrieveWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GeolocationsRetrieveResponse, error)
 
 	// OrganizationsList request
 	OrganizationsListWithResponse(ctx context.Context, params *OrganizationsListParams, reqEditors ...RequestEditorFn) (*OrganizationsListResponse, error)
@@ -10088,6 +10046,28 @@ type ClientWithResponsesInterface interface {
 	UsersUpdateWithResponse(ctx context.Context, id int, body UsersUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*UsersUpdateResponse, error)
 
 	UsersUpdateWithFormdataBodyWithResponse(ctx context.Context, id int, body UsersUpdateFormdataRequestBody, reqEditors ...RequestEditorFn) (*UsersUpdateResponse, error)
+}
+
+type CollectionSummariesListResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	JSON200      *PaginatedCollectionSummaryList
+}
+
+// Status returns HTTPResponse.Status
+func (r CollectionSummariesListResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CollectionSummariesListResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
 }
 
 type CollectionsListResponse struct {
@@ -10282,50 +10262,6 @@ func (r EventsRetrieveResponse) Status() string {
 
 // StatusCode returns HTTPResponse.StatusCode
 func (r EventsRetrieveResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GeolocationsListResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *PaginatedGeolocationList
-}
-
-// Status returns HTTPResponse.Status
-func (r GeolocationsListResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GeolocationsListResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-type GeolocationsRetrieveResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	JSON200      *Geolocation
-}
-
-// Status returns HTTPResponse.Status
-func (r GeolocationsRetrieveResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GeolocationsRetrieveResponse) StatusCode() int {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.StatusCode
 	}
@@ -10705,6 +10641,15 @@ func (r UsersUpdateResponse) StatusCode() int {
 	return 0
 }
 
+// CollectionSummariesListWithResponse request returning *CollectionSummariesListResponse
+func (c *ClientWithResponses) CollectionSummariesListWithResponse(ctx context.Context, params *CollectionSummariesListParams, reqEditors ...RequestEditorFn) (*CollectionSummariesListResponse, error) {
+	rsp, err := c.CollectionSummariesList(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCollectionSummariesListResponse(rsp)
+}
+
 // CollectionsListWithResponse request returning *CollectionsListResponse
 func (c *ClientWithResponses) CollectionsListWithResponse(ctx context.Context, params *CollectionsListParams, reqEditors ...RequestEditorFn) (*CollectionsListResponse, error) {
 	rsp, err := c.CollectionsList(ctx, params, reqEditors...)
@@ -10832,24 +10777,6 @@ func (c *ClientWithResponses) EventsRetrieveWithResponse(ctx context.Context, id
 		return nil, err
 	}
 	return ParseEventsRetrieveResponse(rsp)
-}
-
-// GeolocationsListWithResponse request returning *GeolocationsListResponse
-func (c *ClientWithResponses) GeolocationsListWithResponse(ctx context.Context, params *GeolocationsListParams, reqEditors ...RequestEditorFn) (*GeolocationsListResponse, error) {
-	rsp, err := c.GeolocationsList(ctx, params, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGeolocationsListResponse(rsp)
-}
-
-// GeolocationsRetrieveWithResponse request returning *GeolocationsRetrieveResponse
-func (c *ClientWithResponses) GeolocationsRetrieveWithResponse(ctx context.Context, id int, reqEditors ...RequestEditorFn) (*GeolocationsRetrieveResponse, error) {
-	rsp, err := c.GeolocationsRetrieve(ctx, id, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGeolocationsRetrieveResponse(rsp)
 }
 
 // OrganizationsListWithResponse request returning *OrganizationsListResponse
@@ -11101,6 +11028,32 @@ func (c *ClientWithResponses) UsersUpdateWithFormdataBodyWithResponse(ctx contex
 	return ParseUsersUpdateResponse(rsp)
 }
 
+// ParseCollectionSummariesListResponse parses an HTTP response from a CollectionSummariesListWithResponse call
+func ParseCollectionSummariesListResponse(rsp *http.Response) (*CollectionSummariesListResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CollectionSummariesListResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PaginatedCollectionSummaryList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCollectionsListResponse parses an HTTP response from a CollectionsListWithResponse call
 func ParseCollectionsListResponse(rsp *http.Response) (*CollectionsListResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -11325,58 +11278,6 @@ func ParseEventsRetrieveResponse(rsp *http.Response) (*EventsRetrieveResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Event
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGeolocationsListResponse parses an HTTP response from a GeolocationsListWithResponse call
-func ParseGeolocationsListResponse(rsp *http.Response) (*GeolocationsListResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GeolocationsListResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest PaginatedGeolocationList
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGeolocationsRetrieveResponse parses an HTTP response from a GeolocationsRetrieveWithResponse call
-func ParseGeolocationsRetrieveResponse(rsp *http.Response) (*GeolocationsRetrieveResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GeolocationsRetrieveResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest Geolocation
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -11822,97 +11723,113 @@ func ParseUsersUpdateResponse(rsp *http.Response) (*UsersUpdateResponse, error) 
 // Base64 encoded, gzipped, json marshaled Swagger object
 var swaggerSpec = []string{
 
-	"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",
+	"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",
+	"rZlL4enp6f8CAAD//+Ol8To8LgEA",
 }
 
 // GetSwagger returns the content of the embedded swagger specification file

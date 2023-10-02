@@ -2,14 +2,78 @@
     "openapi": "3.0.3",
     "info": {
         "title": "Vault API",
-        "version": "0.6.0",
+        "version": "1.0.0",
         "description": "Vault Digital Preservation System Private API"
     },
     "paths": {
+        "/api/collection-summaries/": {
+            "get": {
+                "operationId": "collection_summaries_list",
+                "parameters": [
+                    {
+                        "name": "limit",
+                        "required": false,
+                        "in": "query",
+                        "description": "Number of results to return per page.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "required": false,
+                        "in": "query",
+                        "description": "The initial index from which to return the results.",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "ordering",
+                        "required": false,
+                        "in": "query",
+                        "description": "Which field to use when ordering the results.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "required": false,
+                        "in": "query",
+                        "description": "A search term.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "tags": [
+                    "vault"
+                ],
+                "security": [
+                    {
+                        "cookieAuth": []
+                    },
+                    {}
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PaginatedCollectionSummaryList"
+                                }
+                            }
+                        },
+                        "description": ""
+                    }
+                }
+            }
+        },
         "/api/collections/": {
             "get": {
                 "operationId": "collections_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -37,7 +101,8 @@
                                 "QUARTERLY",
                                 "TWICE_YEARLY"
                             ]
-                        }
+                        },
+                        "description": "* `TWICE_YEARLY` - Twice Yearly\n* `QUARTERLY` - Quarterly\n* `MONTHLY` - Monthly"
                     },
                     {
                         "in": "query",
@@ -256,7 +321,8 @@
                                 3,
                                 4
                             ]
-                        }
+                        },
+                        "description": "* `2` - 2x\n* `3` - 3x\n* `4` - 4x"
                     },
                     {
                         "in": "query",
@@ -522,7 +588,7 @@
         "/api/deposits/": {
             "get": {
                 "operationId": "deposits_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -856,9 +922,11 @@
                                 "HASHED",
                                 "REGISTERED",
                                 "REPLICATED",
+                                "TERMINATED_BY_USER",
                                 "UPLOADED"
                             ]
-                        }
+                        },
+                        "description": "* `REGISTERED` - Registered\n* `UPLOADED` - Uploaded\n* `HASHED` - Hashed\n* `REPLICATED` - Replicated\n* `COMPLETE_WITH_ERRORS` - Complete With Errors\n* `TERMINATED_BY_USER` - Terminated by user action"
                     },
                     {
                         "in": "query",
@@ -1045,7 +1113,7 @@
         "/api/events/": {
             "get": {
                 "operationId": "events_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -1372,7 +1440,8 @@
                                 "DEPOSIT",
                                 "FIXITY"
                             ]
-                        }
+                        },
+                        "description": "* `DEPOSIT` - Deposit\n* `FIXITY` - Fixity"
                     },
                     {
                         "in": "query",
@@ -1432,9 +1501,11 @@
                                 "HASHED",
                                 "REGISTERED",
                                 "REPLICATED",
+                                "TERMINATED_BY_USER",
                                 "UPLOADED"
                             ]
-                        }
+                        },
+                        "description": "* `REGISTERED` - Registered\n* `UPLOADED` - Uploaded\n* `HASHED` - Hashed\n* `REPLICATED` - Replicated\n* `COMPLETE_WITH_ERRORS` - Complete With Errors\n* `TERMINATED_BY_USER` - Terminated by user action"
                     },
                     {
                         "in": "query",
@@ -1544,182 +1615,10 @@
                 }
             }
         },
-        "/api/geolocations/": {
-            "get": {
-                "operationId": "geolocations_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
-                "parameters": [
-                    {
-                        "in": "query",
-                        "name": "_flat",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "Create a flat array from plucked field values"
-                    },
-                    {
-                        "in": "query",
-                        "name": "_pluck",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "description": "A subset of response item fields to include"
-                    },
-                    {
-                        "name": "limit",
-                        "required": false,
-                        "in": "query",
-                        "description": "Number of results to return per page.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__contains",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__endswith",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__icontains",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__iexact",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__in",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "type": "string"
-                            }
-                        },
-                        "description": "Multiple values may be separated by commas.",
-                        "explode": false,
-                        "style": "form"
-                    },
-                    {
-                        "in": "query",
-                        "name": "name__startswith",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "offset",
-                        "required": false,
-                        "in": "query",
-                        "description": "The initial index from which to return the results.",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    },
-                    {
-                        "name": "ordering",
-                        "required": false,
-                        "in": "query",
-                        "description": "Which field to use when ordering the results.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "search",
-                        "required": false,
-                        "in": "query",
-                        "description": "A search term.",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                ],
-                "tags": [
-                    "vault"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/PaginatedGeolocationList"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
-        "/api/geolocations/{id}/": {
-            "get": {
-                "operationId": "geolocations_retrieve",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
-                "parameters": [
-                    {
-                        "in": "path",
-                        "name": "id",
-                        "schema": {
-                            "type": "integer"
-                        },
-                        "description": "A unique integer value identifying this geolocation.",
-                        "required": true
-                    }
-                ],
-                "tags": [
-                    "vault"
-                ],
-                "security": [
-                    {
-                        "cookieAuth": []
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/Geolocation"
-                                }
-                            }
-                        },
-                        "description": ""
-                    }
-                }
-            }
-        },
         "/api/organizations/": {
             "get": {
                 "operationId": "organizations_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -1966,7 +1865,7 @@
         "/api/plans/": {
             "get": {
                 "operationId": "plans_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -1994,7 +1893,8 @@
                                 "QUARTERLY",
                                 "TWICE_YEARLY"
                             ]
-                        }
+                        },
+                        "description": "* `TWICE_YEARLY` - Twice Yearly\n* `QUARTERLY` - Quarterly\n* `MONTHLY` - Monthly"
                     },
                     {
                         "in": "query",
@@ -2054,7 +1954,8 @@
                                 3,
                                 4
                             ]
-                        }
+                        },
+                        "description": "* `2` - 2x\n* `3` - 3x\n* `4` - 4x"
                     },
                     {
                         "in": "query",
@@ -2299,7 +2200,7 @@
         "/api/reports/": {
             "get": {
                 "operationId": "reports_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -2659,7 +2560,8 @@
                                 "DEPOSIT",
                                 "FIXITY"
                             ]
-                        }
+                        },
+                        "description": "* `FIXITY` - Fixity\n* `DEPOSIT` - Deposit"
                     },
                     {
                         "in": "query",
@@ -2883,7 +2785,7 @@
         "/api/treenodes/": {
             "get": {
                 "operationId": "treenodes_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -3243,7 +3145,8 @@
                                 "FOLDER",
                                 "ORGANIZATION"
                             ]
-                        }
+                        },
+                        "description": "* `FILE` - File\n* `FOLDER` - Folder\n* `COLLECTION` - Collection\n* `ORGANIZATION` - Organization"
                     },
                     {
                         "in": "query",
@@ -3912,7 +3815,7 @@
         "/api/users/": {
             "get": {
                 "operationId": "users_list",
-                "description": "GenericViewSet subclass w/ List + Retrieve mixins that implements:\n\n- Additional GET param support\n\n  - *__exact/gt/gte/lt/lte lookups for numeric fields\n\n  - *__exact/contains/endswith/... lookups for text fields\n    See FILTERSET_TEXT_SPEC for the full list.\n\n  - _depth=N for specifying foreign key lookup depth",
+                "description": "Override ListModelMixin.list() solely to decorate it with @extendschema\nto specify additional supported parameters.",
                 "parameters": [
                     {
                         "in": "query",
@@ -4308,7 +4211,8 @@
                                 "USER",
                                 "VIEWER"
                             ]
-                        }
+                        },
+                        "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer"
                     },
                     {
                         "in": "query",
@@ -4656,13 +4560,6 @@
                         "type": "string",
                         "format": "uri"
                     },
-                    "target_geolocations": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Geolocation"
-                        },
-                        "readOnly": true
-                    },
                     "target_replication": {
                         "allOf": [
                             {
@@ -4687,7 +4584,6 @@
                     "id",
                     "name",
                     "organization",
-                    "target_geolocations",
                     "url"
                 ]
             },
@@ -4726,13 +4622,41 @@
                     "organization"
                 ]
             },
+            "CollectionSummary": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "fixity_frequency": {
+                        "$ref": "#/components/schemas/FixityFrequencyEnum"
+                    },
+                    "size_bytes": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "target_replica_locations": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/ReplicaLocationConfig"
+                        }
+                    }
+                },
+                "required": [
+                    "fixity_frequency",
+                    "name",
+                    "size_bytes",
+                    "target_replica_locations"
+                ]
+            },
             "DefaultFixityFrequencyEnum": {
                 "enum": [
                     "TWICE_YEARLY",
                     "QUARTERLY",
                     "MONTHLY"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `TWICE_YEARLY` - Twice Yearly\n* `QUARTERLY` - Quarterly\n* `MONTHLY` - Monthly"
             },
             "DefaultReplicationEnum": {
                 "enum": [
@@ -4740,7 +4664,8 @@
                     3,
                     4
                 ],
-                "type": "integer"
+                "type": "integer",
+                "description": "* `2` - 2x\n* `3` - 3x\n* `4` - 4x"
             },
             "Deposit": {
                 "type": "object",
@@ -4870,38 +4795,8 @@
                     "QUARTERLY",
                     "MONTHLY"
                 ],
-                "type": "string"
-            },
-            "Geolocation": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "url": {
-                        "type": "string",
-                        "format": "uri",
-                        "readOnly": true
-                    }
-                },
-                "required": [
-                    "name",
-                    "url"
-                ]
-            },
-            "GeolocationRequest": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 255
-                    }
-                },
-                "required": [
-                    "name"
-                ]
+                "type": "string",
+                "description": "* `TWICE_YEARLY` - Twice Yearly\n* `QUARTERLY` - Quarterly\n* `MONTHLY` - Monthly"
             },
             "MinimalCollection": {
                 "type": "object",
@@ -4973,7 +4868,8 @@
                     "COLLECTION",
                     "ORGANIZATION"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `FILE` - File\n* `FOLDER` - Folder\n* `COLLECTION` - Collection\n* `ORGANIZATION` - Organization"
             },
             "Organization": {
                 "type": "object",
@@ -5036,6 +4932,33 @@
                     }
                 }
             },
+            "PaginatedCollectionSummaryList": {
+                "type": "object",
+                "properties": {
+                    "count": {
+                        "type": "integer",
+                        "example": 123
+                    },
+                    "next": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=400&limit=100"
+                    },
+                    "previous": {
+                        "type": "string",
+                        "nullable": true,
+                        "format": "uri",
+                        "example": "http://api.example.org/accounts/?offset=200&limit=100"
+                    },
+                    "results": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/CollectionSummary"
+                        }
+                    }
+                }
+            },
             "PaginatedDepositList": {
                 "type": "object",
                 "properties": {
@@ -5086,33 +5009,6 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/Event"
-                        }
-                    }
-                }
-            },
-            "PaginatedGeolocationList": {
-                "type": "object",
-                "properties": {
-                    "count": {
-                        "type": "integer",
-                        "example": 123
-                    },
-                    "next": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?offset=400&limit=100"
-                    },
-                    "previous": {
-                        "type": "string",
-                        "nullable": true,
-                        "format": "uri",
-                        "example": "http://api.example.org/accounts/?offset=200&limit=100"
-                    },
-                    "results": {
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/components/schemas/Geolocation"
                         }
                     }
                 }
@@ -5341,6 +5237,11 @@
                         "type": "string",
                         "format": "uri",
                         "nullable": true
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "nullable": true
                     }
                 }
             },
@@ -5415,13 +5316,6 @@
                     "default_fixity_frequency": {
                         "$ref": "#/components/schemas/DefaultFixityFrequencyEnum"
                     },
-                    "default_geolocations": {
-                        "type": "array",
-                        "items": {
-                            "type": "string",
-                            "format": "uri"
-                        }
-                    },
                     "default_replication": {
                         "allOf": [
                             {
@@ -5447,10 +5341,36 @@
                     }
                 },
                 "required": [
-                    "default_geolocations",
                     "name",
                     "price_per_terabyte",
                     "url"
+                ]
+            },
+            "ReplicaLocationConfig": {
+                "type": "object",
+                "properties": {
+                    "display_name": {
+                        "type": "string"
+                    },
+                    "abbreviation": {
+                        "type": "string"
+                    },
+                    "system_description": {
+                        "type": "string"
+                    },
+                    "physical_location": {
+                        "type": "string"
+                    },
+                    "num_copies": {
+                        "type": "integer"
+                    }
+                },
+                "required": [
+                    "abbreviation",
+                    "display_name",
+                    "num_copies",
+                    "physical_location",
+                    "system_description"
                 ]
             },
             "Report": {
@@ -5541,7 +5461,8 @@
                     "FIXITY",
                     "DEPOSIT"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `FIXITY` - Fixity\n* `DEPOSIT` - Deposit"
             },
             "RoleEnum": {
                 "enum": [
@@ -5549,7 +5470,8 @@
                     "USER",
                     "VIEWER"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer"
             },
             "StateEnum": {
                 "enum": [
@@ -5557,9 +5479,11 @@
                     "UPLOADED",
                     "HASHED",
                     "REPLICATED",
-                    "COMPLETE_WITH_ERRORS"
+                    "COMPLETE_WITH_ERRORS",
+                    "TERMINATED_BY_USER"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `REGISTERED` - Registered\n* `UPLOADED` - Uploaded\n* `HASHED` - Hashed\n* `REPLICATED` - Replicated\n* `COMPLETE_WITH_ERRORS` - Complete With Errors\n* `TERMINATED_BY_USER` - Terminated by user action"
             },
             "TargetReplicationEnum": {
                 "enum": [
@@ -5567,7 +5491,8 @@
                     3,
                     4
                 ],
-                "type": "integer"
+                "type": "integer",
+                "description": "* `2` - 2x\n* `3` - 3x\n* `4` - 4x"
             },
             "TreeNode": {
                 "type": "object",
@@ -5603,7 +5528,8 @@
                     "modified_at": {
                         "type": "string",
                         "format": "date-time",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "uploaded_by": {
                         "allOf": [
@@ -5646,7 +5572,8 @@
                     },
                     "path": {
                         "type": "string",
-                        "readOnly": true
+                        "readOnly": true,
+                        "nullable": true
                     },
                     "url": {
                         "type": "string",
@@ -5656,7 +5583,13 @@
                     "content_url": {
                         "type": "string",
                         "nullable": true,
+                        "description": "Generates a URL for downloading the content of this *TreeNode*.\n\nReturns ``None`` if this *TreeNode* is not of *node_type* *FILE* or if\ncontent isn't downloadable.\n\n.. note::\n\n    As of ``0.4.0``, the implementation depends on content being\n    present in a petabox-backed :py:class:`.Replica`. In the future,\n    downloads should be resolvable from any :py:class:`.Replica`,\n    regardless of the storage backend used, provided said replica(s)\n    have a healthy recent :py:class:`.FixityCheck`.\n\n    Another note: a database query is required to resolve the url, which\n    is unfortunate; ideally the requisite data for generating content\n    urls should be resolvable for a page of :py:class:`.TreeNode`s in a\n    constant number of queries. It's not clear to me (mwilson) right\n    now whether this is possible or reasonable, but if performance\n    problems arise because of excessive queries, this could be an area\n    for investigation.",
                         "readOnly": true
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -5727,6 +5660,11 @@
                         "type": "string",
                         "format": "uri",
                         "nullable": true
+                    },
+                    "metadata": {
+                        "type": "object",
+                        "additionalProperties": {},
+                        "nullable": true
                     }
                 },
                 "required": [
@@ -5738,7 +5676,8 @@
                     "DEPOSIT",
                     "FIXITY"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `DEPOSIT` - Deposit\n* `FIXITY` - Fixity"
             },
             "UploadStateEnum": {
                 "enum": [
@@ -5746,9 +5685,11 @@
                     "UPLOADED",
                     "HASHED",
                     "REPLICATED",
-                    "COMPLETE_WITH_ERRORS"
+                    "COMPLETE_WITH_ERRORS",
+                    "TERMINATED_BY_USER"
                 ],
-                "type": "string"
+                "type": "string",
+                "description": "* `REGISTERED` - Registered\n* `UPLOADED` - Uploaded\n* `HASHED` - Hashed\n* `REPLICATED` - Replicated\n* `COMPLETE_WITH_ERRORS` - Complete With Errors\n* `TERMINATED_BY_USER` - Terminated by user action"
             },
             "User": {
                 "type": "object",
