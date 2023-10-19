@@ -187,6 +187,12 @@ func (capi *CompatAPI) String() string {
 //
 // Need to setup the cookie jar for the HTTP client as well as the cookie for
 // the legacy client.
+//
+// TODO: The session may expire after some time (e.g. two weeks) so best would
+// be to refresh the session expiry time after each request.  Cf.
+// https://docs.djangoproject.com/en/4.2/topics/http/sessions/#using-cookie-based-sessions
+// and
+// https://docs.djangoproject.com/en/4.2/ref/settings/#std-setting-SESSION_SAVE_EVERY_REQUEST
 func (capi *CompatAPI) Login() error {
 	if err := capi.legacyAPI.Login(); err != nil {
 		return err
