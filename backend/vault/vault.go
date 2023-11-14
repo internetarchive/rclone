@@ -725,7 +725,7 @@ func (f *Fs) Rmdir(ctx context.Context, dir string) error {
 	if err != nil {
 		return err
 	}
-	if t.NodeType == "FOLDER" {
+	if t.NodeType == "FOLDER" || t.NodeType == "COLLECTION" {
 		return f.api.Remove(ctx, t)
 	}
 	return fmt.Errorf("cannot delete node type %v", strings.ToLower(t.NodeType))
