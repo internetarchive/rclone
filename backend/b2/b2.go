@@ -9,6 +9,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha1"
+	"encoding/json"
 	"errors"
 	"fmt"
 	gohash "hash"
@@ -399,11 +400,18 @@ func (f *Fs) shouldRetry(ctx context.Context, resp *http.Response, err error) (b
 
 // errorHandler parses a non 2xx error response into an error
 func errorHandler(resp *http.Response) error {
-	// Decode error response
-	errResponse := new(api.Error)
-	err := rest.DecodeJSON(resp, &errResponse)
+	body, err := rest.ReadBody(resp)
 	if err != nil {
-		fs.Debugf(nil, "Couldn't decode error response: %v", err)
+		fs.Errorf(nil, "Couldn't read error out of body: %v", err)
+		body = nil
+	}
+	// Decode error response if there was one - they can be blank
+	errResponse := new(api.Error)
+	if len(body) > 0 {
+		err = json.Unmarshal(body, errResponse)
+		if err != nil {
+			fs.Errorf(nil, "Couldn't decode error response: %v", err)
+		}
 	}
 	if errResponse.Code == "" {
 		errResponse.Code = "unknown"
@@ -1332,7 +1340,11 @@ func (f *Fs) copy(ctx context.Context, dstObj *Object, srcObj *Object, newInfo *
 		if err != nil {
 			return err
 		}
-		return up.Copy(ctx)
+		err = up.Copy(ctx)
+		if err != nil {
+			return err
+		}
+		return dstObj.decodeMetaDataFileInfo(up.info)
 	}
 
 	dstBucket, dstPath := dstObj.split()
@@ -1919,7 +1931,11 @@ func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, op
 				return err
 			}
 			// NB Stream returns the buffer and token
-			return up.Stream(ctx, rw)
+			err = up.Stream(ctx, rw)
+			if err != nil {
+				return err
+			}
+			return o.decodeMetaDataFileInfo(up.info)
 		} else if err == io.EOF {
 			fs.Debugf(o, "File has %d bytes, which makes only one chunk. Using direct upload.", n)
 			defer o.fs.putRW(rw)
@@ -2063,7 +2079,7 @@ func (f *Fs) OpenChunkWriter(ctx context.Context, remote string, src fs.ObjectIn
 	// Temporary Object under construction
 	o := &Object{
 		fs:     f,
-		remote: src.Remote(),
+		remote: remote,
 	}
 
 	bucket, _ := o.split()
