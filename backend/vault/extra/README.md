@@ -1,7 +1,9 @@
-# Rclone Vault Test Environment
+# Rclone Vault Test Environment (docker)
 
 Assuming current working directory is `backend/vault/extra`, i.e. where this
 `README.md` lives.
+
+Stop any leftover containers with `docker-compose down` first.
 
 1. If there are any leftover images, remove them first:
 
