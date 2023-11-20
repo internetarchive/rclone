@@ -31,6 +31,7 @@ require (
 	github.com/gdamore/tcell/v2 v2.6.0
 	github.com/getkin/kin-openapi v0.114.0
 	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-git/go-billy/v5 v5.4.1
 	github.com/google/uuid v1.3.1
 	github.com/hanwen/go-fuse/v2 v2.2.1-0.20230410213758-80c1c8221982
 	github.com/henrybear327/Proton-API-Bridge v1.0.0
@@ -89,7 +90,6 @@ require (
 	cloud.google.com/go/compute v1.23.2 // indirect
 	cloud.google.com/go/compute/metadata v0.2.3 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.4.0 // indirect
-	github.com/Azure/azure-sdk-for-go/sdk/storage/azfile v1.1.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.2.0 // indirect
 	github.com/ProtonMail/bcrypt v0.0.0-20211005172633-e235017c1baf // indirect
 	github.com/ProtonMail/gluon v0.17.1-0.20230724134000-308be39be96e // indirect
@@ -97,6 +97,7 @@ require (
 	github.com/ProtonMail/go-srp v0.0.7 // indirect
 	github.com/ProtonMail/gopenpgp/v2 v2.7.4 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
+	github.com/akavel/rsrc v0.10.2 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/antchfx/xpath v1.2.3 // indirect
 	github.com/apapsch/go-jsonmerge/v2 v2.0.0 // indirect
@@ -139,16 +140,21 @@ require (
 	github.com/jcmturner/rpc/v2 v2.0.3 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/jtolio/eventkit v0.0.0-20221004135224-074cf276595b // indirect
 	github.com/jtolio/noiseconn v0.0.0-20230111204749-d7ec1a08b0b8 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.19 // indirect
-	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
+	github.com/matttproud/golang_protobuf_extensions/v2 v2.0.0 // indirect
+	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/minio/sha256-simd v1.0.1 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pengsrc/go-shared v0.2.1-0.20190131101655-1999055a4a14 // indirect
 	github.com/perimeterx/marshmallow v1.1.4 // indirect
