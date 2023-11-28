@@ -4208,11 +4208,12 @@
                             "type": "string",
                             "enum": [
                                 "ADMIN",
+                                "READ_ONLY",
                                 "USER",
                                 "VIEWER"
                             ]
                         },
-                        "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer"
+                        "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer\n* `READ_ONLY` - Read Only"
                     },
                     {
                         "in": "query",
@@ -5468,10 +5469,11 @@
                 "enum": [
                     "ADMIN",
                     "USER",
-                    "VIEWER"
+                    "VIEWER",
+                    "READ_ONLY"
                 ],
                 "type": "string",
-                "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer"
+                "description": "* `ADMIN` - Admin\n* `USER` - User\n* `VIEWER` - Viewer\n* `READ_ONLY` - Read Only"
             },
             "StateEnum": {
                 "enum": [
