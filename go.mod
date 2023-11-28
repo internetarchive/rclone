@@ -21,6 +21,7 @@ require (
 	github.com/atotto/clipboard v0.1.4
 	github.com/aws/aws-sdk-go v1.46.6
 	github.com/buengese/sgzip v0.1.1
+	github.com/cloudsoda/go-smb2 v0.0.0-20231106205947-b0758ecc4c67
 	github.com/colinmarc/hdfs/v2 v2.4.0
 	github.com/coreos/go-semver v0.3.1
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
@@ -36,7 +37,6 @@ require (
 	github.com/hanwen/go-fuse/v2 v2.2.1-0.20230410213758-80c1c8221982
 	github.com/henrybear327/Proton-API-Bridge v1.0.0
 	github.com/henrybear327/go-proton-api v1.0.0
-	github.com/hirochachacha/go-smb2 v1.1.0
 	github.com/iguanesolutions/go-systemd/v5 v5.1.1
 	github.com/jcmturner/gokrb5/v8 v8.4.4
 	github.com/jlaffaye/ftp v0.2.0
@@ -82,6 +82,7 @@ require (
 	golang.org/x/text v0.13.0
 	golang.org/x/time v0.3.0
 	google.golang.org/api v0.148.0
+	gopkg.in/validator.v2 v2.0.1
 	gopkg.in/yaml.v2 v2.4.0
 	storj.io/uplink v1.12.1
 )

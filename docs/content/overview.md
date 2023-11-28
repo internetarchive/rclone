@@ -55,7 +55,7 @@ Here is an overview of the major features of each cloud storage system.
 | Seafile                      | -                 | -       | No               | No              | -         | -        |
 | SFTP                         | MD5, SHA1 ²       | R/W     | Depends          | No              | -         | -        |
 | Sia                          | -                 | -       | No               | No              | -         | -        |
-| SMB                          | -                 | -       | Yes              | No              | -         | -        |
+| SMB                          | -                 | R/W     | Yes              | No              | -         | -        |
 | SugarSync                    | -                 | -       | No               | No              | -         | -        |
 | Storj                        | -                 | R       | No               | No              | -         | -        |
 | Uptobox                      | -                 | -       | No               | Yes             | -         | -        |
@@ -90,7 +90,7 @@ mistake or an unsupported feature.
 ⁹ QingStor does not support SetModTime for objects bigger than 5 GiB.
 
 ¹⁰ FTP supports modtimes for the major FTP servers, and also others
-if they advertised required protocol extensions. See [this](/ftp/#modified-time)
+if they advertised required protocol extensions. See [this](/ftp/#modification-times)
 for more details.
 
 ¹¹ Internet Archive requires option `wait_archive` to be set to a non-zero value
@@ -493,7 +493,7 @@ upon backend-specific capabilities.
 | Memory                       | No    | Yes  | No   | No      | No      | Yes   | Yes          | No                | No           | No    | No       |
 | Microsoft Azure Blob Storage | Yes   | Yes  | No   | No      | No      | Yes   | Yes          | Yes               | No           | No    | No       |
 | Microsoft Azure Files Storage | No   | Yes  | Yes  | Yes     | No      | No    | Yes          | Yes               | No           | Yes   | Yes      |
-| Microsoft OneDrive           | Yes   | Yes  | Yes  | Yes     | Yes     | Yes   | No           | No                | Yes          | Yes   | Yes      |
+| Microsoft OneDrive           | Yes   | Yes  | Yes  | Yes     | Yes     | Yes ⁵ | No           | No                | Yes          | Yes   | Yes      |
 | OpenDrive                    | Yes   | Yes  | Yes  | Yes     | No      | No    | No           | No                | No           | No    | Yes      |
 | OpenStack Swift              | Yes ¹ | Yes  | No   | No      | No      | Yes   | Yes          | No                | No           | Yes   | No       |
 | Oracle Object Storage        | No    | Yes  | No   | No      | Yes     | Yes   | Yes          | Yes               | No           | No    | No       |
@@ -526,6 +526,8 @@ purging a directory inside a bucket, files are deleted individually.
 ³ StreamUpload is not supported with Nextcloud
 
 ⁴ Use the `--sftp-copy-is-hardlink` flag to enable.
+
+⁵ Use the `--onedrive-delta` flag to enable.
 
 ### Purge ###
 

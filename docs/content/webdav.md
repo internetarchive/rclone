@@ -101,7 +101,7 @@ To copy a local directory to an WebDAV directory called backup
 
     rclone copy /home/source remote:backup
 
-### Modified time and hashes ###
+### Modification times and hashes
 
 Plain WebDAV does not support modified times.  However when used with
 Fastmail Files, Owncloud or Nextcloud rclone will support modified times.
@@ -151,8 +151,8 @@ Properties:
         - Sharepoint Online, authenticated by Microsoft account
     - "sharepoint-ntlm"
         - Sharepoint with NTLM authentication, usually self-hosted or on-premises
-    - "rclone",
-        - rclone WebDAV server to serve a remote over HTTP via the WebDAV protocol,
+    - "rclone"
+        - rclone WebDAV server to serve a remote over HTTP via the WebDAV protocol
     - "other"
         - Other site/service or software
 
