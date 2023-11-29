@@ -177,14 +177,14 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		ReadMimeType:            true,
 		SlowModTime:             true,
 		About:                   f.About,
-		Command:                 f.Command,
-		DirMove:                 f.DirMove,
-		Disconnect:              f.Disconnect,
-		PublicLink:              f.PublicLink,
-		Purge:                   f.Purge,
-		PutStream:               f.PutStream,
-		Shutdown:                f.Shutdown,
-		UserInfo:                f.UserInfo,
+		// Command:                 f.Command, // TODO: add vault specific commands
+		DirMove:    f.DirMove,
+		Disconnect: f.Disconnect,
+		PublicLink: f.PublicLink,
+		Purge:      f.Purge,
+		PutStream:  f.PutStream,
+		Shutdown:   f.Shutdown,
+		UserInfo:   f.UserInfo,
 	}).Fill(ctx, f)
 	f.atexit = atexit.Register(f.Terminate)
 	return f, nil
@@ -1138,8 +1138,8 @@ func (dir *Dir) ID() string { return dir.treeNode.Path }
 // ---------------------------------
 
 var (
-	_ fs.Abouter      = (*Fs)(nil)
-	_ fs.Commander    = (*Fs)(nil)
+	_ fs.Abouter = (*Fs)(nil)
+	// _ fs.Commander    = (*Fs)(nil)
 	_ fs.DirMover     = (*Fs)(nil)
 	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.Fs           = (*Fs)(nil)
