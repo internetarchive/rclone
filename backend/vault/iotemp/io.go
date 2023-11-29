@@ -18,7 +18,9 @@ type DummyReader struct {
 	i int64 // current
 }
 
-// Read reports reads, but does nothing.
+// Read reports reads, but only fills up p with fill chars. If N is large
+// enough, the length of the total output is put into the stream as well.
+// Example: https://i.imgur.com/2Zm3WHd.png.
 func (r *DummyReader) Read(p []byte) (n int, err error) {
 	if r.N == 0 {
 		return 0, io.EOF
