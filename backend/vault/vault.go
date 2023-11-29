@@ -943,13 +943,13 @@ func (f *Fs) finalize(ctx context.Context) error {
 }
 
 // Command allows for custom commands. TODO(martin): We could have a cli dashboard or a deposit status command.
-func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
-	// TODO: fixity reports, distribution, ...
-	switch name {
-	default:
-		return nil, fmt.Errorf("command not found")
-	}
-}
+// func (f *Fs) Command(ctx context.Context, name string, args []string, opt map[string]string) (out interface{}, err error) {
+// 	// TODO: fixity reports, distribution, ...
+// 	switch name {
+// 	default:
+// 		return nil, fmt.Errorf("command not found")
+// 	}
+// }
 
 // Fs helpers
 // ----------
