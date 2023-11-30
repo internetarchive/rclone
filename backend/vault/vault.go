@@ -421,6 +421,17 @@ func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (s string, err error) {
 	return fmt.Sprintf("%s-%x", flowIdentifierPrefix, h.Sum(nil)), nil
 }
 
+// getFlowTotalChunks returns the number of chunks required to upload an object
+// of a given size.
+func getFlowTotalChunks(objectSize int, chunkSize int64) int {
+	switch objectSize {
+	case 0:
+		return 1 // WT-2471
+	default:
+		return int(math.Ceil(float64(objectSize) / float64(chunkSize)))
+	}
+}
+
 // Put uploads a new object, using v2 deposits. A new deposit is registered,
 // once. Files are only written to a temporary file, if the remote does not
 // support object size information.
@@ -464,7 +475,7 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 	// (4) Need to get total size, and total number of chunks.
 	var uploadInfo = &UploadInfo{
 		flowTotalSize:   objectSize,
-		flowTotalChunks: int(math.Ceil(float64(objectSize) / float64(f.opt.ChunkSize))),
+		flowTotalChunks: getFlowTotalChunks(objectSize, f.opt.ChunkSize),
 		flowIdentifier:  flowIdentifier,
 		in:              in,
 		src:             src,
