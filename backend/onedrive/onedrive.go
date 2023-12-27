@@ -1241,10 +1241,14 @@ func (f *Fs) List(ctx context.Context, dir string) (entries fs.DirEntries, err e
 	}
 	err = f.listAll(ctx, directoryID, false, false, func(info *api.Item) error {
 		entry, err := f.itemToDirEntry(ctx, dir, info)
-		if err == nil {
-			entries = append(entries, entry)
+		if err != nil {
+			return err
 		}
-		return err
+		if entry == nil {
+			return nil
+		}
+		entries = append(entries, entry)
+		return nil
 	})
 	if err != nil {
 		return nil, err
@@ -1339,6 +1343,9 @@ func (f *Fs) ListR(ctx context.Context, dir string, callback fs.ListRCallback) (
 		if err != nil {
 			return err
 		}
+		if entry == nil {
+			return nil
+		}
 		err = list.Add(entry)
 		if err != nil {
 			return err
@@ -1368,6 +1375,12 @@ func (f *Fs) ListR(ctx context.Context, dir string, callback fs.ListRCallback) (
 
 	return list.Flush()
 
+}
+
+// Shutdown shutdown the fs
+func (f *Fs) Shutdown(ctx context.Context) error {
+	f.tokenRenewer.Shutdown()
+	return nil
 }
 
 // Creates from the parameters passed in a half finished Object which
@@ -2748,6 +2761,7 @@ var (
 	_ fs.PublicLinker    = (*Fs)(nil)
 	_ fs.CleanUpper      = (*Fs)(nil)
 	_ fs.ListRer         = (*Fs)(nil)
+	_ fs.Shutdowner      = (*Fs)(nil)
 	_ fs.Object          = (*Object)(nil)
 	_ fs.MimeTyper       = &Object{}
 	_ fs.IDer            = &Object{}
