@@ -79,7 +79,7 @@ func New(endpoint, username, password string) *API {
 		VersionSupported: VersionSupported,
 		client:           rest.NewClient(fshttp.NewClient(ctx)).SetRoot(endpoint),
 		loginPath:        "/accounts/login/", // trailing slash required, cf. django APPEND_SLASH
-		timeout:          5 * time.Second,
+		timeout:          30 * time.Second,
 		cache:            cache.New(),
 	}
 }
