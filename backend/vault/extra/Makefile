@@ -23,6 +23,7 @@ image:
 	DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
 	# cleanup bootstrap
 	rm -f $(VAULT)/dev/bootstrap.sh
+	#\033[32m image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin \033[39m
 
 .PHONY: clean
 clean:
