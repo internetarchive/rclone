@@ -1,7 +1,8 @@
 # Makefile for vault test image
 #
+# First, clone the vault repository to /some/path, then:
+#
 #   $ VAULT=/path/to/vault make image
-#   $ docker images -f 'reference=vault*'
 #   $ make clean
 #
 # $ docker images -f 'reference=vault*'
