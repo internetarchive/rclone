@@ -1114,6 +1114,7 @@ type Dir struct {
 // Dir DirEntry
 // ------------
 
+func (dir *Dir) Fs() fs.Info    { return dir.fs }
 func (dir *Dir) String() string { return dir.remote }
 func (dir *Dir) Remote() string { return dir.remote }
 func (dir *Dir) ModTime(ctx context.Context) time.Time {
