@@ -128,10 +128,10 @@ Thank you for your understanding.
 
 `
 
-	UploadChunkTimeout                       = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
-	UploadChunkMaxRetries             uint64 = 10                     // how often to attempt to upload a single chunk, if it fails
-	UploadChunkExponentialBackoffBase        = 100 * time.Millisecond // exponential backoff base timeout
-	UploadChunkBackoffBase                   = 100 * time.Millisecond // backoff base timeout
+	UploadChunkTimeout            = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
+	UploadChunkMaxRetries  uint64 = 10                     // how often to attempt to upload a single chunk, if it fails
+	UploadChunkBackoffBase        = 100 * time.Millisecond // backoff base timeout
+	UploadChunkBackoffCap         = 30 * time.Second       // max backoff interval
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -635,7 +635,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 		// have been the cause of the previously encountered 404).
 		ctx, cancel := context.WithTimeout(context.Background(), UploadChunkTimeout)
 		defer cancel()
-		backoff := retry.WithCappedDuration(30*time.Second, retry.NewFibonacci(UploadChunkBackoffBase))
+		backoff := retry.WithCappedDuration(UploadChunkBackoffCap, retry.NewFibonacci(UploadChunkBackoffBase))
 		err = retry.Do(ctx, backoff, func(ctx context.Context) error {
 			fs.Debugf(f, "starting upload... (buffer size: %v, [T=%v])", wbuf.Len(), time.Since(f.started))
 			resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
