@@ -386,7 +386,7 @@ put them back in again.` >}}
   * Roman Kredentser <shareed2k@gmail.com>
   * Kamil Trzciński <ayufan@ayufan.eu>
   * Zac Rubin <z-0@users.noreply.github.com>
-  * Vincent Feltz <psycho@feltzv.fr>
+  * Vincent Feltz
   * Heiko Bornholdt <bornholdt@informatik.uni-hamburg.de>
   * Matteo Pietro Dazzi <matteopietro.dazzi@gmail.com>
   * jtagcat <gitlab@c7.ee>
@@ -826,3 +826,18 @@ put them back in again.` >}}
   * Joe Cai <joe.cai@bigcommerce.com>
   * Anders Swanson <anders.swanson@oracle.com>
   * huajin tong <137764712+thirdkeyword@users.noreply.github.com>
+  * John-Paul Smith <john-paulsmith@users.noreply.github.com>
+  * racerole <148756161+racerole@users.noreply.github.com>
+  * Gachoud Philippe <ph.gachoud@gmail.com>
+  * YukiUnHappy <saberhana@yandex.com>
+  * Kyle Reynolds <kyle.reynolds@bridgerphotonics.com>
+  * Lewis Hook <lewis@hook.im>
+  * hoyho <luohaihao@gmail.com>
+  * Vitaly <9034218+gvitali@users.noreply.github.com>
+  * iotmaestro <iotmaestro@proton.me>
+  * psychopatt <66741203+psychopatt@users.noreply.github.com>
+  * Alex Garel <alex@garel.org>
+  * Warrentheo <warrentheo@hotmail.com>
+  * Alexandre Lavigne <lavigne958@gmail.com>
+  * yoelvini <134453420+yoelvini@users.noreply.github.com>
+  * Erisa A <erisa@cloudflare.com>
