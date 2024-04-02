@@ -131,6 +131,7 @@ Thank you for your understanding.
 	UploadChunkTimeout                       = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
 	UploadChunkMaxRetries             uint64 = 10                     // how often to attempt to upload a single chunk, if it fails
 	UploadChunkExponentialBackoffBase        = 100 * time.Millisecond // exponential backoff base timeout
+	UploadChunkBackoffBase                   = 100 * time.Millisecond // backoff base timeout
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
@@ -572,7 +573,7 @@ func (info *UploadInfo) resetStream() error {
 
 // upload is the main transfer function for a single file, which is wrapped in
 // an UploadInfo value. Returns a hasher that contains the supported hashes of
-// this backends of the file object.
+// of the file object.
 func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHasher, err error) {
 	hasher, err = hash.NewMultiHasherTypes(f.Hashes())
 	if err != nil {
@@ -584,10 +585,10 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 		var (
 			buf      bytes.Buffer                               // buffer for file data (we need the actual size at upload time)
 			lr       = io.LimitReader(info.in, f.opt.ChunkSize) // chunk reader over stream
+			wrapIn   = io.TeeReader(lr, hasher)                 // wrap input stream for hashing
 			wbuf     = bytes.Buffer{}                           // buffer for multipart message
 			w        = multipart.NewWriter(&wbuf)               // multipart writer
 			mimeType = "application/octet-stream"               // file mime type
-			wrapIn   = io.TeeReader(lr, hasher)                 // wrap input stream for hashing
 			n        int64                                      // actual length of this chunk
 			err      error                                      // any error
 			fw       io.Writer                                  // formfile writer
@@ -634,7 +635,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 		// have been the cause of the previously encountered 404).
 		ctx, cancel := context.WithTimeout(context.Background(), UploadChunkTimeout)
 		defer cancel()
-		backoff := retry.WithMaxRetries(UploadChunkMaxRetries, retry.NewExponential(UploadChunkExponentialBackoffBase))
+		backoff := retry.WithCappedDuration(30*time.Second, retry.NewFibonacci(UploadChunkBackoffBase))
 		err = retry.Do(ctx, backoff, func(ctx context.Context) error {
 			fs.Debugf(f, "starting upload... (buffer size: %v, [T=%v])", wbuf.Len(), time.Since(f.started))
 			resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
