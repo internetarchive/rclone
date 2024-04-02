@@ -644,7 +644,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 				// failures, etc., so we can retry them as well. It's important
 				// that we check this case first.
 				return retry.RetryableError(err)
-			case resp.StatusCode == 500:
+			case resp.StatusCode >= 500: // refs. VLT-518
 				// We may recover from an HTTP 500 likely caused by a rare race
 				// condition in a database trigger, encountered in 05/2023.
 				fs.Debugf(f, "chunk upload retry: %v", resp.Status)
