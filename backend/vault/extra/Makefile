@@ -18,13 +18,13 @@ help:
 
 .PHONY: image
 image:
-	# temporarily copying bootstrap.sh into build context
+	# [make] temporarily copying bootstrap.sh into build context
 	cp ./bootstrap.sh $(VAULT)/dev
-	#\033[33m to debug, you may want to add `--no-cache` \033[39m
+	# [make] to debug, you may want to add `--no-cache`
 	DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
-	# cleanup bootstrap
+	# [make] cleanup bootstrap
 	rm -f $(VAULT)/dev/bootstrap.sh
-	#\033[32m image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin \033[39m
+	# [make] image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin
 
 .PHONY: clean
 clean:
