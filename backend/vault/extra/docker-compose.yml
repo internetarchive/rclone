@@ -13,9 +13,10 @@ services:
       - temporal
       - elasticsearch
     environment:
-      ALLOWED_HOSTS: "*"
-      VAULT_POSTGRES_HOST: postgres
-      WAIT_HOSTS: postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
+      - ALLOWED_HOSTS="*"
+      - VAULT_POSTGRES_HOST=postgres
+      - WAIT_HOSTS=postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
+      - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
   minio:
     image: minio/minio:RELEASE.2022-06-03T01-40-53Z
     command: server /data --console-address ":9001"
@@ -108,7 +109,7 @@ services:
     image: elasticsearch:7.10.1
     environment:
       - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
-      - "discovery.type=single-node"
+      - discovery.type=single-node
     ports:
       - "9200:9200"
       - "9300:9300"

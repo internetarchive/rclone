@@ -3,12 +3,20 @@
 # When the containerized vault application starts up, we want the database
 # already populated. For that we need the database to be up.
 #
+# In addition, we need a search index to be present.
+#
 # Using `build` in docker-compose won't solve this: https://stackoverflow.com/q/75386770/89391
 #
 # Solution: use docker-compose-wait && ./bootstrap.sh as CMD
 
 set -eu -o pipefail
 set -x # debug
+
+echo "but first, for something completely different"
+
+# create elasticsearch index for vault search
+INDEX_NAME=vault-treenode-metadata-00001
+curl -v -XPUT elasticsearch:9200/$INDEX_NAME
 
 cat <<EOM
 
@@ -19,6 +27,7 @@ Y8b Y88888P                   888   d8     888 88b,                       d8    
     Y8P     "88 888  "88 88"  888  888     888 88P'  "88 88"   "88 88"   888   d,dP   888   888    "88 888 888 88"
                                                                                                            888
 EOM
+
 
 make migrate
 
