@@ -16,7 +16,9 @@ echo "but first, for something completely different"
 
 # create elasticsearch index for vault search
 INDEX_NAME=vault-treenode-metadata-00001
-curl -v -XPUT elasticsearch:9200/$INDEX_NAME
+curl -sL -XPUT http://elasticsearch:9200/$INDEX_NAME
+curl -s http://elasticsearch:9200/
+curl -s http://elasticsearch:9200/$INDEX_NAME
 
 cat <<EOM
 
