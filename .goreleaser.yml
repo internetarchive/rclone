@@ -40,14 +40,13 @@ release:
   header: |
     ## Rclone with Vault support (experimental)
 
-    This is a release of Rclone with support for the Vault
-    Digital Preservation System, developed at the [Internet
+    This is a release of Rclone with support for the [Vault
+    Digital Preservation System](https://webservices.archive.org/pages/vault), developed at the [Internet
     Archive](https://archive.org).
 
-    More information about this backend can be found in
-    [backend/vault/README.md](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md)
+    Setup instructions for this tool can be found in the [README.md](https://github.com/internetarchive/rclone/blob/ia-wt-1168/backend/vault/README.md).
 
-    Note MacOS users: We recommended to download the binary on the command line
+    Note macOS users: We recommend to download the binary on the command line
     with [curl](https://curl.se/) or [wget](https://www.gnu.org/software/wget/).
 
     * Date: {{ .Date }}
