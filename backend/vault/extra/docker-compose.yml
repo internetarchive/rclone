@@ -11,10 +11,11 @@ services:
     depends_on:
       - postgres
       - temporal
+      - elasticsearch
     environment:
       ALLOWED_HOSTS: "*"
       VAULT_POSTGRES_HOST: postgres
-      WAIT_HOSTS: postgres:5432, temporal:7233 # https://github.com/ufoscout/docker-compose-wait
+      WAIT_HOSTS: postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
   minio:
     image: minio/minio:RELEASE.2022-06-03T01-40-53Z
     command: server /data --console-address ":9001"
@@ -102,6 +103,18 @@ services:
       - "8080:8080"
     expose:
       - "8080"
+  elasticsearch:
+    container_name: elasticsearch
+    image: elasticsearch:7.10.1
+    environment:
+      - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
+      - "discovery.type=single-node"
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    expose:
+      - "9200"
+      - "9300"
 
 # volumes:
 #   rclone_vault_minio_volume: {}
