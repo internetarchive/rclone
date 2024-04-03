@@ -40,7 +40,6 @@ $ rclone copy lib v:/martin-rclone-tests/RCT0
 ## Requirements
 
 * An active [Vault](https://vault.archive-it.org/accounts/login/) account
-* A macOS (both classic Intel-based Macs and the newer Apple Silicon Macs), Windows, or Linux machine
 * Basic familiarity with the command line
 
 ## Install Rclone with Vault Support
