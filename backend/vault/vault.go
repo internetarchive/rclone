@@ -128,10 +128,9 @@ Thank you for your understanding.
 
 `
 
-	UploadChunkTimeout            = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
-	UploadChunkMaxRetries  uint64 = 10                     // how often to attempt to upload a single chunk, if it fails
-	UploadChunkBackoffBase        = 100 * time.Millisecond // backoff base timeout
-	UploadChunkBackoffCap         = 30 * time.Second       // max backoff interval
+	UploadChunkTimeout     = 24 * time.Hour         // generous limit for single chunk upload time (should never be hit)
+	UploadChunkBackoffBase = 100 * time.Millisecond // backoff base timeout
+	UploadChunkBackoffCap  = 30 * time.Second       // max backoff interval
 )
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
