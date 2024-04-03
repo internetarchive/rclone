@@ -7,7 +7,7 @@
 # that this does not affect vault
 #
 FROM python:3.8.16-slim-bullseye@sha256:13856bb0fadf6bc658125bae44d41ffd3cc42e423c399cfc7300d41a47f66237
-RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git
+RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git curl
 WORKDIR /app
 COPY . .
 RUN make clean
