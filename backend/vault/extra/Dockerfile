@@ -3,7 +3,8 @@
 # Containerfile for vault, build with "vault-site" repo as context. Please take
 # a look at the Makefile for how this Dockerfile is used.
 #
-# TODO: apt-get update makes this image non-reproducible; we assume that this does not affect vault
+# TODO(martin): apt-get update makes this image non-reproducible; we assume
+# that this does not affect vault
 #
 FROM python:3.8.16-slim-bullseye@sha256:13856bb0fadf6bc658125bae44d41ffd3cc42e423c399cfc7300d41a47f66237
 RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git
@@ -20,7 +21,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
     chmod +x /wait
 
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "c1086e7b28092bc0b3f7be27f1add5526bfb82ab ./bootstrap.sh" | sha1sum --check && \
+RUN echo "5eb1c11ba62616e33b4d6af93e25dce8c2a492a2 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
