@@ -15,6 +15,7 @@ services:
     environment:
       - ALLOWED_HOSTS="*"
       - VAULT_POSTGRES_HOST=postgres
+      - WAIT_TIMEOUT=60 # 30 worked before we added elasticsearch
       - WAIT_HOSTS=postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
   minio:
