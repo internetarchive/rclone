@@ -118,6 +118,8 @@ services:
     expose:
       - "9200"
       - "9300"
+    tmpfs:
+      - /var/lib/elasticsearch:exec,size=1G
 
 # volumes:
 #   rclone_vault_minio_volume: {}
