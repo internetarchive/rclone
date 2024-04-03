@@ -106,7 +106,7 @@ services:
       - "8080"
   elasticsearch:
     container_name: elasticsearch
-    image: elasticsearch:7.10.1
+    image: elasticsearch:8.13.0
     environment:
       - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
       - discovery.type=single-node
