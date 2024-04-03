@@ -118,13 +118,15 @@ var (
 ██    ██ ██   ██     ██  ██ ██ ██    ██
  ██████  ██   ██     ██   ████  ██████
 
-We detected a version mismatch between the Vault API (%v) and the version supported
-by rclone (%v). We kindly ask you to upgrade to the latest rclone release to fix
-this problem.
+We detected a version mismatch between the Vault API (%v) and the version
+supported by the currently installed rclone (%v). We kindly ask you to upgrade
+to the latest rclone release to fix this problem.
 
 You can download the latest release here: https://github.com/internetarchive/rclone/releases
 
 Thank you for your understanding.
+
+For more information about Vault visit https://webservices.archive.org/pages/vault
 
 `
 
