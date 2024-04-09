@@ -28,7 +28,7 @@ On 2024-04-09 we upgraded to Vault API version 3, which is supported by the
 most recent rclone version. If you use an older rclone version, please upgrade
 to the [latest release](https://github.com/internetarchive/rclone/releases/latest).
 
-On 2023-04-19 we upgraded to Vault API version 2. The previous version 1 of the
+On 2023-04-19 we upgraded to Vault API version 2. Previous versions of the
 Vault API is no longer supported. To be able to use rclone with the new Vault
 API version, **we ask all users of rclone to upgrade rclone to the [latest
 release](https://github.com/internetarchive/rclone/releases/latest)**.
