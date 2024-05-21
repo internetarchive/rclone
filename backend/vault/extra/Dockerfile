@@ -6,14 +6,15 @@
 # TODO(martin): apt-get update makes this image non-reproducible; we assume
 # that this does not affect vault
 #
-FROM python:3.8.16-slim-bullseye@sha256:13856bb0fadf6bc658125bae44d41ffd3cc42e423c399cfc7300d41a47f66237
+FROM python:3.12.3-slim-bookworm@sha256:afc139a0a640942491ec481ad8dda10f2c5b753f5c969393b12480155fe15a63
 RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git curl
 WORKDIR /app
 COPY . .
 RUN make clean
 
+RUN pip install uv
 # https://docs.docker.com/build/cache/#use-the-dedicated-run-cache
-RUN --mount=type=cache,target=/root/.cache make setup
+RUN --mount=type=cache,target=/root/.cache make install
 
 # https://github.com/ufoscout/docker-compose-wait, since we need a DB for bootstrap.sh
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wait /wait
