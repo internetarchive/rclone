@@ -10,6 +10,9 @@ FROM python:3.12.3-slim-bookworm@sha256:afc139a0a640942491ec481ad8dda10f2c5b753f
 RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git curl
 WORKDIR /app
 COPY . .
+# patch out @ensure_fresh_db_connection, which led to "connection already
+# closed" errors in test environment
+RUN patch --verbose 0001-disable-ensure-fresh-db-connection-decorator.patch
 RUN make clean
 
 RUN pip install uv

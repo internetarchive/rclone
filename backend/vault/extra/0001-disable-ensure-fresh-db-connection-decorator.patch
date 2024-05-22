@@ -1,0 +1,13 @@
+diff --git a/vault/search_indexer.py b/vault/search_indexer.py
+index 576b6c7..e154920 100644
+--- a/vault/search_indexer.py
++++ b/vault/search_indexer.py
+@@ -26,7 +26,7 @@ SEARCH_INDEXER_MUTEX_NAME = "SEARCH_INDEXER"
+ logger = structlog.stdlib.get_logger(__name__)
+ 
+ 
+-@ensure_fresh_db_connection
++# @ensure_fresh_db_connection
+ def _worker_iter(svc: TreeNodeSearchService):
+     """Executes an iteration of the search indexer worker
+ 

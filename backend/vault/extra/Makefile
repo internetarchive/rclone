@@ -20,6 +20,8 @@ help:
 image:
 	# [make] temporarily copying bootstrap.sh into build context
 	cp ./bootstrap.sh $(VAULT)/dev
+	# copy patch file to disable @ensure_fresh_db_connection
+	cp ./0001-disable-ensure-fresh-db-connection-decorator.patch $(VAULT)
 	# [make] to debug, you may want to add `--no-cache`
 	DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
 	# [make] cleanup bootstrap
