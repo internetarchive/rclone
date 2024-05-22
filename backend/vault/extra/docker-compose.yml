@@ -55,7 +55,7 @@ services:
     # volumes:
     #   - rabbitmq_volume:/var/lib/rabbitmq
   postgres:
-    image: postgres:10
+    image: postgres:14
     environment:
       - POSTGRES_USER=${POSTGRES_USER:-vault}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-vault}
@@ -99,7 +99,7 @@ services:
       - temporal
     environment:
       - TEMPORAL_CLI_ADDRESS=temporal:7233
-    image: temporalio/admin-tools:${TEMPORAL_VERSION:-1.18.5}
+    image: temporalio/admin-tools:${TEMPORAL_VERSION:-1.21.4}
     stdin_open: true
     tty: true
   temporal-ui:
@@ -109,7 +109,7 @@ services:
     environment:
       - TEMPORAL_ADDRESS=temporal:7233
       - TEMPORAL_CORS_ORIGINS=http://localhost:3000
-    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.8.3}
+    image: temporalio/ui:${TEMPORAL_UI_VERSION:-2.17.1}
     ports:
       - "8080:8080"
     expose:

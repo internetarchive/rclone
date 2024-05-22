@@ -22,13 +22,14 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
     chmod +x /wait
 
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "366e048a9f2831691b80336aac16a2a3bacc3cc2 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "29d4e9ffb3c49f65a32d0362c56d2105fbf39677 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
 ENV VAULT_POSTGRES_HOST=postgres
 ENV TEMPORAL_FRONTEND_URI=temporal:7233
 ENV CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
+ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 
 # USCAS301 uses S3 minio by default; use USCAS301 to get S3 path included; use
 # DEVNULL to discard contents
