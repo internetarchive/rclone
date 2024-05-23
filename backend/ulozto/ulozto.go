@@ -7,6 +7,7 @@ import (
 	"encoding/base64"
 	"encoding/gob"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -16,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
 	"github.com/rclone/rclone/backend/ulozto/api"
 	"github.com/rclone/rclone/fs"
 	"github.com/rclone/rclone/fs/config"
@@ -121,6 +121,9 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		return nil, err
 	}
 
+	// Strip leading and trailing slashes, see https://github.com/rclone/rclone/issues/7796 for details.
+	root = strings.Trim(root, "/")
+
 	client := fshttp.NewClient(ctx)
 
 	f := &Fs{
@@ -186,8 +189,7 @@ func errorHandler(resp *http.Response) error {
 	if errResponse.StatusCode == 0 {
 		errResponse.StatusCode = resp.StatusCode
 	}
-
-	return errors.WithStack(errResponse)
+	return errResponse
 }
 
 // retryErrorCodes is a slice of error codes that we will retry

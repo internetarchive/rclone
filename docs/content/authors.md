@@ -841,3 +841,19 @@ put them back in again.` >}}
   * Alexandre Lavigne <lavigne958@gmail.com>
   * yoelvini <134453420+yoelvini@users.noreply.github.com>
   * Erisa A <erisa@cloudflare.com>
+  * Pieter van Oostrum <pieter@vanoostrum.org>
+  * jakzoe <155812065+jakzoe@users.noreply.github.com>
+  * guangwu <guoguangwu@magic-shield.com>
+  * static-moonlight <107991124+static-moonlight@users.noreply.github.com>
+  * yudrywet <yudeyao@yeah.net>
+  * Butanediol <git@xnh.app>
+  * Dave Nicolson <david.nicolson@gmail.com>
+  * Katia Esposito <katia@linux.com>
+  * pawsey-kbuckley <36438302+pawsey-kbuckley@users.noreply.github.com>
+  * hidewrong <167099254+hidewrong@users.noreply.github.com>
+  * Michael Terry <mike@mterry.name>
+  * Sunny <25066078+LoSunny@users.noreply.github.com>
+  * overallteach <cricis@foxmail.com>
+  * JT Olio <jt@olio.lol>
+  * Evan McBeth <64177332+AtomicRobotMan0101@users.noreply.github.com>
+  * Dominik Joe Pantůček <dominik.pantucek@trustica.cz>

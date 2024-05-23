@@ -69,6 +69,7 @@ var initDate = time.Date(2000, time.January, 1, 0, 0, 0, 0, bisync.TZ)
 // go run ./fstest/test_all -remotes local,TestCrypt:,TestDrive:,TestOneDrive:,TestOneDriveBusiness:,TestDropbox:,TestCryptDrive:,TestOpenDrive:,TestChunker:,:memory:,TestCryptNoEncryption:,TestCombine:DirA,TestFTPRclone:,TestWebdavRclone:,TestS3Rclone:,TestSFTPRclone:,TestSFTPRcloneSSH:,TestNextcloud:,TestChunkerNometaLocal:,TestChunkerChunk3bLocal:,TestChunkerLocal:,TestChunkerChunk3bNometaLocal:,TestStorj: -run '^TestBisync.*$' -timeout 3h -verbose -maxtries 5
 // go test -timeout 3h -run '^TestBisync.*$' github.com/rclone/rclone/cmd/bisync -remote TestDrive:Bisync -v
 // go test -timeout 3h -run '^TestBisyncRemoteRemote/basic$' github.com/rclone/rclone/cmd/bisync -remote TestDropbox:Bisync -v
+// TestFTPProftpd:,TestFTPPureftpd:,TestFTPRclone:,TestFTPVsftpd:,TestHdfs:,TestS3Minio:,TestS3MinioEdge:,TestS3Rclone:,TestSeafile:,TestSeafileEncrypted:,TestSeafileV6:,TestSFTPOpenssh:,TestSFTPRclone:,TestSFTPRcloneSSH:,TestSia:,TestSwiftAIO:,TestWebdavNextcloud:,TestWebdavOwncloud:,TestWebdavRclone:
 
 // logReplacements make modern test logs comparable with golden dir.
 // It is a string slice of even length with this structure:
@@ -89,12 +90,15 @@ var logReplacements = []string{
 	`^NOTICE: .*?: Forced to upload files to set modification times on this backend.$`, dropMe,
 	`^INFO  : .*? Committing uploads - please wait...$`, dropMe,
 	`^INFO  : .*?: src and dst identical but can't set mod time without deleting and re-uploading$`, dropMe,
+	`^INFO  : .*?: src and dst identical but can't set mod time without re-uploading$`, dropMe,
 	// ignore crypt info messages
 	`^INFO  : .*?: Crypt detected! Using cryptcheck instead of check. \(Use --size-only or --ignore-checksum to disable\)$`, dropMe,
 	// ignore drive info messages
 	`^NOTICE:.*?Files of unknown size \(such as Google Docs\) do not sync reliably with --checksum or --size-only\. Consider using modtime instead \(the default\) or --drive-skip-gdocs.*?$`, dropMe,
 	// ignore cache backend cache expired messages
 	`^INFO  : .*cache expired.*$`, dropMe,
+	// ignore "Implicitly create directory" messages (TestnStorage:)
+	`^INFO  : .*Implicitly create directory.*$`, dropMe,
 	// ignore differences in backend features
 	`^.*?"HashType1":.*?$`, dropMe,
 	`^.*?"HashType2":.*?$`, dropMe,
@@ -106,6 +110,8 @@ var logReplacements = []string{
 	`^(INFO  : .*?: (Made directory with|Set directory) (metadata|modification time)).*$`, dropMe,
 	// ignore sizes in directory time updates
 	`^(NOTICE: .*?: Skipped set directory modification time as --dry-run is set).*$`, dropMe,
+	// ignore sizes in directory metadata updates
+	`^(NOTICE: .*?: Skipped update directory metadata as --dry-run is set).*$`, dropMe,
 }
 
 // Some dry-run messages differ depending on the particular remote.
@@ -215,12 +221,21 @@ type bisyncTest struct {
 
 var color = bisync.Color
 
+// TestMain drives the tests
+func TestMain(m *testing.M) {
+	fstest.TestMain(m)
+}
+
 // Path1 is remote, Path2 is local
 func TestBisyncRemoteLocal(t *testing.T) {
 	if *fstest.RemoteName == *argRemote2 {
 		t.Skip("path1 and path2 are the same remote")
 	}
-	testBisync(t, *fstest.RemoteName, *argRemote2)
+	_, remote, cleanup, err := fstest.RandomRemote()
+	log.Printf("remote: %v", remote)
+	require.NoError(t, err)
+	defer cleanup()
+	testBisync(t, remote, *argRemote2)
 }
 
 // Path1 is local, Path2 is remote
@@ -228,13 +243,21 @@ func TestBisyncLocalRemote(t *testing.T) {
 	if *fstest.RemoteName == *argRemote2 {
 		t.Skip("path1 and path2 are the same remote")
 	}
-	testBisync(t, *argRemote2, *fstest.RemoteName)
+	_, remote, cleanup, err := fstest.RandomRemote()
+	log.Printf("remote: %v", remote)
+	require.NoError(t, err)
+	defer cleanup()
+	testBisync(t, *argRemote2, remote)
 }
 
 // Path1 and Path2 are both different directories on remote
 // (useful for testing server-side copy/move)
 func TestBisyncRemoteRemote(t *testing.T) {
-	testBisync(t, *fstest.RemoteName, *fstest.RemoteName)
+	_, remote, cleanup, err := fstest.RandomRemote()
+	log.Printf("remote: %v", remote)
+	require.NoError(t, err)
+	defer cleanup()
+	testBisync(t, remote, remote)
 }
 
 // TestBisync is a test engine for bisync test cases.
@@ -256,7 +279,7 @@ func testBisync(t *testing.T, path1, path2 string) {
 
 	baseDir, err := os.Getwd()
 	require.NoError(t, err, "get current directory")
-	randName := "bisync-" + time.Now().Format("150405-") + random.String(5) // AzureBlob doesn't like dots
+	randName := time.Now().Format("150405") + random.String(2) // some bucket backends don't like dots, keep this short to avoid linux errors
 	tempDir := filepath.Join(os.TempDir(), randName)
 	workDir := filepath.Join(tempDir, "workdir")
 
@@ -316,13 +339,23 @@ func testBisync(t *testing.T, path1, path2 string) {
 		}
 	}
 	require.False(t, b.stopAt > 0 && len(testList) > 1, "-stop-at is meaningful only for a single test")
+	deadline, hasDeadline := t.Deadline()
+	var maxRunDuration time.Duration
 
 	for _, testCase := range testList {
 		testCase = strings.ReplaceAll(testCase, "-", "_")
 		testCase = strings.TrimPrefix(testCase, "test_")
 		t.Run(testCase, func(childTest *testing.T) {
+			startTime := time.Now()
+			remaining := time.Until(deadline)
+			if hasDeadline && (remaining < maxRunDuration || remaining < 10*time.Second) { // avoid starting tests we don't have time to finish
+				childTest.Fatalf("test %v timed out - not enough time to start test (%v remaining, need %v for test)", testCase, remaining, maxRunDuration)
+			}
 			bCopy := *b
 			bCopy.runTestCase(ctx, childTest, testCase)
+			if time.Since(startTime) > maxRunDuration {
+				maxRunDuration = time.Since(startTime)
+			}
 		})
 	}
 }
@@ -348,6 +381,10 @@ func (b *bisyncTest) runTestCase(ctx context.Context, t *testing.T, testCase str
 
 	b.fs1, b.parent1, b.path1, b.canonPath1 = b.makeTempRemote(ctx, b.argRemote1, "path1")
 	b.fs2, b.parent2, b.path2, b.canonPath2 = b.makeTempRemote(ctx, b.argRemote2, "path2")
+
+	if strings.Contains(b.replaceHex(b.path1), " ") || strings.Contains(b.replaceHex(b.path2), " ") {
+		b.t.Skip("skipping as tests can't handle spaces config string")
+	}
 
 	b.sessionName = bilib.SessionName(b.fs1, b.fs2)
 	b.testDir = b.ensureDir(b.dataRoot, "test_"+b.testCase, false)
@@ -528,14 +565,13 @@ func (b *bisyncTest) runTestCase(ctx context.Context, t *testing.T, testCase str
 func (b *bisyncTest) makeTempRemote(ctx context.Context, remote, subdir string) (f, parent fs.Fs, path, canon string) {
 	var err error
 	if bilib.IsLocalPath(remote) && !strings.HasPrefix(remote, ":") && !strings.Contains(remote, ",") {
-		if remote != "" && remote != "local" {
+		if remote != "" && !strings.HasPrefix(remote, "local") && *fstest.RemoteName != "" {
 			b.t.Fatalf(`Missing ":" in remote %q. Use "local" to test with local filesystem.`, remote)
 		}
 		parent, err = cache.Get(ctx, b.tempDir)
 		checkError(b.t, err, "parsing local tempdir %s", b.tempDir)
 
 		path = filepath.Join(b.tempDir, b.testCase)
-		canon = bilib.CanonicalPath(path) + "_"
 		path = filepath.Join(path, subdir)
 	} else {
 		last := remote[len(remote)-1]
@@ -548,13 +584,13 @@ func (b *bisyncTest) makeTempRemote(ctx context.Context, remote, subdir string) 
 		checkError(b.t, operations.Mkdir(ctx, parent, subdir), "Mkdir "+subdir) // ensure dir exists (storj seems to need this)
 
 		path = remote + "/" + b.testCase
-		canon = bilib.CanonicalPath(path) + "_"
 		path += "/" + subdir
 	}
 
 	f, err = cache.Get(ctx, path)
 	checkError(b.t, err, "parsing remote/subdir %s/%s", remote, subdir)
-	path = bilib.FsPath(f) // Make it canonical
+	path = bilib.FsPath(f)                                                                                                                // Make it canonical
+	canon = bilib.StripHexString(bilib.CanonicalPath(strings.TrimSuffix(strings.TrimSuffix(path, `\`+subdir+`\`), "/"+subdir+"/"))) + "_" // account for possible connection string
 	return
 }
 
@@ -590,12 +626,12 @@ func (b *bisyncTest) runTestStep(ctx context.Context, line string) (err error) {
 
 		for i := 0; i < 50; i++ {
 			dst := "file" + fmt.Sprint(i) + ".txt"
-			err := b.copyFile(ctx, src, bilib.StripHexString(b.path2), dst)
+			err := b.copyFile(ctx, src, b.replaceHex(b.path2), dst)
 			if err != nil {
 				fs.Errorf(src, "error copying file: %v", err)
 			}
 			dst = "file" + fmt.Sprint(100-i) + ".txt"
-			err = b.copyFile(ctx, src, bilib.StripHexString(b.path1), dst)
+			err = b.copyFile(ctx, src, b.replaceHex(b.path1), dst)
 			if err != nil {
 				fs.Errorf(dst, "error copying file: %v", err)
 			}
@@ -616,12 +652,12 @@ func (b *bisyncTest) runTestStep(ctx context.Context, line string) (err error) {
 	case "purge-children":
 		b.checkArgs(args, 1, 1)
 		dir := ""
-		if strings.HasPrefix(args[1], bilib.StripHexString(b.path1)) {
+		if strings.HasPrefix(args[1], b.replaceHex(b.path1)) {
 			fsrc = b.fs1
-			dir = strings.TrimPrefix(args[1], bilib.StripHexString(b.path1))
-		} else if strings.HasPrefix(args[1], bilib.StripHexString(b.path2)) {
+			dir = strings.TrimPrefix(args[1], b.replaceHex(b.path1))
+		} else if strings.HasPrefix(args[1], b.replaceHex(b.path2)) {
 			fsrc = b.fs2
-			dir = strings.TrimPrefix(args[1], bilib.StripHexString(b.path2))
+			dir = strings.TrimPrefix(args[1], b.replaceHex(b.path2))
 		} else {
 			return fmt.Errorf("error parsing arg: %q (path1: %q, path2: %q)", args[1], b.path1, b.path2)
 		}
@@ -646,7 +682,7 @@ func (b *bisyncTest) runTestStep(ctx context.Context, line string) (err error) {
 	case "touch-glob":
 		b.checkArgs(args, 3, 3)
 		date, src, glob := args[1], args[2], args[3]
-		if fsrc, err = cache.Get(ctx, src); err != nil {
+		if fsrc, err = cache.Get(ctx, b.replaceHex(src)); err != nil {
 			return err
 		}
 		_, err = touchFiles(ctx, date, fsrc, src, glob)
@@ -905,6 +941,9 @@ func (b *bisyncTest) checkPreReqs(ctx context.Context, opt *bisync.Options) (con
 		b.fs2.Features().Disable("Copy") // API has longstanding bug for conflictBehavior=replace https://github.com/rclone/rclone/issues/4590
 		b.fs2.Features().Disable("Move")
 	}
+	if strings.Contains(strings.ToLower(fs.ConfigString(b.fs1)), "mailru") || strings.Contains(strings.ToLower(fs.ConfigString(b.fs2)), "mailru") {
+		fs.GetConfig(ctx).TPSLimit = 10 // https://github.com/rclone/rclone/issues/7768#issuecomment-2060888980
+	}
 	if (!b.fs1.Features().CanHaveEmptyDirectories || !b.fs2.Features().CanHaveEmptyDirectories) && (b.testCase == "createemptysrcdirs" || b.testCase == "rmdirs") {
 		b.t.Skip("skipping test as remote does not support empty dirs")
 	}
@@ -1051,8 +1090,8 @@ func (b *bisyncTest) runBisync(ctx context.Context, args []string) (err error) {
 			opt.CompareFlag = "size,checksum"
 			opt.Compare.DownloadHash = true // allows us to test crypt and the like
 		case "subdir":
-			fs1 = addSubdir(bilib.StripHexString(b.path1), val)
-			fs2 = addSubdir(bilib.StripHexString(b.path2), val)
+			fs1 = addSubdir(b.replaceHex(b.path1), val)
+			fs2 = addSubdir(b.replaceHex(b.path2), val)
 		case "backupdir1":
 			opt.BackupDir1 = val
 		case "backupdir2":
@@ -1148,6 +1187,8 @@ func (b *bisyncTest) copyFile(ctx context.Context, src, dst, asName string) (err
 	fs.Debugf(nil, "copyFile %q to %q as %q", src, dst, asName)
 	var fsrc, fdst fs.Fs
 	var srcPath, srcFile, dstPath, dstFile string
+	src = b.replaceHex(src)
+	dst = b.replaceHex(dst)
 
 	switch fsrc, err = fs.NewFs(ctx, src); err { // intentionally using NewFs here to avoid dircaching the parent
 	case fs.ErrorIsFile:
@@ -1683,8 +1724,8 @@ func (b *bisyncTest) newReplacer(mangle bool) *strings.Replacer {
 			"{datadir/}", b.dataDir + slash,
 			"{testdir/}", b.testDir + slash,
 			"{workdir/}", b.workDir + slash,
-			"{path1/}", bilib.StripHexString(b.path1),
-			"{path2/}", bilib.StripHexString(b.path2),
+			"{path1/}", b.replaceHex(b.path1),
+			"{path2/}", b.replaceHex(b.path2),
 			"{session}", b.sessionName,
 			"{/}", slash,
 		}
@@ -1699,8 +1740,8 @@ func (b *bisyncTest) newReplacer(mangle bool) *strings.Replacer {
 		b.fs2.String(), "{path2String}",
 		b.path1, "{path1/}",
 		b.path2, "{path2/}",
-		bilib.StripHexString(b.path1), "{path1/}",
-		bilib.StripHexString(b.path2), "{path2/}",
+		b.replaceHex(b.path1), "{path1/}",
+		b.replaceHex(b.path2), "{path2/}",
 		"//?/" + strings.TrimSuffix(strings.Replace(b.path1, slash, "/", -1), "/"), "{path1}", // fix windows-specific issue
 		"//?/" + strings.TrimSuffix(strings.Replace(b.path2, slash, "/", -1), "/"), "{path2}",
 		strings.TrimSuffix(b.path1, slash), "{path1}", // ensure it's still recognized without trailing slash
@@ -1878,4 +1919,14 @@ func checkError(t *testing.T, err error, msgAndArgs ...interface{}) {
 		t.Skipf("Skip test because remote cannot upload empty files")
 	}
 	assert.NoError(t, err, msgAndArgs...)
+}
+
+// for example, replaces TestS3{juk_h}:dir with TestS3,directory_markers=true:dir
+// because NewFs needs the latter
+func (b *bisyncTest) replaceHex(remote string) string {
+	if bilib.HasHexString(remote) {
+		remote = strings.ReplaceAll(remote, fs.ConfigString(b.parent1), fs.ConfigStringFull(b.parent1))
+		remote = strings.ReplaceAll(remote, fs.ConfigString(b.parent2), fs.ConfigStringFull(b.parent2))
+	}
+	return remote
 }
