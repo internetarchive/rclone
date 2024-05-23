@@ -112,7 +112,7 @@ func New(endpoint, username, password string) (*CompatAPI, error) {
 		loginPath:        "/accounts/login/",
 		// TODO: using vanilla client for now, but could upgrade to pester or something else
 		c:                &http.Client{Timeout: 30 * time.Second},
-		csrfTokenPattern: regexp.MustCompile(`csrfToken:[ ]*"([^"]*)"`),
+		csrfTokenPattern: regexp.MustCompile(`"?csrfToken"?:[ ]*"([^"]*)"`),
 		legacyAPI:        api.New(endpoint, username, password),
 	}
 	// NewClient wants the URL w/o the "/api" suffix by default.
