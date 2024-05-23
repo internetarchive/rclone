@@ -1,0 +1,26 @@
+diff --git a/dev/run-workers.sh b/dev/run-workers.sh
+index 1e83e733..2bf66557 100755
+--- a/dev/run-workers.sh
++++ b/dev/run-workers.sh
+@@ -16,14 +16,14 @@ function terminate() {
+ 
+ trap terminate SIGINT
+ 
+-aux_telemetry_server &
++# aux_telemetry_server &
+ temporal_assemble_worker &
+ temporal_deposit_watchdog_worker &
+-temporal_fixity_worker &
+-temporal_hello_worker &
+-temporal_rebox_sync_worker &
+-temporal_treenode_replicator_worker &
+-temporal_mass_replicator_worker &
+-treenode_meta_indexer &
++# temporal_fixity_worker &
++# temporal_hello_worker &
++# temporal_rebox_sync_worker &
++# temporal_treenode_replicator_worker &
++# temporal_mass_replicator_worker &
++# treenode_meta_indexer &
+ 
+ wait

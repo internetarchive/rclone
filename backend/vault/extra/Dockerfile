@@ -10,11 +10,12 @@ FROM python:3.12.3-slim-bookworm@sha256:afc139a0a640942491ec481ad8dda10f2c5b753f
 RUN apt-get update && apt-get install -y --no-install-recommends make build-essential git curl
 WORKDIR /app
 COPY . .
-# patch out @ensure_fresh_db_connection, which led to "connection already
-# closed" errors in test environment
-RUN patch --verbose 0001-disable-ensure-fresh-db-connection-decorator.patch
-RUN make clean
+# patch run workers script, so we run only a minimal set of workers we need for
+# rclone testing
+RUN patch --verbose 0001-minimal-workers.patch
 
+RUN make clean
+# we need uv for venv management and deps
 RUN pip install uv
 # https://docs.docker.com/build/cache/#use-the-dedicated-run-cache
 RUN --mount=type=cache,target=/root/.cache make install
@@ -25,7 +26,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
     chmod +x /wait
 
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "29d4e9ffb3c49f65a32d0362c56d2105fbf39677 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "625468498c9b3fe18ae67f3f1b04b793e3032c21 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
