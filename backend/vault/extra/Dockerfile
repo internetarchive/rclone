@@ -25,6 +25,7 @@ ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.12.1/wai
 RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
     chmod +x /wait
 
+# this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
 RUN echo "625468498c9b3fe18ae67f3f1b04b793e3032c21 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh

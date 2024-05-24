@@ -39,8 +39,6 @@ services:
     expose:
       - "9000"
       - "9001"
-    # volumes:
-    #   - minio_volume:/data
   rabbitmq:
     image: rabbitmq:3.8-management
     environment:
@@ -52,8 +50,6 @@ services:
     expose:
       - "5672"
       - "15672"
-    # volumes:
-    #   - rabbitmq_volume:/var/lib/rabbitmq
   postgres:
     image: postgres:14
     environment:
@@ -63,16 +59,12 @@ services:
       - "5432:5432"
     expose:
       - "5432"
-    # volumes:
-    #   - postgres_volume:/var/lib/postgresql/data
   redis:
     image: redis:7.0.2
     ports:
       - "6379:6379"
     expose:
       - "6379"
-    # volumes:
-    #   - redis_volume:/data
 
   # temporal bits borrowed from: https://github.com/temporalio/docker-compose
   # To determine the latest versions of the temporal containers,
@@ -91,8 +83,6 @@ services:
     image: temporalio/auto-setup:${TEMPORAL_VERSION:-1.18.5}
     ports:
       - "7233:7233"
-    # volumes:
-    #   - ./temporal:/etc/temporal/config/dynamicconfig
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
@@ -130,8 +120,3 @@ services:
     tmpfs:
       - /var/lib/elasticsearch:exec,size=2G
 
-# volumes:
-#   rclone_vault_minio_volume: {}
-#   rclone_vault_rabbitmq_volume: {}
-#   rclone_vault_postgres_volume: {}
-#   rclone_vault_redis_volume: {}

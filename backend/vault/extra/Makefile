@@ -3,12 +3,16 @@
 # First, clone the vault repository to /some/path, then:
 #
 #   $ VAULT=/path/to/vault make image
-#   $ make clean
 #
 # $ docker images -f 'reference=vault*'
 # REPOSITORY   TAG       IMAGE ID       CREATED          SIZE
 # vault        latest    850998bd7ea0   22 minutes ago   1.66GB
 #
+# To remove the image:
+#
+#   $ make clean
+#
+
 # Location of vault checkout, will be used as build context.
 VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site
 
@@ -18,15 +22,16 @@ help:
 
 .PHONY: image
 image:
-	# [make] temporarily copying bootstrap.sh into build context
+	# [image] temporarily copying bootstrap.sh into build context
 	cp ./bootstrap.sh $(VAULT)/dev
-	# copy patch file to run minimal workers only
+	# [image] copy patch file to run minimal workers only
 	cp ./0001-minimal-workers.patch $(VAULT)
-	# [make] to debug, you may want to add `--no-cache`
+	# [image] to debug, you may want to add `--no-cache`
 	DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
-	# [make] cleanup bootstrap
+	# [image] cleanup bootstrap and patch file
 	rm -f $(VAULT)/dev/bootstrap.sh
-	# [make] image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin
+	rm -f $(VAULT)/0001-minimal-workers.patch
+	# [image] image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin
 
 .PHONY: clean
 clean:
