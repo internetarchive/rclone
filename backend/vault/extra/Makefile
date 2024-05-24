@@ -11,7 +11,6 @@
 # To remove the image:
 #
 #   $ make clean
-#
 
 # Location of vault checkout, will be used as build context.
 VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site
