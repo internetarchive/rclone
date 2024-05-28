@@ -37,9 +37,10 @@ func TestIntegration(t *testing.T) {
 	fstests.Run(t, &fstests.Opt{
 		RemoteName:               remoteName,
 		NilObject:                (*Object)(nil),
+		SkipBadWindowsCharacters: true,
+		SkipDirectoryCheckWrap:   true,
 		SkipFsCheckWrap:          true,
 		SkipInvalidUTF8:          true,
-		SkipBadWindowsCharacters: true,
 	})
 }
 

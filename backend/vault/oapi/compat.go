@@ -385,6 +385,8 @@ func (capi *CompatAPI) CreateFolder(ctx context.Context, parent *api.TreeNode, n
 func (capi *CompatAPI) SetModTime(ctx context.Context, t *api.TreeNode) error {
 	// TODO: There may be an effect by doing a pseudo-change like setting the
 	// name to name, and have "updated_at" reflect that.
+	//
+	// TODO: use pre_deposit_modified_at
 	fs.Debugf(capi, "not changing immutable treenode.modified_at")
 	return nil
 }
