@@ -193,14 +193,22 @@ func (stats *CollectionStats) NumFiles() (result int64) {
 func (t *TreeNode) Content(options ...fs.OpenOption) (io.ReadCloser, error) {
 	switch v := t.ContentURL.(type) {
 	case string:
-		resp, err := http.Get(v)
-		if err != nil {
-			return nil, err
+		// The DEVNULL backend currently returns a string like
+		// "/download/109?storage_backend=DEVNULL", so we are treating that
+		// specifically
+		if strings.Contains(v, "storage_backend=DEVNULL") {
+			r := &iotemp.DummyReader{N: t.Size(), C: 0x7c}
+			return io.NopCloser(r), nil
+		} else {
+			resp, err := http.Get(v)
+			if err != nil {
+				return nil, err
+			}
+			if resp.StatusCode >= 400 {
+				return nil, fmt.Errorf("open: %v", resp.StatusCode)
+			}
+			return resp.Body, nil
 		}
-		if resp.StatusCode >= 400 {
-			return nil, fmt.Errorf("open: %v", resp.StatusCode)
-		}
-		return resp.Body, nil
 	case nil:
 		r := &iotemp.DummyReader{N: t.Size(), C: 0x7c}
 		return io.NopCloser(r), nil
