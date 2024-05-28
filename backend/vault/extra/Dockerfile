@@ -27,7 +27,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
 
 # this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "625468498c9b3fe18ae67f3f1b04b793e3032c21 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "00ad4b660d7914c4aaf9ed8f342352e90b197860 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
@@ -37,13 +37,17 @@ ENV CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
 ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 
 # USCAS301 uses S3 minio by default; use USCAS301 to get S3 path included; use
-# DEVNULL to discard contents
+# DEVNULL to discard contents (note: while using DEVNULL, temporal will still
+# try to store data inside a bucket)
 ENV PRIMARY_STORAGE_MANAGER=DEVNULL
+ENV GLOBAL_DEFAULT_REPLICA_LOCATIONS=DEVNULL
 # ENV PRIMARY_STORAGE_MANAGER=USCAS301
 ENV S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
 ENV S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
 ENV S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
 ENV S3_STORAGE_MANAGER_USCAS301_S3_SECRET_KEY=secretkey
+# set bucket explicitly here; we also need to instruct minio to prepare the bucket
+ENV S3_STORAGE_MANAGER_USCAS301_S3_BUCKET=s3storagemanagerdevstorage
 ENV CHUNK_MANAGER_TYPE=LOCALFS
 ENV ASYNC_MODE=TEMPORAL
 

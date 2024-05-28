@@ -15,6 +15,10 @@
 # Location of vault checkout, will be used as build context.
 VAULT ?= $(HOME)/code/git.archive.org/dps/vault-site
 
+higreen := $(shell tput setaf 10)
+green := $(shell tput setaf 2)
+reset := $(shell tput sgr0)
+
 .PHONY: help
 help:
 	@echo "Makefile for vault images, run `make image` to build vault image"
@@ -31,6 +35,8 @@ image:
 	rm -f $(VAULT)/dev/bootstrap.sh
 	rm -f $(VAULT)/0001-minimal-workers.patch
 	# [image] image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin
+	@printf 'done: $(higreen)vault test image successfully created$(reset)\n'
+	@printf 'next: $(green)docker-compose up$(reset)\n'
 
 .PHONY: clean
 clean:

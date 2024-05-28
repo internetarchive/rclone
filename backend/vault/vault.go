@@ -154,8 +154,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		fmt.Fprintf(os.Stderr, VersionMismatchMessage, api.Version(ctx), api.VersionSupported)
 		return nil, ErrVersionMismatch
 	}
-	// Setup v2 client, when requested, current endpoint:
-	// /api/deposits/v2/
+	// V2 is the current deposit API: /api/deposits/v2/
 	var depositsV2Client *ClientWithResponses
 	endpoint, err := opt.EndpointNormalizedDepositsV2()
 	if err != nil {
@@ -166,7 +165,6 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 	if err != nil {
 		return nil, err
 	}
-	fs.Debugf(nil, "v2 client at %v", endpoint)
 	f := &Fs{
 		name:             name,
 		root:             root,
@@ -179,14 +177,13 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		ReadMimeType:            true,
 		SlowModTime:             true,
 		About:                   f.About,
-		// Command:                 f.Command, // TODO: add vault specific commands
-		DirMove:    f.DirMove,
-		Disconnect: f.Disconnect,
-		PublicLink: f.PublicLink,
-		Purge:      f.Purge,
-		PutStream:  f.PutStream,
-		Shutdown:   f.Shutdown,
-		UserInfo:   f.UserInfo,
+		DirMove:                 f.DirMove,
+		Disconnect:              f.Disconnect,
+		PublicLink:              f.PublicLink,
+		Purge:                   f.Purge,
+		PutStream:               f.PutStream,
+		Shutdown:                f.Shutdown,
+		UserInfo:                f.UserInfo,
 	}).Fill(ctx, f)
 	f.atexit = atexit.Register(f.Terminate)
 	return f, nil
