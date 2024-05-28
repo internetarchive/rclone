@@ -151,7 +151,7 @@ func (capi *CompatAPI) Intercept(ctx context.Context, req *http.Request) error {
 		return err
 	}
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("intercept link at %s failed with: %s", anyLink, resp.StatusCode)
+		return fmt.Errorf("intercept link at %s failed with: %d", anyLink, resp.StatusCode)
 	}
 	defer resp.Body.Close() // nolint:errcheck
 	b, err := io.ReadAll(resp.Body)
