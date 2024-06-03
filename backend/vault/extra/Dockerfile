@@ -27,7 +27,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
 
 # this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "00ad4b660d7914c4aaf9ed8f342352e90b197860 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "f1670a68186942f29945b742c9e15eb3bcb556dd ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
