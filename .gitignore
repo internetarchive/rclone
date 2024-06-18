@@ -3,7 +3,9 @@ _junk/
 rclone
 rclone.exe
 build
-docs/public
+/docs/public/
+/docs/.hugo_build.lock
+/docs/static/img/logos/
 rclone.iml
 .idea
 .history
