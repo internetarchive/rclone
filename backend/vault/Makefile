@@ -1,4 +1,6 @@
 # Makefile for documenting various steps.
+#
+# go install github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen@latest
 
 deposit-v2-openapi.json:
 	# e.g. start a local instance and access openapi.json
