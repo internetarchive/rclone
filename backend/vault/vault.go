@@ -19,6 +19,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/gabriel-vasile/mimetype"
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
@@ -597,7 +598,7 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 		}
 		// (5a) on first chunk, try to find mime type
 		if info.i == 1 {
-			mimeType = http.DetectContentType(buf.Bytes())
+			mimeType = mimetype.Detect(buf.Bytes()).String()
 		}
 		// (5b) write multipart fields
 		mfw := &iotemp.MultipartFieldWriter{W: w}
