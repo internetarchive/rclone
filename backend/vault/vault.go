@@ -39,7 +39,7 @@ const (
 	// 16M/1/1: 15M/s
 	// 16M/2/2: 20M/s
 	//
-	// Target two-core QA machine was occassionally maxed out, not sure if
+	// Target two-core QA machine was occasionally maxed out, not sure if
 	// that's imposing a limit.
 	//
 	// ----8<----
