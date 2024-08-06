@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"math"
+	"mime"
 	"mime/multipart"
 	"net/http"
 	"net/http/httputil"
@@ -19,7 +20,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gabriel-vasile/mimetype"
 	"github.com/rclone/rclone/backend/vault/api"
 	"github.com/rclone/rclone/backend/vault/iotemp"
 	"github.com/rclone/rclone/backend/vault/oapi"
@@ -598,7 +598,11 @@ func (f *Fs) upload(ctx context.Context, info *UploadInfo) (hasher *hash.MultiHa
 		}
 		// (5a) on first chunk, try to find mime type
 		if info.i == 1 {
-			mimeType = mimetype.Detect(buf.Bytes()).String()
+			ext := path.Ext(path.Base(info.src.Remote()))
+			mimeType = mime.TypeByExtension(ext)
+			if mimeType == "" {
+				mimeType = http.DetectContentType(buf.Bytes())
+			}
 		}
 		// (5b) write multipart fields
 		mfw := &iotemp.MultipartFieldWriter{W: w}
