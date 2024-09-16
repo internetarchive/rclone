@@ -7,7 +7,6 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"log"
 	"mime"
 	"net/http"
 	"net/url"
@@ -18,13 +17,9 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rclone/rclone/fs"
-	"github.com/rclone/rclone/fs/accounting"
 	"github.com/rclone/rclone/fs/cache"
 	"github.com/rclone/rclone/fs/config"
-	"github.com/rclone/rclone/fs/fshttp"
 	"github.com/rclone/rclone/fs/list"
 	"github.com/rclone/rclone/fs/rc"
 	"github.com/rclone/rclone/fs/rc/jobs"
@@ -34,21 +29,6 @@ import (
 	"github.com/rclone/rclone/lib/random"
 	"github.com/skratchdot/open-golang/open"
 )
-
-var promHandler http.Handler
-
-func init() {
-	rcloneCollector := accounting.NewRcloneCollector(context.Background())
-	prometheus.MustRegister(rcloneCollector)
-
-	m := fshttp.NewMetrics("rclone")
-	for _, c := range m.Collectors() {
-		prometheus.MustRegister(c)
-	}
-	fshttp.DefaultMetrics = m
-
-	promHandler = promhttp.Handler()
-}
 
 // Start the remote control server if configured
 //
@@ -105,7 +85,7 @@ func newServer(ctx context.Context, opt *rc.Options, mux *http.ServeMux) (*Serve
 			if opt.Auth.BasicPass == "" && opt.Auth.HtPasswd == "" {
 				randomPass, err := random.Password(128)
 				if err != nil {
-					log.Fatalf("Failed to make password: %v", err)
+					fs.Fatalf(nil, "Failed to make password: %v", err)
 				}
 				opt.Auth.BasicPass = randomPass
 				fs.Infof(nil, "No password specified. Using random password: %s \n", randomPass)
@@ -308,14 +288,14 @@ func (s *Server) handleOptions(w http.ResponseWriter, r *http.Request, path stri
 }
 
 func (s *Server) serveRoot(w http.ResponseWriter, r *http.Request) {
-	remotes := config.FileSections()
-	sort.Strings(remotes)
+	remoteNames := config.GetRemoteNames()
+	sort.Strings(remoteNames)
 	directory := serve.NewDirectory("", s.server.HTMLTemplate())
 	directory.Name = "List of all rclone remotes."
 	q := url.Values{}
-	for _, remote := range remotes {
-		q.Set("fs", remote)
-		directory.AddHTMLEntry("["+remote+":]", true, -1, time.Time{})
+	for _, remoteName := range remoteNames {
+		q.Set("fs", remoteName)
+		directory.AddHTMLEntry("["+remoteName+":]", true, -1, time.Time{})
 	}
 	sortParm := r.URL.Query().Get("sort")
 	orderParm := r.URL.Query().Get("order")
@@ -376,7 +356,7 @@ func (s *Server) handleGet(w http.ResponseWriter, r *http.Request, path string) 
 		s.serveRemote(w, r, fsMatchResult[2], fsMatchResult[1])
 		return
 	case path == "metrics" && s.opt.EnableMetrics:
-		promHandler.ServeHTTP(w, r)
+		promHandlerFunc(w, r)
 		return
 	case path == "*" && s.opt.Serve:
 		// Serve /* as the remote listing

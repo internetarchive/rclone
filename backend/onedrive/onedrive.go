@@ -942,7 +942,8 @@ func errorHandler(resp *http.Response) error {
 	// Decode error response
 	errResponse := new(api.Error)
 	err := rest.DecodeJSON(resp, &errResponse)
-	if err != nil {
+	// Redirects have no body so don't report an error
+	if err != nil && resp.Header.Get("Location") == "" {
 		fs.Debugf(nil, "Couldn't decode error response: %v", err)
 	}
 	if errResponse.ErrorInfo.Code == "" {
@@ -1927,7 +1928,7 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 		return shareURL, nil
 	}
 
-	cnvFailMsg := "Don't know how to convert share link to direct link - returning the link as is"
+	const cnvFailMsg = "Don't know how to convert share link to direct link - returning the link as is"
 	directURL := ""
 	segments := strings.Split(shareURL, "/")
 	switch f.driveType {

@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"path"
 	"strings"
 	"time"
@@ -190,7 +189,7 @@ func NewFilter(opt *Options) (f *Filter, err error) {
 	if f.Opt.MaxAge.IsSet() {
 		f.ModTimeFrom = time.Now().Add(-time.Duration(f.Opt.MaxAge))
 		if !f.ModTimeTo.IsZero() && f.ModTimeTo.Before(f.ModTimeFrom) {
-			log.Fatalf("filter: --min-age %q can't be larger than --max-age %q", opt.MinAge, opt.MaxAge)
+			fs.Fatalf(nil, "filter: --min-age %q can't be larger than --max-age %q", opt.MinAge, opt.MaxAge)
 		}
 		fs.Debugf(nil, "--max-age %v to %v", f.Opt.MaxAge, f.ModTimeFrom)
 	}
@@ -258,7 +257,7 @@ func (f *Filter) addDirGlobs(Include bool, glob string) error {
 		if dirGlob == "/" {
 			continue
 		}
-		dirRe, err := GlobToRegexp(dirGlob, f.Opt.IgnoreCase)
+		dirRe, err := GlobPathToRegexp(dirGlob, f.Opt.IgnoreCase)
 		if err != nil {
 			return err
 		}
@@ -278,7 +277,7 @@ func (f *Filter) Add(Include bool, glob string) error {
 	if strings.Contains(glob, "**") {
 		isDirRule, isFileRule = true, true
 	}
-	re, err := GlobToRegexp(glob, f.Opt.IgnoreCase)
+	re, err := GlobPathToRegexp(glob, f.Opt.IgnoreCase)
 	if err != nil {
 		return err
 	}

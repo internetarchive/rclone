@@ -2,6 +2,7 @@ package docker
 
 import (
 	"fmt"
+	"math"
 	"strings"
 
 	"github.com/rclone/rclone/cmd/mountlib"
@@ -250,6 +251,15 @@ func getVFSOption(vfsOpt *vfscommon.Options, opt rc.Params, key string) (ok bool
 		err = getFVarP(&vfsOpt.ReadAhead, opt, key)
 	case "vfs-used-is-size":
 		vfsOpt.UsedIsSize, err = opt.GetBool(key)
+	case "vfs-read-chunk-streams":
+		intVal, err = opt.GetInt64(key)
+		if err == nil {
+			if intVal >= 0 && intVal <= math.MaxInt {
+				vfsOpt.ChunkStreams = int(intVal)
+			} else {
+				err = fmt.Errorf("key %q (%v) overflows int", key, intVal)
+			}
+		}
 
 	// unprefixed vfs options
 	case "no-modtime":
@@ -272,10 +282,22 @@ func getVFSOption(vfsOpt *vfscommon.Options, opt rc.Params, key string) (ok bool
 		err = getFVarP(&vfsOpt.Umask, opt, key)
 	case "uid":
 		intVal, err = opt.GetInt64(key)
-		vfsOpt.UID = uint32(intVal)
+		if err == nil {
+			if intVal >= 0 && intVal <= math.MaxUint32 {
+				vfsOpt.UID = uint32(intVal)
+			} else {
+				err = fmt.Errorf("key %q (%v) overflows uint32", key, intVal)
+			}
+		}
 	case "gid":
 		intVal, err = opt.GetInt64(key)
-		vfsOpt.GID = uint32(intVal)
+		if err == nil {
+			if intVal >= 0 && intVal <= math.MaxUint32 {
+				vfsOpt.UID = uint32(intVal)
+			} else {
+				err = fmt.Errorf("key %q (%v) overflows uint32", key, intVal)
+			}
+		}
 
 	// non-vfs options
 	default:
