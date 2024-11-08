@@ -83,14 +83,14 @@ After download with `curl` or `wget` the file needs to be made executable with [
 #### Intel-based Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Darwin_x86_64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Darwin_x86_64
 $ chmod +x rclone
 ```
 
 #### Apple Silicon Macs
 
 ```shell
-$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Darwin_arm64
+$ curl --output rclone -L https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Darwin_arm64
 $ chmod +x rclone
 ```
 
@@ -98,10 +98,10 @@ $ chmod +x rclone
 
 Download the latest binary (e.g. with your browser):
 
-* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Windows_x86_64.exe)
+* Rclone with Vault for Windows x64 64bit: [https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Windows_x86_64.exe](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Windows_x86_64.exe)
 
 In (the rare) case you have an ARM based computer running Windows, please
-download: [https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Windows_arm64.exe).
+download: [https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Windows_arm64.exe](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Windows_arm64.exe).
 
 **Important**: We do not sign the executables, which is why Windows will issue
 warnings about an untrusted source and will suggest that you delete the file.
@@ -128,8 +128,8 @@ recognized internal or external command*).
 
 Download the latest release depending on your architecture:
 
-* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Linux_x86_64)
-* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241025173340-6eae29b63/rclone_1.68.1-vault-20241025173340-6eae29b63_Linux_arm64)
+* [x64 64-bit](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Linux_x86_64)
+* [ARM64](https://github.com/internetarchive/rclone/releases/download/v1.68.1-vault-20241108195226-37d4a5609/rclone_1.68.1-vault-20241108195226-37d4a5609_Linux_arm64)
 
 For convenience, you can rename the downloaded file to e.g. `rclone` with your
 File Explorer or the [`mv`](https://man7.org/linux/man-pages/man1/mv.1.html)
@@ -219,7 +219,6 @@ development and QA Vault instances, a few limitations remain.
 
 * ~~**uploaded files are currently not mutable** - that is, you cannot update a file with the same name but with different content (use `--ignore-existing` [global flag](https://rclone.org/flags/) to upload or synchronize files without considering existing files)~~ fixed in production since 10/2022 and currently testing
 * read and write support **only on the command line** level (mount and serve are read only)
-* currently, if you copy data from another cloud service to vault, **data will be stored temporarily on the machine where rclone runs**, which means that if you want to transfer 10TB of data from a cloud service to vault, you will have to have at least 10TB of free disk space on the machine where rclone runs; if you want to upload files from the local filesystem to vault, this limitation does not apply
 * when you sync a folder that is already in vault, but where some files has changed (outside vault), then you may encounter an error like `Attempt 1/3 failed with 1 errors and: corrupted on transfer: sizes differ 44 vs 43` - to work around that, we currently recommend using the [`--ignore-size`](https://rclone.org/docs/#ignore-size) flag in your command, like so:
 
 ```
