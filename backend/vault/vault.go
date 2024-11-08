@@ -801,19 +801,13 @@ func (f *Fs) UserInfo(ctx context.Context) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	plan, err := f.api.Plan()
-	if err != nil {
-		return nil, err
-	}
 	return map[string]string{
-		"Username":               u.Username,
-		"FirstName":              u.FirstName,
-		"LastName":               u.LastName,
-		"Organization":           organization.Name,
-		"Plan":                   plan.Name,
-		"DefaultFixityFrequency": plan.DefaultFixityFrequency,
-		"QuotaBytes":             fmt.Sprintf("%d", organization.QuotaBytes),
-		"LastLogin":              u.LastLogin,
+		"Username":     u.Username,
+		"FirstName":    u.FirstName,
+		"LastName":     u.LastName,
+		"Organization": organization.Name,
+		"QuotaBytes":   fmt.Sprintf("%d", organization.QuotaBytes),
+		"LastLogin":    u.LastLogin,
 	}, nil
 }
 
