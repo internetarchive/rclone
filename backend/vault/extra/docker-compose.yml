@@ -27,6 +27,8 @@ services:
       - WAIT_TIMEOUT=60 # 30 worked before we added elasticsearch
       - WAIT_HOSTS=postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
+    tty: true
+    stdin_open: true
   minio:
     image: minio/minio:RELEASE.2024-04-06T05-26-02Z
     command: server /data --console-address ":9001"
@@ -39,6 +41,8 @@ services:
     expose:
       - "9000"
       - "9001"
+    tty: true
+    stdin_open: true
   rabbitmq:
     image: rabbitmq:3.8-management
     environment:
@@ -50,6 +54,8 @@ services:
     expose:
       - "5672"
       - "15672"
+    tty: true
+    stdin_open: true
   postgres:
     image: postgres:14
     environment:
@@ -65,6 +71,8 @@ services:
       - "6379:6379"
     expose:
       - "6379"
+    tty: true
+    stdin_open: true
 
   # temporal bits borrowed from: https://github.com/temporalio/docker-compose
   # To determine the latest versions of the temporal containers,
@@ -83,6 +91,8 @@ services:
     image: temporalio/auto-setup:${TEMPORAL_VERSION:-1.18.5}
     ports:
       - "7233:7233"
+    tty: true
+    stdin_open: true
   temporal-admin-tools:
     container_name: temporal-admin-tools
     depends_on:
@@ -104,6 +114,8 @@ services:
       - "8080:8080"
     expose:
       - "8080"
+    tty: true
+    stdin_open: true
   elasticsearch:
     container_name: elasticsearch
     image: elasticsearch:8.13.0
@@ -119,4 +131,6 @@ services:
       - "9300"
     tmpfs:
       - /var/lib/elasticsearch:exec,size=2G
+    tty: true
+    stdin_open: true
 
