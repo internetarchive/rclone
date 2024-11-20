@@ -27,7 +27,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
 
 # this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "1a2a8bf19f3987fe5efb1c16b526ef22bc5548f2 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "cf300109ab7c8ab224d1485854b72b8c9e4762b8 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 ENV REDIS_HOST=redis
@@ -39,9 +39,9 @@ ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 # USCAS301 uses S3 minio by default; use USCAS301 to get S3 path included; use
 # DEVNULL to discard contents (note: while using DEVNULL, temporal will still
 # try to store data inside a bucket)
-ENV PRIMARY_STORAGE_MANAGER=DEVNULL
-ENV GLOBAL_DEFAULT_REPLICA_LOCATIONS=DEVNULL
-# ENV PRIMARY_STORAGE_MANAGER=USCAS301
+ENV PRIMARY_STORAGE_MANAGER=USCAS301
+ENV GLOBAL_DEFAULT_REPLICA_LOCATIONS=USCAS301
+# ENV PRIMARY_STORAGE_MANAGER=DEVNULL
 ENV S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
 ENV S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
 ENV S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
