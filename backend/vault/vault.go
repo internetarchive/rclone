@@ -1147,9 +1147,12 @@ func (dir *Dir) ID() string { return dir.treeNode.Path }
 // Check if interfaces are satisfied
 // ---------------------------------
 
+// TODO: there is one interesting interface, fs.Commander, that allows to add
+// arbitrary commands to rclone. This could be interesting for fixity status,
+// visualizing geographic distribution of the data, etc.
+
 var (
-	_ fs.Abouter = (*Fs)(nil)
-	// _ fs.Commander    = (*Fs)(nil)
+	_ fs.Abouter      = (*Fs)(nil)
 	_ fs.DirMover     = (*Fs)(nil)
 	_ fs.Disconnecter = (*Fs)(nil)
 	_ fs.Fs           = (*Fs)(nil)
