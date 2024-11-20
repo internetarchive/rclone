@@ -66,16 +66,16 @@ rm -f "$F0001TREENODE"
 rm -f "$F0002TESTUSER"
 
 # download "mc" minio tool (don't need that with DEVNULL)
-# mkdir -p /usr/local/bin
-# curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
-# chmod +x /usr/local/bin/mc
+mkdir -p /usr/local/bin
+curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
+chmod +x /usr/local/bin/mc
 # The default configuration stores deposited content in a local S3 daemon. The
 # bucket in which replica content is stored must be created manually.
 #
 # create organization bucket; this is manual; for chunks it is done on the fly
 # in s3_chunk_manager.py:_put
 # important: this name must correspond to the ENV VAR set in settings
-# mc mb s3storagemanagerdevstorage
+mc mb s3storagemanagerdevstorage
 
 # run workers in the background; taken from Makefile: make run-workers; we do
 # not care how these are teared down
