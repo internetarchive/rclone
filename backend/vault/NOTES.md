@@ -1,5 +1,40 @@
 # Notes
 
+## Overview
+
+For rclone tests, the idea is to have a fully ephemeral, fresh-off-the-source
+docker image ready to run.
+
+```shell
+$ cd backend/vault/extra
+$ make # and make clean, to remove the docker image again
+```
+
+This does roughly the following:
+
+```shell
+cp ./bootstrap.sh $(VAULT)/dev
+cp ./0001-minimal-workers.patch $(VAULT)
+DOCKER_BUILDKIT=1 docker build -t vault:latest -f Dockerfile $(VAULT)
+rm -f $(VAULT)/dev/bootstrap.sh
+rm -f $(VAULT)/0001-minimal-workers.patch
+```
+
+Vault needs a little bit of manual setup, e.g. creating and "org", and this is
+done in bootstrap.sh with the help of fixtures currently.
+
+One the docker image is built, one should be able to run vault plus all its adjacent components with:
+
+```shell
+$ docker-compose up
+```
+
+
+
+
+
+## Integration tests
+
 Integration test (local):
 
 ```
