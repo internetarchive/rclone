@@ -69,7 +69,7 @@ rm -f "$F0002TESTUSER"
 mkdir -p /usr/local/bin
 curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
 # this is to notice upstream changes and to track them, manually for now
-echo '070f831f1df265ca7de913e6be0174a7555cb3x9 /usr/local/bin/mc' | sha1sum -c
+echo '070f831f1df265ca7de913e6be0174a7555cb3e9 /usr/local/bin/mc' | sha1sum -c
 chmod +x /usr/local/bin/mc
 # The default configuration stores deposited content in a local S3 daemon. The
 # bucket in which replica content is stored must be created manually.

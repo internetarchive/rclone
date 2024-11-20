@@ -57,6 +57,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/sys/mountinfo v0.7.2
 	github.com/ncw/swift/v2 v2.0.3
+	github.com/oapi-codegen/runtime v1.1.1
 	github.com/oracle/oci-go-sdk/v65 v65.73.0
 	github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/pkg/sftp v1.13.7
