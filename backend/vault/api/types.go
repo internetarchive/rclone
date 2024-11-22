@@ -189,7 +189,7 @@ func (stats *CollectionStats) NumFiles() (result int64) {
 }
 
 // Content either returns the real content or some dummy bytes of the size of
-// the object. TODO: handle options
+// the object. TODO: handle options; TODO: add download domain
 func (t *TreeNode) Content(options ...fs.OpenOption) (io.ReadCloser, error) {
 	switch v := t.ContentURL.(type) {
 	case string:
