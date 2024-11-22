@@ -1,12 +1,15 @@
 # Generated API client code and notes
 
-Using [oapi-codegen](https://github.com/deepmap/oapi-codegen), via go generate:
+Using [oapi-codegen](https://github.com/oapi-codegen/oapi-codegen), via go generate:
 
 ```
 $ oapi-codegen -generate types,client,spec -package oapi -o vault.gen.go schema.json
 ```
 
 The `schema.json` is taken as-is from the vault-site repo.
+
+As of 11/2024, vault emits openapi schema version 3.1.0, but openapi-codegen
+only works with 3.0.X. A first attempt to fix the emitted schema failed.
 
 ## TODO
 

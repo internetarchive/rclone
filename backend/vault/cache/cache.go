@@ -1,4 +1,4 @@
-// Package cache implements a minimal volatile cache.
+// Package cache implements a minimal in-memory cache.
 package cache
 
 import (

@@ -67,6 +67,7 @@ rm -f "$F0002TESTUSER"
 
 # download "mc" minio tool (don't need that with DEVNULL)
 mkdir -p /usr/local/bin
+# TODO: move this to nexus
 curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
 # this is to notice upstream changes and to track them, manually for now
 echo '070f831f1df265ca7de913e6be0174a7555cb3e9 /usr/local/bin/mc' | sha1sum -c
