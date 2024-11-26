@@ -23,10 +23,29 @@ services:
       - elasticsearch
     environment:
       - ALLOWED_HOSTS="*"
-      - VAULT_POSTGRES_HOST=postgres
       - WAIT_TIMEOUT=60 # 30 worked before we added elasticsearch
       - WAIT_HOSTS=postgres:5432, temporal:7233, elasticsearch:9200 # https://github.com/ufoscout/docker-compose-wait
+      - VAULT_POSTGRES_HOST=postgres
       - ELASTICSEARCH_URL=${ELASTICSEARCH_URL:-http://elasticsearch:9200}
+      - SEARCH_INDEXER_POLL_INTERVAL_SECS=600
+      # TODO: does this affect the bucket creation and access?
+      - MINIO_ROOT_USER=${S3_CHUNK_MANAGER_S3_ACCESS_KEY:-accesskey}
+      - MINIO_ROOT_PASSWORD=${S3_CHUNK_MANAGER_S3_SECRET_KEY:-secretkey}
+      # taken from Dockerfile, but most values are set in this file ----8<----
+      - REDIS_HOST=redis
+      - TEMPORAL_FRONTEND_URI=temporal:7233
+      - CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
+      - PROMETHEUS_MULTIPROC_DIR=/tmp
+      # storage related
+      - PRIMARY_STORAGE_MANAGER=USCAS301
+      - GLOBAL_DEFAULT_REPLICA_LOCATIONS=USCAS301
+      - S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
+      - S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
+      - S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
+      - S3_STORAGE_MANAGER_USCAS301_S3_SECRET_KEY=secretkey
+      - S3_STORAGE_MANAGER_USCAS301_S3_BUCKET=s3storagemanagerdevstorage
+      - CHUNK_MANAGER_TYPE=LOCALFS
+      - ASYNC_MODE=TEMPORAL
     tty: true
     stdin_open: true
   minio:
@@ -118,11 +137,12 @@ services:
     stdin_open: true
   elasticsearch:
     container_name: elasticsearch
-    image: elasticsearch:8.13.0
+    image: elasticsearch:8.16.1
     environment:
-      - "ES_JAVA_OPTS=-Xms2G -Xmx2G"
+      - "ES_JAVA_OPTS=-Xms4G -Xmx4G"
       - discovery.type=single-node
       - xpack.security.enabled=false
+      - ELASTICSEARCH_REQUESTTIMEOUT=120000
     ports:
       - "9200:9200"
       - "9300:9300"
