@@ -764,7 +764,7 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 		}
 		return u.String(), nil
 	default:
-		return "", fmt.Errorf("link not available for treenode %v", t.ID)
+		return "", fmt.Errorf("link not available for treenode %v (%T)", t.ID, v)
 	}
 }
 
