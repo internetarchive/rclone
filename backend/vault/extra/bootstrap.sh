@@ -20,6 +20,27 @@ curl -sL -XPUT http://elasticsearch:9200/$INDEX_NAME
 curl -s http://elasticsearch:9200/
 curl -s http://elasticsearch:9200/$INDEX_NAME
 
+# https://www.elastic.co/guide/en/elasticsearch/reference/current/fix-watermark-errors.html
+curl -X PUT "http://elasticsearch:9200/_cluster/settings?pretty" -H 'Content-Type: application/json' -d'
+{
+  "persistent": {
+    "cluster.routing.allocation.disk.watermark.low": "90%",
+    "cluster.routing.allocation.disk.watermark.low.max_headroom": "100GB",
+    "cluster.routing.allocation.disk.watermark.high": "95%",
+    "cluster.routing.allocation.disk.watermark.high.max_headroom": "20GB",
+    "cluster.routing.allocation.disk.watermark.flood_stage": "97%",
+    "cluster.routing.allocation.disk.watermark.flood_stage.max_headroom": "5GB",
+    "cluster.routing.allocation.disk.watermark.flood_stage.frozen": "97%",
+    "cluster.routing.allocation.disk.watermark.flood_stage.frozen.max_headroom": "5GB"
+  }
+}
+'
+curl -X PUT "http://elasticsearch:9200/*/_settings?expand_wildcards=all&pretty" -H 'Content-Type: application/json' -d'
+{
+  "index.blocks.read_only_allow_delete": null
+}
+'
+
 cat <<EOM
 
 Y8b Y88888P                   888   d8     888 88b,                       d8           d8
@@ -70,15 +91,20 @@ mkdir -p /usr/local/bin
 # TODO: move this to nexus
 curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
 # this is to notice upstream changes and to track them, manually for now
-echo '070f831f1df265ca7de913e6be0174a7555cb3e9 /usr/local/bin/mc' | sha1sum -c
-chmod +x /usr/local/bin/mc
+# echo '070f831f1df265ca7de913e6be0174a7555cb3e9 /usr/local/bin/mc' | sha1sum -c
+# chmod +x /usr/local/bin/mc
+chmod +x ./mc
 # The default configuration stores deposited content in a local S3 daemon. The
 # bucket in which replica content is stored must be created manually.
 #
 # create organization bucket; this is manual; for chunks it is done on the fly
 # in s3_chunk_manager.py:_put
 # important: this name must correspond to the ENV VAR set in settings
-mc mb s3storagemanagerdevstorage
+
+# > mc commands that operate on S3-compatible services require specifying an
+# alias for that service. -- https://min.io/docs/minio/linux/reference/minio-mc/mc-alias.html
+./mc alias set vault http://minio:9000 accesskey secretkey
+./mc mb vault/s3storagemanagerdevstorage
 
 # run workers in the background; taken from Makefile: make run-workers; we do
 # not care how these are teared down
