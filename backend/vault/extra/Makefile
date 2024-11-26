@@ -25,6 +25,10 @@ help:
 
 .PHONY: image
 image:
+	# temporary copy "mc" binary, to avoid download from
+	# https://dl.min.io/client/mc/release/linux-amd64/mc (cf. bootstrap.sh)
+	# cp ./mc $(VAULT)
+	#
 	# [image] temporarily copying bootstrap.sh into build context
 	cp ./bootstrap.sh $(VAULT)/dev
 	# [image] copy patch file to run minimal workers only
@@ -34,6 +38,7 @@ image:
 	# [image] cleanup bootstrap and patch file
 	rm -f $(VAULT)/dev/bootstrap.sh
 	rm -f $(VAULT)/0001-minimal-workers.patch
+	rm -f $(VAULT)/mc
 	# [image] image built, now run: docker-compose up then log in under http://0.0.0.0:8000/ with admin:admin
 	@printf 'done: $(higreen)vault test image successfully created$(reset)\n'
 	@printf 'next: $(green)docker-compose up$(reset)\n'
