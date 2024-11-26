@@ -27,29 +27,31 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
 
 # this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "4bb925a1a7eadd3faf88a24650fa6ac78e973ebc ./bootstrap.sh" | sha1sum --check && \
+RUN echo "233bb40f0e97a2822a5e0e0b55b7f1ccbf7b1724 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
-ENV REDIS_HOST=redis
-ENV VAULT_POSTGRES_HOST=postgres
-ENV TEMPORAL_FRONTEND_URI=temporal:7233
-ENV CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
-ENV PROMETHEUS_MULTIPROC_DIR=/tmp
+# TODO: we may remove these values here, because vault will need a docker
+# compose file anyway
+# ENV REDIS_HOST=redis
+# ENV VAULT_POSTGRES_HOST=postgres
+# ENV TEMPORAL_FRONTEND_URI=temporal:7233
+# ENV CELERY_BROKER_URI=amqp://vault:vault@rabbitmq:5672/
+# ENV PROMETHEUS_MULTIPROC_DIR=/tmp
 
 # USCAS301 uses S3 minio by default; use USCAS301 to get S3 path included; use
 # DEVNULL to discard contents (note: while using DEVNULL, temporal will still
 # try to store data inside a bucket)
-ENV PRIMARY_STORAGE_MANAGER=USCAS301
-ENV GLOBAL_DEFAULT_REPLICA_LOCATIONS=USCAS301
+# ENV PRIMARY_STORAGE_MANAGER=USCAS301
+# ENV GLOBAL_DEFAULT_REPLICA_LOCATIONS=USCAS301
 # ENV PRIMARY_STORAGE_MANAGER=DEVNULL
-ENV S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
-ENV S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
-ENV S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
-ENV S3_STORAGE_MANAGER_USCAS301_S3_SECRET_KEY=secretkey
+# ENV S3_CHUNK_MANAGER_S3_ENDPOINT=http://minio:9000
+# ENV S3_STORAGE_MANAGER_USCAS301_S3_ENDPOINT=http://minio:9000
+# ENV S3_STORAGE_MANAGER_USCAS301_S3_ACCESS_KEY=accesskey
+# ENV S3_STORAGE_MANAGER_USCAS301_S3_SECRET_KEY=secretkey
 # set bucket explicitly here; we also need to instruct minio to prepare the bucket
-ENV S3_STORAGE_MANAGER_USCAS301_S3_BUCKET=s3storagemanagerdevstorage
-ENV CHUNK_MANAGER_TYPE=LOCALFS
-ENV ASYNC_MODE=TEMPORAL
+# ENV S3_STORAGE_MANAGER_USCAS301_S3_BUCKET=s3storagemanagerdevstorage
+# ENV CHUNK_MANAGER_TYPE=LOCALFS
+# ENV ASYNC_MODE=TEMPORAL
 
 # cf. WAIT_HOSTS, ... in docker-compose.yml
 CMD /wait && ./bootstrap.sh
