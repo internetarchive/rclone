@@ -27,7 +27,7 @@ RUN echo "6c340afe7608744d099834972ca243ee5eaed6f1 /wait" | sha1sum --check && \
 
 # this will be the bootstrap script that runs, when the vault containers runs
 ADD dev/bootstrap.sh bootstrap.sh
-RUN echo "233bb40f0e97a2822a5e0e0b55b7f1ccbf7b1724 ./bootstrap.sh" | sha1sum --check && \
+RUN echo "a45490b064f32b3cbe61a0c9df08c951f9d5f1c1 ./bootstrap.sh" | sha1sum --check && \
     chmod +x ./bootstrap.sh
 
 # TODO: we may remove these values here, because vault will need a docker

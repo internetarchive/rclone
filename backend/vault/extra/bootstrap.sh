@@ -92,8 +92,8 @@ mkdir -p /usr/local/bin
 curl -sL --fail https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs -o /usr/local/bin/mc
 # this is to notice upstream changes and to track them, manually for now
 # echo '070f831f1df265ca7de913e6be0174a7555cb3e9 /usr/local/bin/mc' | sha1sum -c
-# chmod +x /usr/local/bin/mc
-chmod +x ./mc
+chmod +x /usr/local/bin/mc
+# chmod +x ./mc
 # The default configuration stores deposited content in a local S3 daemon. The
 # bucket in which replica content is stored must be created manually.
 #
@@ -103,8 +103,10 @@ chmod +x ./mc
 
 # > mc commands that operate on S3-compatible services require specifying an
 # alias for that service. -- https://min.io/docs/minio/linux/reference/minio-mc/mc-alias.html
-./mc alias set vault http://minio:9000 accesskey secretkey
-./mc mb vault/s3storagemanagerdevstorage
+# ./mc alias set vault http://minio:9000 accesskey secretkey
+# ./mc mb vault/s3storagemanagerdevstorage
+/usr/local/bin/mc alias set vault http://minio:9000 accesskey secretkey
+/usr/local/bin/mc mb vault/s3storagemanagerdevstorage
 
 # run workers in the background; taken from Makefile: make run-workers; we do
 # not care how these are teared down
