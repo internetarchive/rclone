@@ -757,7 +757,9 @@ func (f *Fs) PublicLink(ctx context.Context, remote string, expire fs.Duration, 
 	}
 	switch v := t.ContentURL.(type) {
 	case string:
-		// TODO: may want to url encode
+		// TODO: check, if host + URL will resolve downloads correctly
+		host := strings.Replace(f.api.Endpoint, "/api", "", 1)
+		v = host + v
 		u, err := url.Parse(v)
 		if err != nil {
 			return "", err
@@ -1067,7 +1069,8 @@ func (o *Object) SetModTime(ctx context.Context, _ time.Time) error {
 }
 func (o *Object) Open(ctx context.Context, options ...fs.OpenOption) (io.ReadCloser, error) {
 	fs.Debugf(o, "reading object contents from %v", o.ID())
-	return o.treeNode.Content(options...)
+	host := strings.Replace(o.fs.api.Endpoint, "/api", "", 1)
+	return o.treeNode.Content(o.fs.api.Client(), host, options...)
 }
 func (o *Object) Update(ctx context.Context, in io.Reader, src fs.ObjectInfo, options ...fs.OpenOption) error {
 	fs.Debugf(o, "updating object contents at %v", o.ID())
