@@ -7,6 +7,7 @@
 # Example tag would be: v1.59.1-vault-20230131181542-1da70fdd1
 #
 # Where v1.59.1 is the latest tag of the master branch that this branch is rebased on.
+version: 2
 before:
   hooks:
     - go mod tidy
@@ -23,15 +24,17 @@ builds:
 archives:
   -
     format: binary
-    replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      amd64: x86_64
+    name_template: >-
+      {{- .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end -}}
 snapshot:
   name_template: "{{ incpatch .Version }}-vault"
 changelog:
-  skip: true
+  disable: true
 release:
   github:
     owner: internetarchive
