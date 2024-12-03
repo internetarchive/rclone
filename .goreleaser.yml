@@ -32,7 +32,7 @@ archives:
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end -}}
 snapshot:
-  name_template: "{{ incpatch .Version }}-vault"
+  version_template: "{{ incpatch .Version }}-vault"
 changelog:
   disable: true
 release:
