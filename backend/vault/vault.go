@@ -555,21 +555,6 @@ func (info *UploadInfo) IsDone() bool {
 	return info.i == info.flowTotalChunks
 }
 
-func (info *UploadInfo) resetStream() error {
-	if info.src.Fs().Name() == "local" {
-		filename := path.Join(info.src.Fs().Root(), info.src.String())
-		f, err := os.Open(filename)
-		if err != nil {
-			return err
-		}
-		info.in = f
-		info.i = 0
-		return nil
-	} else {
-		return fmt.Errorf("cannot reset non-local stream")
-	}
-}
-
 // upload is the main transfer function for a single file, which is wrapped in
 // an UploadInfo value. Returns a hasher that contains the supported hashes of
 // of the file object.
