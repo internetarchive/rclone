@@ -138,7 +138,6 @@ For more information about Vault visit https://webservices.archive.org/pages/vau
 
 // NewFS sets up a new filesystem for vault, with deposits/v2 support.
 func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, error) {
-	fs.Debugf(nil, "using deposits/v2")
 	var opt Options
 	err := configstruct.Set(m, &opt)
 	if err != nil {
