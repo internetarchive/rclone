@@ -1,5 +1,13 @@
 # Notes
 
+## Ideas
+
+* [ ] maybe switch to manual api client only, again
+* [ ] we would need, some limit currently in place (like 50K files per dir, that are fetched)
+* [ ] have more unit and integration test (maybe snapshot testing w/ golden file)
+* [ ] have mount write work
+* [ ] custom command, vault specific things, like fixity, geolocation, "dashboard", etc.
+
 ## Overview
 
 For rclone tests, the idea is to have a fully ephemeral, fresh-off-the-source
