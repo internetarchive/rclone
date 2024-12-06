@@ -193,8 +193,8 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 type Options struct {
 	Username        string `config:"username"`
 	Password        string `config:"password"`
-	Endpoint        string `config:"endpoint"` // e.g. http://localhost:8000/api
-	ResumeDepositId int64  `config:"resume_deposit_id"`
+	Endpoint        string `config:"endpoint"`          // e.g. http://localhost:8000/api
+	ResumeDepositId int64  `config:"resume_deposit_id"` // TODO: can we remove this?
 	ChunkSize       int64  `config:"chunk_size"`
 }
 
@@ -358,6 +358,12 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 	if f.inflightDepositID != 0 {
 		return nil
 	}
+	fs.Debugf(f, "trying to resolve %s ...", f.root)
+	// TODO: when using "rclone mount" f.root will be / and the object will
+	// have the path a/b/c.txt, whereas with regular uploads the root will be
+	// the directory and the object will be the file.
+	//
+	// ...
 	t, err := f.api.ResolvePath(f.root)
 	if err != nil {
 		if err == fs.ErrorObjectNotFound {
@@ -390,6 +396,8 @@ func (f *Fs) requestDeposit(ctx context.Context) error {
 		pid := int(parent.ID)
 		body.ParentNodeId = &pid
 	default:
+		// TODO: can we just copy to / now?
+		fs.Debugf(f, "cannot copy to parent: %v", parent)
 		return ErrCannotCopyToRoot
 	}
 	resp, err := f.depositsV2Client.VaultDepositApiRegisterDepositWithResponse(ctx, body)
@@ -440,6 +448,11 @@ func (f *Fs) Put(ctx context.Context, in io.Reader, src fs.ObjectInfo, options .
 		flowIdentifier string
 		err            error
 	)
+	// TODO: if src.Remote() is not just a basename, assume we have an "rclone
+	// mount" situation; then f.root will be / and the src.Remote() will have
+	// all path segments, but we would like to shift the path segments from
+	// src.Remote() to f.root
+
 	// (1) Start a deposit, if not already started. TODO: support resuming a deposit.
 	if err := f.requestDeposit(ctx); err != nil {
 		return nil, err
