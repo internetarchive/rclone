@@ -251,7 +251,7 @@ func (f *Fs) Precision() time.Duration { return 1 * time.Second }
 // Hashes returns the supported hashes. Vault supports various hashes
 // internally (availability may be delayed) and MD5 at upload time.
 func (f *Fs) Hashes() hash.Set {
-	return hash.Set(hash.MD5)
+	return hash.Set(hash.MD5 | hash.SHA1 | hash.SHA256)
 }
 
 // Features returns optional features.
