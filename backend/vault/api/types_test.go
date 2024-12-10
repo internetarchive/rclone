@@ -48,10 +48,11 @@ func TestTreeNodeContent(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = io.WriteString(w, mockData)
 	}))
-	node := &TreeNode{
+	t.Logf("mock treenode content URL: %v", ts.URL)
+	tno := &TreeNode{
 		ContentURL: ts.URL,
 	}
-	rc, err := node.Content(http.DefaultClient, "", nil)
+	rc, err := tno.Content(http.DefaultClient, "", nil)
 	if err != nil {
 		t.Fatalf("could not get content: %v", err)
 	}
@@ -63,4 +64,21 @@ func TestTreeNodeContent(t *testing.T) {
 		t.Fatalf("got %v, want %v", string(b), mockData)
 	}
 	defer ts.Close()
+}
+
+func TestTreeNodeSize(t *testing.T) {
+	var cases = []struct {
+		tno          *TreeNode
+		expectedSize int64
+	}{
+		{&TreeNode{ObjectSize: nil}, 0},
+		{&TreeNode{ObjectSize: 0}, 0},
+		{&TreeNode{ObjectSize: 1}, 1},
+		{&TreeNode{ObjectSize: 1024}, 1024},
+	}
+	for _, c := range cases {
+		if got := c.tno.Size(); got != c.expectedSize {
+			t.Fatalf("got %v, want %v", got, c.expectedSize)
+		}
+	}
 }
