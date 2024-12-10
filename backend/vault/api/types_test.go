@@ -82,3 +82,57 @@ func TestTreeNodeSize(t *testing.T) {
 		}
 	}
 }
+
+func TestTreeNodeMimeType(t *testing.T) {
+	var cases = []struct {
+		tno      *TreeNode
+		expected string
+	}{
+		{&TreeNode{FileType: nil}, ""},
+		{&TreeNode{FileType: "text/plain"}, "text/plain"},
+		{&TreeNode{FileType: ""}, ""},
+		{&TreeNode{FileType: "any"}, "any"},
+	}
+	for _, c := range cases {
+		if got := c.tno.MimeType(); got != c.expected {
+			t.Fatalf("got %v, want %v", got, c.expected)
+		}
+	}
+}
+
+func TestTreeNodeParentTreeNodeIdentifier(t *testing.T) {
+	var cases = []struct {
+		tno      *TreeNode
+		expected string
+	}{
+		{&TreeNode{Parent: nil}, ""},
+		{&TreeNode{Parent: "unchecked"}, "unchecked"},
+		{&TreeNode{Parent: "http://invalid"}, ""},
+		{&TreeNode{Parent: "http://vault.xyz/api/treenodes/invalid"}, ""},
+		{&TreeNode{Parent: "http://vault.xyz/api/treenodes/123"}, "123"},
+		{&TreeNode{Parent: "http://vault.xyz/api/treenodes/123X"}, ""},
+	}
+	for _, c := range cases {
+		if got := c.tno.ParentTreeNodeIdentifier(); got != c.expected {
+			t.Fatalf("got %v, want %v", got, c.expected)
+		}
+	}
+}
+
+func TestOrganizationPlanIdentifier(t *testing.T) {
+	var cases = []struct {
+		org      *Organization
+		expected string
+	}{
+		{&Organization{Plan: ""}, ""},
+		{&Organization{Plan: "xyz"}, "xyz"},
+		{&Organization{Plan: "123"}, "123"},
+		{&Organization{TreeNode: "", Plan: "http://vault.xyz/api/plans/123"}, "http://vault.xyz/api/plans/123"},
+		{&Organization{TreeNode: "http://vault.xyz/...", Plan: "http://vault.xyz/api/plans/123"}, "123"},
+	}
+	for _, c := range cases {
+		if got := c.org.PlanIdentifier(); got != c.expected {
+			t.Fatalf("got %v, want %v", got, c.expected)
+		}
+	}
+}
