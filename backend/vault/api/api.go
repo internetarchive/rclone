@@ -116,7 +116,9 @@ func (api *API) String() string {
 }
 
 // Login sets up a session, which should be valid for the client until logout
-// (or timeout). This follows the interactive login procedure.
+// (or timeout). This follows the interactive login procedure. TODO: move to a
+// better auth scheme, e.g. via
+// https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
 func (api *API) Login() (err error) {
 	var u *url.URL
 	if u, err = url.Parse(api.Endpoint); err != nil {
