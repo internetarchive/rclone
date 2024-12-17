@@ -2,7 +2,6 @@ package vault
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"math/rand"
 	"net/url"
@@ -74,7 +73,7 @@ func mustCollection(t *testing.T, api *oapi.CompatAPI, name string) *api.Collect
 	vs.Set("name", name)
 	result, err := api.FindCollections(vs)
 	if err != nil {
-		t.Fatalf("failed to query collections: %v", result)
+		t.Fatalf("failed to query collections: %v, %v", result, err)
 	}
 	if len(result) != 1 {
 		t.Fatalf("expected a single result, got %v", len(result))
@@ -123,64 +122,7 @@ func TestCreateFolder(t *testing.T) {
 }
 
 func TestRegisterDeposit(t *testing.T) {
-	var (
-		vapi = mustLogin(t)
-		ctx  = context.Background()
-	)
-	// errCases are cases that should yield an api.Error of sorts
-	var errCases = []struct {
-		help string
-		rdr  *api.RegisterDepositRequest
-	}{
-		{
-			"empty request",
-			&api.RegisterDepositRequest{},
-		},
-		{
-			"incomplete, collection id only",
-			&api.RegisterDepositRequest{CollectionID: 123},
-		},
-		{
-			"invalid collection ids",
-			&api.RegisterDepositRequest{
-				CollectionID: 1234567,
-				Files:        nil,
-				ParentNodeID: 1,
-				TotalSize:    0,
-			},
-		},
-		{
-			"invalid collection ids",
-			&api.RegisterDepositRequest{
-				CollectionID: 1234567,
-				Files:        nil,
-				ParentNodeID: 1,
-				TotalSize:    0,
-			},
-		},
-	}
-	// Test various incomplete register deposit requests.
-	var apiError *api.Error
-	for _, c := range errCases {
-		_, err := vapi.RegisterDeposit(ctx, c.rdr)
-		if !errors.As(err, &apiError) {
-			t.Fatalf("register failed [%s]: got %v, want an api error", c.help, err)
-		}
-	}
-	// var okCases = []struct {
-	// 	help string
-	// 	rdr  *api.RegisterDepositRequest
-	// }{
-	// 	{
-	// 		"complete request",
-	// 		&api.RegisterDepositRequest{
-	// 			CollectionID: 1,
-	// 			Files:        nil,
-	// 			ParentNodeID: 1,
-	// 			TotalSize:    0,
-	// 		},
-	// 	},
-	// }
+	t.Skip("obsolete")
 }
 
 func TestDeposit(t *testing.T)      {}

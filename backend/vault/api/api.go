@@ -282,6 +282,7 @@ func (api *API) ResolvePath(p string) (*TreeNode, error) {
 		}
 		t, segments = ts[0], segments[1:]
 	}
+	fs.Debugf(api, "resolve path to treenode: %v => %v", p, t.ID)
 	return t, nil
 }
 

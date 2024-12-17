@@ -537,11 +537,19 @@ func (capi *CompatAPI) FindCollections(vs url.Values) (result []*api.Collection,
 	for k, v := range vs {
 		switch k {
 		case "tree_node":
+			if len(v) == 0 {
+				continue
+			}
 			i, err := strconv.Atoi(v[0])
 			if err != nil {
 				return nil, err
 			}
 			params.TreeNode = &i
+		case "name":
+			if len(v) == 0 {
+				continue
+			}
+			params.Name = &v[0]
 		default:
 			return nil, fmt.Errorf("compat missing legacy parameters: %v", k)
 		}
@@ -571,17 +579,28 @@ func (capi *CompatAPI) FindTreeNodes(vs url.Values) (result []*api.TreeNode, err
 		// something else, we can err out.
 		switch k {
 		case "parent":
-			if len(v) > 0 {
-				i, err := strconv.Atoi(v[0])
-				if err != nil {
-					return nil, err
-				}
-				params.Parent = &i
+			if len(v) == 0 {
+				continue
 			}
+			i, err := strconv.Atoi(v[0])
+			if err != nil {
+				return nil, err
+			}
+			params.Parent = &i
 		case "name":
-			if len(v) > 0 {
-				params.Name = &v[0]
+			if len(v) == 0 {
+				continue
 			}
+			params.Name = &v[0]
+		case "id":
+			if len(v) == 0 {
+				continue
+			}
+			i, err := strconv.Atoi(v[0])
+			if err != nil {
+				return nil, err
+			}
+			params.Id = &i
 		default:
 			return nil, fmt.Errorf("compat missing legacy parameter: %v", k)
 		}

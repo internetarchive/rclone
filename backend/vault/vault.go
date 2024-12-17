@@ -269,6 +269,7 @@ func (f *Fs) Features() *fs.Features { return f.features }
 // This should return ErrDirNotFound if the directory isn't
 // found.
 func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
+	fs.Debugf(f, "listing directory: %v", dir)
 	var (
 		entries fs.DirEntries
 		absPath = f.absPath(dir)
@@ -316,6 +317,7 @@ func (f *Fs) List(ctx context.Context, dir string) (fs.DirEntries, error) {
 	default:
 		return nil, fs.ErrorDirNotFound
 	}
+	fs.Debugf(f, "found %d entries for %v", len(entries), dir)
 	return entries, nil
 }
 
