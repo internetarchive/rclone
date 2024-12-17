@@ -1,12 +1,12 @@
 # Notes
 
-## Ideas
+## Ideas and Todos
 
 * [ ] maybe switch to manual api client only, again
 * [ ] we would need, some limit currently in place (like 50K files per dir, that are fetched)
 * [ ] have more unit and integration test (maybe snapshot testing w/ golden file)
 * [ ] have mount write work
-* [ ] custom command, vault specific things, like fixity, geolocation, "dashboard", etc.
+* [ ] custom command, vault specific things, like fixity, geolocation, "dashboard", metadata upload, ...
 
 ## Overview
 
@@ -31,15 +31,12 @@ rm -f $(VAULT)/0001-minimal-workers.patch
 Vault needs a little bit of manual setup, e.g. creating and "org", and this is
 done in bootstrap.sh with the help of fixtures currently.
 
-One the docker image is built, one should be able to run vault plus all its adjacent components with:
+One the docker image is built, one should be able to run vault plus all its
+adjacent components with:
 
 ```shell
 $ docker-compose up
 ```
-
-
-
-
 
 ## Integration tests
 
@@ -49,18 +46,7 @@ Integration test (local):
 $ VAULT_TEST_REMOTE_NAME=vault: go test -v ./backend/vault/...
 ```
 
-* 10 PASS
-* 6 SKIP
-* 7 FAIL (plus subtests)
-
-Mostly, `duplicate key` ... -- if a file exists, we just return that or nil error?
-
-```
-dev-postgres-1  | 2022-08-04 13:26:47.197 UTC [3434] ERROR:  duplicate key value violates unique constraint "vault_collection_org_and_name"
-dev-postgres-1  | 2022-08-04 13:26:47.197 UTC [3434] DETAIL:  Key (organization_id, name)=(1, trailing dot.) already exists.
-dev-postgres-1  | 2022-08-04 13:26:47.197 UTC [3434] STATEMENT:  INSERT INTO "vault_collection" ("name", "organization_id", "target_replication", "fixity_frequency", "tree_node_id") VALUES ('trailing dot.', 1, 2, 'TWICE_YEARLY', NULL) RETURNING "vault_collection"."id"
-```
-
+Results as of 2024-12-17.
 
 ```shell
 --- FAIL: TestIntegration (106.86s)
