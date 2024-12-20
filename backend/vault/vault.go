@@ -170,7 +170,7 @@ func NewFs(ctx context.Context, name, root string, m configmap.Mapper) (fs.Fs, e
 		root:             root,
 		opt:              opt,
 		api:              api,
-		depositsV2Client: depositsV2Client,
+		depositsV2Client: depositsV2Client, // TODO: remove this doubling of API and then another client for the deposit
 	}
 	f.features = (&fs.Features{
 		CanHaveEmptyDirectories: true,

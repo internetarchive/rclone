@@ -592,3 +592,12 @@ func (api *API) root() (*TreeNode, error) {
 	api.cache.SetGroup("root", "default", t)
 	return t, nil
 }
+
+// TODO(martin): do two, then pass on
+
+// func (api *API) depositV2...
+
+// resp, err := f.depositsV2Client.VaultDepositApiRegisterDepositWithResponse(ctx, body)
+// resp, err = f.depositsV2Client.VaultDepositApiSendChunkWithBody(ctx, w.FormDataContentType(), &wbuf)
+// resp, err := f.depositsV2Client.VaultDepositApiTerminateDeposit(ctx, body)
+// resp, err := f.depositsV2Client.VaultDepositApiFinalizeDepositWithResponse(ctx, body)
