@@ -7,6 +7,7 @@
 * [ ] have more unit and integration test (maybe snapshot testing w/ golden file)
 * [ ] have mount write work
 * [ ] custom command, vault specific things, like fixity, geolocation, "dashboard", metadata upload, ...
+* [ ] use explicit encoding mapping and spec out the allowed chars for petabox; TestIntegration/FsMkdir/FsEncoding
 
 ## Overview
 
