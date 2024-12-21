@@ -4,7 +4,8 @@
 #
 # $ docker-compose up
 #
-# Once running, you should be able to go to http://localhost:8000 and login.
+# Once running, you should be able to go to http://localhost:8000 and login
+# with admin:admin.
 #
 # Note: Since the addition of elasticsearch, we may need 8GB or more RAM to run.
 
