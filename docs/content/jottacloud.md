@@ -178,7 +178,7 @@ supported by rclone, but the support will be removed in a future version.
 Here is an example of how to make a remote called `remote` with the default setup.
 First run:
 
-```sh
+```console
 rclone config
 ```
 
@@ -277,23 +277,24 @@ d) Delete this remote
 y/e/d> y
 ```
 
-Once configured you can then use `rclone` like this,
+Once configured you can then use `rclone` like this (replace `remote` with the
+name you gave your remote):
 
 List directories in top level of your Jottacloud
 
-```sh
+```console
 rclone lsd remote:
 ```
 
 List all the files in your Jottacloud
 
-```sh
+```console
 rclone ls remote:
 ```
 
 To copy a local directory to an Jottacloud directory called backup
 
-```sh
+```console
 rclone copy /home/source remote:backup
 ```
 
@@ -588,12 +589,14 @@ See the [metadata](/docs/#metadata) docs for more info.
 Note that Jottacloud is case insensitive so you can't have a file called
 "Hello.doc" and one called "hello.doc".
 
-There are quite a few characters that can't be in Jottacloud file names. Rclone will map these names to and from an identical
-looking unicode equivalent. For example if a file has a ? in it will be mapped to ？ instead.
+There are quite a few characters that can't be in Jottacloud file names.
+Rclone will map these names to and from an identical looking unicode
+equivalent. For example if a file has a ? in it will be mapped to ？ instead.
 
 Jottacloud only supports filenames up to 255 characters in length.
 
 ## Troubleshooting
 
-Jottacloud exhibits some inconsistent behaviours regarding deleted files and folders which may cause Copy, Move and DirMove
-operations to previously deleted paths to fail. Emptying the trash should help in such cases.
+Jottacloud exhibits some inconsistent behaviours regarding deleted files and
+folders which may cause Copy, Move and DirMove operations to previously
+deleted paths to fail. Emptying the trash should help in such cases.

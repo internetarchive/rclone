@@ -117,6 +117,7 @@ WebDAV or S3, that work out of the box.)
 {{< provider name="Citrix ShareFile" home="http://sharefile.com/" config="/sharefile/" >}}
 {{< provider name="Cloudflare R2" home="https://blog.cloudflare.com/r2-open-beta/" config="/s3/#cloudflare-r2" >}}
 {{< provider name="Cloudinary" home="https://cloudinary.com/" config="/cloudinary/" >}}
+{{< provider name="Cubbit DS3" home="https://cubbit.io/ds3-cloud" config="/s3/#Cubbit" >}}
 {{< provider name="DigitalOcean Spaces" home="https://www.digitalocean.com/products/object-storage/" config="/s3/#digitalocean-spaces" >}}
 {{< provider name="Digi Storage" home="https://storage.rcs-rds.ro/" config="/koofr/#digi-storage" >}}
 {{< provider name="Dreamhost" home="https://www.dreamhost.com/cloud/storage/" config="/s3/#dreamhost" >}}
@@ -192,6 +193,7 @@ WebDAV or S3, that work out of the box.)
 {{< provider name="Seagate Lyve Cloud" home="https://www.seagate.com/gb/en/services/cloud/storage/" config="/s3/#lyve" >}}
 {{< provider name="SeaweedFS" home="https://github.com/chrislusf/seaweedfs/" config="/s3/#seaweedfs" >}}
 {{< provider name="Selectel" home="https://selectel.ru/services/cloud/storage/" config="/s3/#selectel" >}}
+{{< provider name="Servercore Object Storage" home="https://servercore.com/services/object-storage/" config="/s3/#servercore" >}}
 {{< provider name="SFTP" home="https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol" config="/sftp/" >}}
 {{< provider name="Sia" home="https://sia.tech/" config="/sia/" >}}
 {{< provider name="SMB / CIFS" home="https://en.wikipedia.org/wiki/Server_Message_Block" config="/smb/" >}}
@@ -216,6 +218,7 @@ WebDAV or S3, that work out of the box.)
 These backends adapt or modify other storage providers:
 
 {{< provider name="Alias: Rename existing remotes" home="/alias/" config="/alias/" >}}
+{{< provider name="Archive: Read archive files" home="/archive/" config="/archive/" >}}
 {{< provider name="Cache: Cache remotes (DEPRECATED)" home="/cache/" config="/cache/" >}}
 {{< provider name="Chunker: Split large files" home="/chunker/" config="/chunker/" >}}
 {{< provider name="Combine: Combine multiple remotes into a directory tree" home="/combine/" config="/combine/" >}}

@@ -34,6 +34,7 @@ directories to and from different cloud storage providers.
 - China Mobile Ecloud Elastic Object Storage (EOS) [:page_facing_up:](https://rclone.org/s3/#china-mobile-ecloud-eos)
 - Cloudflare R2 [:page_facing_up:](https://rclone.org/s3/#cloudflare-r2)
 - Citrix ShareFile [:page_facing_up:](https://rclone.org/sharefile/)
+- Cubbit DS3 [:page_facing_up:](https://rclone.org/s3/#Cubbit)
 - DigitalOcean Spaces [:page_facing_up:](https://rclone.org/s3/#digitalocean-spaces)
 - Digi Storage [:page_facing_up:](https://rclone.org/koofr/#digi-storage)
 - Dreamhost [:page_facing_up:](https://rclone.org/s3/#dreamhost)
@@ -106,6 +107,7 @@ directories to and from different cloud storage providers.
 - Seagate Lyve Cloud [:page_facing_up:](https://rclone.org/s3/#lyve)
 - SeaweedFS [:page_facing_up:](https://rclone.org/s3/#seaweedfs)
 - Selectel Object Storage [:page_facing_up:](https://rclone.org/s3/#selectel)
+- Servercore Object Storage [:page_facing_up:](https://rclone.org/s3/#servercore)
 - SFTP [:page_facing_up:](https://rclone.org/sftp/)
 - SMB / CIFS [:page_facing_up:](https://rclone.org/smb/)
 - Spectra Logic [:page_facing_up:](https://rclone.org/s3/#spectralogic)
@@ -129,6 +131,7 @@ Please see [the full list of all storage providers and their features](https://r
 These backends adapt or modify other storage providers
 
 - Alias: rename existing remotes [:page_facing_up:](https://rclone.org/alias/)
+- Archive: read archive files [:page_facing_up:](https://rclone.org/archive/)
 - Cache: cache remotes (DEPRECATED) [:page_facing_up:](https://rclone.org/cache/)
 - Chunker: split large files [:page_facing_up:](https://rclone.org/chunker/)
 - Combine: combine multiple remotes into a directory tree [:page_facing_up:](https://rclone.org/combine/)
