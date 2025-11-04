@@ -21,7 +21,7 @@ reset := $(shell tput sgr0)
 
 # SHA1 of the current "mc" tool, this may change; please adjust that as needed;
 # so we a least recognize when a binary changed
-MC_SHA1 = 34e8ff4eb61529eab8b42efd94ba57461d94d066
+MC_SHA1 = f287887779ebb2b069bdd76cab11b56f5c605f6b
 
 .DEFAULT_GOAL := help
 
