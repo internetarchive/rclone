@@ -71,8 +71,8 @@ const (
 	// TODO: revisit this size
 	defaultUploadChunkSize = 1_048_576
 	// Pacer options
-	minSleep      = 500 * time.Millisecond
-	maxSleep      = 60 * time.Millisecond
+	minSleep      = 10 * time.Millisecond
+	maxSleep      = 2 * time.Second
 	decayConstant = 2
 )
 
