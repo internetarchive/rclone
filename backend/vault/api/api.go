@@ -259,6 +259,9 @@ func (api *API) SplitPath(p string) (*PathInfo, error) {
 
 // ResolvePath resolves an absolute path to a treenode object.
 func (api *API) ResolvePath(p string) (*TreeNode, error) {
+	if v := api.cache.GetGroup("resolve", p); v != nil {
+		return v.(*TreeNode), nil
+	}
 	t, err := api.root()
 	if err != nil {
 		return nil, err
@@ -294,6 +297,7 @@ func (api *API) ResolvePath(p string) (*TreeNode, error) {
 		t, segments = ts[0], segments[1:]
 	}
 	fs.Debugf(api, "resolved path to treenode: %v => %v", p, t.ID)
+	api.cache.SetGroup("resolve", p, t)
 	return t, nil
 }
 
