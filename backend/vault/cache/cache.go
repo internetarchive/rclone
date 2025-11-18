@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-const defaultCacheTTL = 10 * time.Minute
+const defaultCacheTTL = 5 * time.Minute
 
 // New sets up a basic cache using a map.
 func New() *Cache {
