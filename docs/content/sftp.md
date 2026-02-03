@@ -601,10 +601,10 @@ Properties:
 - Type:        bool
 - Default:     false
 - Examples:
-    - "false"
-        - Use default Cipher list.
-    - "true"
-        - Enables the use of the aes128-cbc cipher and diffie-hellman-group-exchange-sha256, diffie-hellman-group-exchange-sha1 key exchange.
+  - "false"
+    - Use default Cipher list.
+  - "true"
+    - Enables the use of the aes128-cbc cipher and diffie-hellman-group-exchange-sha256, diffie-hellman-group-exchange-sha1 key exchange.
 
 #### --sftp-disable-hashcheck
 
@@ -674,8 +674,8 @@ Properties:
 - Type:        string
 - Required:    false
 - Examples:
-    - "~/.ssh/known_hosts"
-        - Use OpenSSH's known_hosts file.
+  - "~/.ssh/known_hosts"
+    - Use OpenSSH's known_hosts file.
 
 #### --sftp-ask-password
 
@@ -751,14 +751,14 @@ Properties:
 - Type:        string
 - Required:    false
 - Examples:
-    - "none"
-        - No shell access
-    - "unix"
-        - Unix shell
-    - "powershell"
-        - PowerShell
-    - "cmd"
-        - Windows Command Prompt
+  - "none"
+    - No shell access
+  - "unix"
+    - Unix shell
+  - "powershell"
+    - PowerShell
+  - "cmd"
+    - Windows Command Prompt
 
 #### --sftp-hashes
 
@@ -1185,6 +1185,12 @@ Properties:
 URL for HTTP CONNECT proxy
 
 Set this to a URL for an HTTP proxy which supports the HTTP CONNECT verb.
+
+Supports the format http://user:pass@host:port, http://host:port, http://host.
+
+Example:
+
+    http://myUser:myPass@proxyhostname.example.com:8000
 
 
 Properties:

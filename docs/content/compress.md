@@ -2,7 +2,6 @@
 title: "Compress"
 description: "Compression Remote"
 versionIntroduced: "v1.54"
-status: Experimental
 ---
 
 # {{< icon "fas fa-compress" >}} Compress
@@ -151,10 +150,10 @@ Properties:
 - Type:        string
 - Default:     "gzip"
 - Examples:
-    - "gzip"
-        - Standard gzip compression with fastest parameters.
-    - "zstd"
-        - Zstandard compression — fast modern algorithm offering adjustable speed-to-compression tradeoffs.
+  - "gzip"
+    - Standard gzip compression with fastest parameters.
+  - "zstd"
+    - Zstandard compression — fast modern algorithm offering adjustable speed-to-compression tradeoffs.
 
 #### --compress-level
 

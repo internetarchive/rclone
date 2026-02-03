@@ -368,14 +368,14 @@ Properties:
 - Type:        string
 - Default:     "global"
 - Examples:
-    - "global"
-        - Microsoft Cloud Global
-    - "us"
-        - Microsoft Cloud for US Government
-    - "de"
-        - Microsoft Cloud Germany (deprecated - try global region first).
-    - "cn"
-        - Azure and Office 365 operated by Vnet Group in China
+  - "global"
+    - Microsoft Cloud Global
+  - "us"
+    - Microsoft Cloud for US Government
+  - "de"
+    - Microsoft Cloud Germany (deprecated - try global region first).
+  - "cn"
+    - Azure and Office 365 operated by Vnet Group in China
 
 #### --onedrive-tenant
 
@@ -536,13 +536,13 @@ Properties:
 - Type:        SpaceSepList
 - Default:     Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All Sites.Read.All offline_access
 - Examples:
-    - "Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All Sites.Read.All offline_access"
-        - Read and write access to all resources
-    - "Files.Read Files.Read.All Sites.Read.All offline_access"
-        - Read only access to all resources
-    - "Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All offline_access"
-        - Read and write access to all resources, without the ability to browse SharePoint sites. 
-        - Same as if disable_site_permission was set to true
+  - "Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All Sites.Read.All offline_access"
+    - Read and write access to all resources
+  - "Files.Read Files.Read.All Sites.Read.All offline_access"
+    - Read only access to all resources
+  - "Files.Read Files.ReadWrite Files.Read.All Files.ReadWrite.All offline_access"
+    - Read and write access to all resources, without the ability to browse SharePoint sites. 
+    - Same as if disable_site_permission was set to true
 
 #### --onedrive-disable-site-permission
 
@@ -660,13 +660,13 @@ Properties:
 - Type:        string
 - Default:     "anonymous"
 - Examples:
-    - "anonymous"
-        - Anyone with the link has access, without needing to sign in.
-        - This may include people outside of your organization.
-        - Anonymous link support may be disabled by an administrator.
-    - "organization"
-        - Anyone signed into your organization (tenant) can use the link to get access.
-        - Only available in OneDrive for Business and SharePoint.
+  - "anonymous"
+    - Anyone with the link has access, without needing to sign in.
+    - This may include people outside of your organization.
+    - Anonymous link support may be disabled by an administrator.
+  - "organization"
+    - Anyone signed into your organization (tenant) can use the link to get access.
+    - Only available in OneDrive for Business and SharePoint.
 
 #### --onedrive-link-type
 
@@ -679,12 +679,12 @@ Properties:
 - Type:        string
 - Default:     "view"
 - Examples:
-    - "view"
-        - Creates a read-only link to the item.
-    - "edit"
-        - Creates a read-write link to the item.
-    - "embed"
-        - Creates an embeddable link to the item.
+  - "view"
+    - Creates a read-only link to the item.
+  - "edit"
+    - Creates a read-write link to the item.
+  - "embed"
+    - Creates an embeddable link to the item.
 
 #### --onedrive-link-password
 
@@ -729,18 +729,18 @@ Properties:
 - Type:        string
 - Default:     "auto"
 - Examples:
-    - "auto"
-        - Rclone chooses the best hash
-    - "quickxor"
-        - QuickXor
-    - "sha1"
-        - SHA1
-    - "sha256"
-        - SHA256
-    - "crc32"
-        - CRC32
-    - "none"
-        - None - don't use any hashes
+  - "auto"
+    - Rclone chooses the best hash
+  - "quickxor"
+    - QuickXor
+  - "sha1"
+    - SHA1
+  - "sha256"
+    - SHA256
+  - "crc32"
+    - CRC32
+  - "none"
+    - None - don't use any hashes
 
 #### --onedrive-av-override
 
@@ -788,7 +788,7 @@ This is why this flag is not set as the default.
 
 As a rule of thumb if nearly all of your data is under rclone's root
 directory (the `root/directory` in `onedrive:root/directory`) then
-using this flag will be be a big performance win. If your data is
+using this flag will be a big performance win. If your data is
 mostly not under the root then using this flag will be a big
 performance loss.
 
@@ -818,16 +818,16 @@ Properties:
 - Type:        Bits
 - Default:     off
 - Examples:
-    - "off"
-        - Do not read or write the value
-    - "read"
-        - Read the value only
-    - "write"
-        - Write the value only
-    - "read,write"
-        - Read and Write the value.
-    - "failok"
-        - If writing fails log errors only, don't fail the transfer
+  - "off"
+    - Do not read or write the value
+  - "read"
+    - Read the value only
+  - "write"
+    - Write the value only
+  - "read,write"
+    - Read and Write the value.
+  - "failok"
+    - If writing fails log errors only, don't fail the transfer
 
 #### --onedrive-encoding
 
@@ -995,7 +995,7 @@ Here are the possible system metadata items for the onedrive backend.
 | content-type | The MIME type of the file. | string | text/plain | **Y** |
 | created-by-display-name | Display name of the user that created the item. | string | John Doe | **Y** |
 | created-by-id | ID of the user that created the item. | string | 48d31887-5fad-4d73-a9f5-3c356e68a038 | **Y** |
-| description | A short description of the file. Max 1024 characters. Only supported for OneDrive Personal. | string | Contract for signing | N |
+| description | A short description of the file. Max 1024 characters. No longer supported by Microsoft. | string | Contract for signing | N |
 | id | The unique identifier of the item within OneDrive. | string | 01BYE5RZ6QN3ZWBTUFOFD3GSPGOHDJD36K | **Y** |
 | last-modified-by-display-name | Display name of the user that last modified the item. | string | John Doe | **Y** |
 | last-modified-by-id | ID of the user that last modified the item. | string | 48d31887-5fad-4d73-a9f5-3c356e68a038 | **Y** |

@@ -498,6 +498,12 @@ URL for HTTP CONNECT proxy
 
 Set this to a URL for an HTTP proxy which supports the HTTP CONNECT verb.
 
+Supports the format http://user:pass@host:port, http://host:port, http://host.
+
+Example:
+
+    http://myUser:myPass@proxyhostname.example.com:8000
+
 
 Properties:
 
@@ -541,12 +547,12 @@ Properties:
 - Type:        Encoding
 - Default:     Slash,Del,Ctl,RightSpace,Dot
 - Examples:
-    - "Asterisk,Ctl,Dot,Slash"
-        - ProFTPd can't handle '*' in file names
-    - "BackSlash,Ctl,Del,Dot,RightSpace,Slash,SquareBracket"
-        - PureFTPd can't handle '[]' or '*' in file names
-    - "Ctl,LeftPeriod,Slash"
-        - VsFTPd can't handle file names starting with dot
+  - "Asterisk,Ctl,Dot,Slash"
+    - ProFTPd can't handle '*' in file names
+  - "BackSlash,Ctl,Del,Dot,RightSpace,Slash,SquareBracket"
+    - PureFTPd can't handle '[]' or '*' in file names
+  - "Ctl,LeftPeriod,Slash"
+    - VsFTPd can't handle file names starting with dot
 
 #### --ftp-description
 
