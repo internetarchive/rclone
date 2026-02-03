@@ -47,7 +47,7 @@ func init() {
 			},
 			{
 				Name: "api_key",
-				Help: `API Key for your Filen account 
+				Help: `API Key for your Filen account
 
 Get this using the Filen CLI export-api-key command
 You can download the Filen CLI from https://github.com/FilenCloudDienste/filen-cli`,
@@ -414,7 +414,7 @@ func (cw *chunkWriter) WriteChunk(ctx context.Context, chunkNumber int, reader i
 		if err != nil {
 			return totalWritten, err
 		}
-		resp, err := cw.filen.UploadChunk(ctx, &cw.FileUpload, realChunkNumber, chunkReadSlice)
+		resp, err := cw.filen.UploadChunk(ctx, &cw.FileUpload, int64(realChunkNumber), chunkReadSlice)
 		select { // only care about getting this once
 		case cw.bucketAndRegion <- *resp:
 		default:
