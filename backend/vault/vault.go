@@ -449,9 +449,11 @@ func (f *Fs) getFlowIdentifier(src fs.ObjectInfo) (s string, err error) {
 // getFlowTotalChunks returns the number of chunks required to upload an object
 // of a given size.
 func getFlowTotalChunks(objectSize int, chunkSize int64) int {
-	switch objectSize {
-	case 0:
+	switch {
+	case objectSize == 0:
 		return 1 // WT-2471
+	case chunkSize == 0:
+		return 0 // todo: should be made impossible
 	default:
 		return int(math.Ceil(float64(objectSize) / float64(chunkSize)))
 	}
