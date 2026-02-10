@@ -908,11 +908,11 @@ func (f *Fs) Shutdown(ctx context.Context) error {
 
 // Terminate the currently running deposit.
 func (f *Fs) Terminate() {
+	f.mu.Lock()
+	defer f.mu.Unlock()
 	if f.inflightDepositID == 0 {
 		return
 	}
-	f.mu.Lock()
-	defer f.mu.Unlock()
 	body := api.TerminateDepositRequest{
 		DepositId: f.inflightDepositID,
 	}
