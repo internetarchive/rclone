@@ -65,8 +65,7 @@ func (c *Cache) Set(k string, v any) {
 func (c *Cache) Get(k string) any {
 	c.mu.Lock()
 	e, ok := c.m[k]
-	defer c.mu.Unlock()
-
+	c.mu.Unlock()
 	if !ok {
 		return nil
 	}
