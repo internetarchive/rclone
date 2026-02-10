@@ -1023,8 +1023,7 @@ func (o *Object) ModTime(ctx context.Context) time.Time {
 			return t
 		}
 	}
-
-	fs.Debugf(o, "failed to parse modification time layout: %v, falling back to epoch", o.treeNode.ModifiedAt)
+	fs.Debugf(o, "failed to parse modification time layout: %v, falling back to epoch", o.treeNode.PreDepositModifiedAt)
 	return epoch // TODO: that may cause unnecessary uploads, if T differs too much
 }
 func (o *Object) Size() int64 {
